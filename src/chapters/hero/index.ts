@@ -4,7 +4,7 @@ import { el, reveal, rise, setRise } from '../../core/dom'
 import { BRAND, MICROCOPY } from '../../content'
 import { clamp, lerp, segment, smoothstep } from '../../core/math'
 import { nextFrame } from '../../core/yield'
-import { FLOOR_MIRROR, FROST, MARK_S, THAW_A, THAW_B, buildCard, buildFloor, buildMark, buildNeonMark, buildReflection, refineMark, type HeroSet } from './scene'
+import { FLOOR_MIRROR, FLOOR_Y, FROST, MARK_S, THAW_A, THAW_B, buildCard, buildFloor, buildMark, buildNeonMark, buildReflection, refineMark, type HeroSet } from './scene'
 import './hero.css'
 
 /*
@@ -240,8 +240,11 @@ export default function create(): Chapter {
       // the halo: the mark in neon, mounted behind the glass (it turns with it)
       const halo = buildNeonMark(rt => ctx.post.isFrameTarget(rt))
       mark.logo.root.add(halo.root)
-      set = { ...mark, ...card, floor, reflection, neon: halo.parts }
-      group.add(set.card, set.floor, set.pivot, set.reflection)
+      // …and its reflection in the black mirror floor (placed each frame like the mark's)
+      const haloRefl = buildNeonMark(rt => ctx.post.isFrameTarget(rt), { floorY: FLOOR_Y, fade: 1.3 })
+      haloRefl.root.matrixAutoUpdate = false
+      set = { ...mark, ...card, floor, reflection, neon: halo.parts, neonRefl: haloRefl }
+      group.add(set.card, set.floor, set.pivot, set.reflection, haloRefl.root)
 
       // ---- DOM
       intro = el('div', 'hf-intro', undefined, ctx.stage)
@@ -347,6 +350,7 @@ export default function create(): Chapter {
       s.pivot.rotation.set(val[TILT] + 0.015 * Math.sin(t * 0.23) * calm * (1 - macro), val[ROT] + sway, 0)
       s.pivot.updateMatrixWorld(true)
       s.reflection.matrix.multiplyMatrices(FLOOR_MIRROR, s.logo.root.matrixWorld)
+      s.neonRefl.root.matrix.multiplyMatrices(FLOOR_MIRROR, s.logo.root.matrixWorld)
 
       // ---- light sweep along the bevels every ~8 s: glide across, rest, glide back
       let sweep = 0
@@ -440,6 +444,16 @@ export default function create(): Chapter {
           n.k.main.glow = 0.55
           n.k.trans.tube = 3.0
           n.k.trans.glow = 1.1 * lerp(1, 0.6, macro)
+        }
+      }
+      // the reflection: the room's view only (the glass never sees it), dimmer
+      for (let i = 0; i < s.neonRefl.parts.length; i++) {
+        for (const n of s.neonRefl.parts[i]) {
+          n.on.value = rNeon[i] * (1 - 0.5 * outW) * (portrait ? 0.4 : 1)
+          n.k.main.tube = 0.9
+          n.k.main.glow = 0.3
+          n.k.trans.tube = 0
+          n.k.trans.glow = 0
         }
       }
 

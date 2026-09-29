@@ -83,6 +83,8 @@ export interface HeroSet {
   reflection: THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>
   /** the neon mark behind the glass: per part (loop A, loop B, diamond), its tubes */
   neon: NeonPath[][]
+  /** the neon mark mirrored in the floor (place with FLOOR_MIRROR x the logo root) */
+  neonRefl: { root: THREE.Group; parts: NeonPath[][] }
   /** the mark's width / height */
   markAspect: number
 }
@@ -437,6 +439,6 @@ export const FLOOR_MIRROR = new THREE.Matrix4().makeTranslation(0, 2 * FLOOR_Y, 
  * a little larger than the glass and mounted just behind it). Lives in the
  * mark's own space: add `root` to the logo root, so it turns with the glass.
  */
-export function buildNeonMark(isFrameTarget: (rt: THREE.WebGLRenderTarget | null) => boolean) {
-  return neonMark({ z: -(DEPTH / 2) - 0.2, scale: 1.16, isFrameTarget })
+export function buildNeonMark(isFrameTarget: (rt: THREE.WebGLRenderTarget | null) => boolean, mirror?: { floorY: number; fade?: number }) {
+  return neonMark({ z: -(DEPTH / 2) - 0.2, scale: 1.16, isFrameTarget, mirror })
 }

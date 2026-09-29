@@ -687,7 +687,9 @@ const NEON_PATH_VERT = /* glsl */ `
   varying vec3 vN;
   varying vec3 vV;
   varying float vU;
+  varying float vWY;
   void main() {
+    vWY = (modelMatrix * vec4(position, 1.0)).y;
     vec4 mv = modelViewMatrix * vec4(position, 1.0);
     vN = normalize(normalMatrix * normal);
     vV = normalize(-mv.xyz);
@@ -695,17 +697,27 @@ const NEON_PATH_VERT = /* glsl */ `
     gl_Position = projectionMatrix * mv;
   }
 `
+/** a mirrored copy (a black mirror floor) draws only below the floor, fading with depth */
+const NEON_PATH_FADE = /* glsl */ `
+  uniform float uMirror, uFloorY, uFade;
+  varying float vWY;
+  float mirrorFade() {
+    float below = max(uFloorY - vWY, 0.0);
+    return mix(1.0, exp(-below * uFade) * step(vWY, uFloorY + 0.001), uMirror);
+  }
+`
 const NEON_PATH_TUBE = /* glsl */ `
   uniform vec3 uColor;
   uniform float uK, uOn;
   varying vec3 vN;
   varying vec3 vV;
+  ${NEON_PATH_FADE}
   void main() {
     // a round glass tube full of glowing gas: white-hot where it faces you,
     // saturated toward its silhouette
     float f = abs(dot(normalize(vN), normalize(vV)));
     vec3 gas = mix(uColor, vec3(1.0), smoothstep(0.5, 0.98, f));
-    gl_FragColor = vec4(gas * (0.45 + 0.55 * f) * uK * uOn, 1.0);
+    gl_FragColor = vec4(gas * (0.45 + 0.55 * f) * uK * uOn * mirrorFade(), 1.0);
   }
 `
 const NEON_PATH_GLOW = /* glsl */ `
@@ -713,11 +725,12 @@ const NEON_PATH_GLOW = /* glsl */ `
   uniform float uK, uOn;
   varying vec3 vN;
   varying vec3 vV;
+  ${NEON_PATH_FADE}
   void main() {
     // a fat, invisible sleeve around the tube: bright along the middle, gone at its edge
     float f = abs(dot(normalize(vN), normalize(vV)));
     float g = f * f * f;
-    gl_FragColor = vec4(uColor * g * g * uK * uOn, 1.0);
+    gl_FragColor = vec4(uColor * g * g * uK * uOn * mirrorFade(), 1.0);
   }
 `
 
@@ -738,6 +751,8 @@ export function neonPath(o: {
   glowRadius?: number
   /** tubular segments (default: 3 per point) */
   segments?: number
+  /** a reflection in a black mirror floor: draw only below floorY, fading with depth (place it with a mirror matrix) */
+  mirror?: { floorY: number; fade?: number }
   isFrameTarget: (rt: THREE.WebGLRenderTarget | null) => boolean
 }): NeonPath {
   const curve = new THREE.CatmullRomCurve3(o.points, o.closed ?? false, 'centripetal', 0.5)
@@ -748,14 +763,19 @@ export function neonPath(o: {
   const color = { value: new THREE.Color(o.color) }
   const on = { value: 1 }
   const k = { main: { tube: 3.2, glow: 0.35 } as NeonPathPass, trans: { tube: 3.2, glow: 0.8 } as NeonPathPass }
+  const fade = {
+    uMirror: { value: o.mirror ? 1 : 0 },
+    uFloorY: { value: o.mirror?.floorY ?? 0 },
+    uFade: { value: o.mirror?.fade ?? 1.5 },
+  }
   const tubeMat = new THREE.ShaderMaterial({
-    uniforms: { uColor: color, uK: { value: 0 }, uOn: on },
+    uniforms: { uColor: color, uK: { value: 0 }, uOn: on, ...fade },
     vertexShader: NEON_PATH_VERT,
     fragmentShader: NEON_PATH_TUBE,
     toneMapped: false,
   })
   const glowMat = new THREE.ShaderMaterial({
-    uniforms: { uColor: color, uK: { value: 0 }, uOn: on },
+    uniforms: { uColor: color, uK: { value: 0 }, uOn: on, ...fade },
     vertexShader: NEON_PATH_VERT,
     fragmentShader: NEON_PATH_GLOW,
     transparent: false,
@@ -796,6 +816,8 @@ export function neonMark(o: {
   radius?: number
   glowRadius?: number
   colors?: THREE.ColorRepresentation[]
+  /** a floor reflection copy (see neonPath) */
+  mirror?: { floorY: number; fade?: number }
   isFrameTarget: (rt: THREE.WebGLRenderTarget | null) => boolean
 }): { root: THREE.Group; parts: NeonPath[][] } {
   const scale = o.scale ?? 1.16
@@ -816,6 +838,7 @@ export function neonMark(o: {
           radius: o.radius ?? 0.0072,
           glowRadius: o.glowRadius ?? 0.045,
           segments: n * 2,
+          mirror: o.mirror,
           isFrameTarget: o.isFrameTarget,
         })
         root.add(t.root)
