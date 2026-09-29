@@ -2,7 +2,6 @@ import * as THREE from 'three'
 import { G, neonPath, type NeonPath } from '../../kit/glass'
 import { placeholderTexture } from '../../kit/images'
 import type { WorkItem } from '../../content'
-import { LABEL_PX, lotLabel } from './text'
 
 /*
  * The Carousel set: a revolving glass showroom on the black mirror floor.
@@ -15,7 +14,6 @@ import { LABEL_PX, lotLabel } from './text'
  *             when the leaf is clear (roughness ~0, crisp studio strips),
  *             diffused into soft colour when it is frosted (mip blur + a
  *             jittered sandblast), bleeding into the frosted glass around it.
- *             The lower glass is etched with the leaf's lot number and name.
  *             Transmission-free: the faces are premultiplied-alpha surfaces
  *             (reflections are added at full strength, the print covers, the
  *             margins let the drum's interior through), so the glass buffer
@@ -44,16 +42,16 @@ export const R = 2.0
 export const STEP = (Math.PI * 2) / 6
 const GAP = 5.5 * DEG
 export const LEAF_W = R * (STEP - GAP)
-export const LEAF_H = 2.2
+/** the print: full width inside a slim margin — the leaf is just the site (the card carries the name) */
+const MARGIN = 0.065
+export const SHOT_W = LEAF_W - 2 * MARGIN
+export const SHOT_H = SHOT_W * 0.625
+export const LEAF_H = SHOT_H + 2 * MARGIN
 /** bottom edge height: the leaves stand just off the floor, so the ring shows beneath */
 export const LEAF_Y0 = 0.3
 export const LEAF_CY = LEAF_Y0 + LEAF_H / 2
 const LEAF_T = 0.05
 const CORNER = 0.05
-/** the print: full width inside a slim margin, hung high */
-const MARGIN = 0.065
-export const SHOT_W = LEAF_W - 2 * MARGIN
-export const SHOT_H = SHOT_W * 0.625
 /** the print's centre height (world) */
 export const SHOT_CY = LEAF_Y0 + LEAF_H - MARGIN - SHOT_H / 2
 /** the ring on the floor, inside the drum */
@@ -516,12 +514,8 @@ export function buildCarousel(featured: WorkItem[], rest: WorkItem[], mobile: bo
   const leafBack = faceGeometry(LEAF_W, LEAF_H, LEAF_T / 2, R, true, segX)
   const leafRim = rimGeometry(LEAF_W, LEAF_H, CORNER, LEAF_T / 2, R, mobile ? 150 : 240, mobile ? 6 : 10)
   const rect = new THREE.Vector4(MARGIN / LEAF_W, 1 - (MARGIN + SHOT_H) / LEAF_H, 1 - MARGIN / LEAF_W, 1 - MARGIN / LEAF_H)
-  // the lot label on the lower glass
-  const labW = LEAF_W * 0.8
-  const labH = (labW * LABEL_PX.h) / LABEL_PX.w
-  const labX0 = MARGIN + 0.02
-  const labY0 = 0.3
-  const labelRect = new THREE.Vector4(labX0 / LEAF_W, labY0 / LEAF_H, (labX0 + labW) / LEAF_W, (labY0 + labH) / LEAF_H)
+  // (no etched label on the glass: the leaf is the site; the card names it)
+  const labelRect = new THREE.Vector4(-1, -1, -0.5, -0.5)
   const size = new THREE.Vector2(LEAF_W, LEAF_H)
 
   const leaves: Leaf[] = featured.map((w, k) => {
@@ -534,7 +528,7 @@ export function buildCarousel(featured: WorkItem[], rest: WorkItem[], mobile: bo
     const shot = placeholderTexture('#15171c')
     const u: FaceUniforms = {
       uShot: { value: shot },
-      uLabel: { value: lotLabel(pad(k + 1), w.name, w.industry, isPreview(w.url)) },
+      uLabel: { value: blankLabel },
       uFrost: { value: 1 },
       uLit: { value: 0.5 },
       uRect: { value: rect },
