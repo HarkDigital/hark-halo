@@ -50,8 +50,10 @@ export const G = {
    * frosted glass (the frost diffuses them into soft colour); never text,
    * never UI fills
    */
-  neonA: '#3fd4ff',
-  neonB: '#8f63ff',
+  neonA: '#00e1ff',
+  neonB: '#a32cff',
+  /** a third, hot magenta (the neon mark's diamond) */
+  neonC: '#ff2bd1',
   /** hostile tint, shield chapter only */
   ember: '#ff4d4d',
 } as const
@@ -716,8 +718,9 @@ const NEON_PATH_TUBE = /* glsl */ `
     // a round glass tube full of glowing gas: white-hot where it faces you,
     // saturated toward its silhouette
     float f = abs(dot(normalize(vN), normalize(vV)));
-    vec3 gas = mix(uColor, vec3(1.0), smoothstep(0.5, 0.98, f));
-    gl_FragColor = vec4(gas * (0.45 + 0.55 * f) * uK * uOn * mirrorFade(), 1.0);
+    // (only a thin white-hot line down the middle: the colour stays saturated)
+    vec3 gas = mix(uColor, vec3(1.0), smoothstep(0.84, 1.0, f) * 0.85);
+    gl_FragColor = vec4(gas * (0.5 + 0.5 * f) * uK * uOn * mirrorFade(), 1.0);
   }
 `
 const NEON_PATH_GLOW = /* glsl */ `
@@ -807,8 +810,8 @@ export function neonPath(o: {
  * The HALO: the Hark mark bent in neon — one glass tube along every contour of
  * each part (the two loops, the diamond) — in mark units (1u tall), drawn
  * `scale` x the mark and placed at depth `z`, for mounting just behind a glass
- * mark like a halo-lit sign. Loop A glacier cyan, loop B ultraviolet, the
- * diamond ice white. `parts[i]` holds part i's tubes (strike them separately).
+ * mark like a halo-lit sign. Loop A electric cyan, loop B electric violet,
+ * the diamond hot magenta. `parts[i]` holds part i's tubes (strike them separately).
  */
 export function neonMark(o: {
   z: number
@@ -821,7 +824,7 @@ export function neonMark(o: {
   isFrameTarget: (rt: THREE.WebGLRenderTarget | null) => boolean
 }): { root: THREE.Group; parts: NeonPath[][] } {
   const scale = o.scale ?? 1.16
-  const colors = o.colors ?? [G.neonA, G.neonB, '#dfe9ff']
+  const colors = o.colors ?? [G.neonA, G.neonB, G.neonC]
   const root = new THREE.Group()
   const lp = logoParts()
   const parts: NeonPath[][] = []

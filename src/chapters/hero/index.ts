@@ -366,10 +366,10 @@ export default function create(): Chapter {
       s.sides.envMapRotation.set(0, turn, 0)
       // the FROST does the lighting: the sandblasted faces keep only a faint sheen of the
       // studio (strong strip reflections read as brushed metal); the polished bevels keep it all
-      s.caps.envMapIntensity = lerp(0.06, 0.3, rLight) * lerp(1, 0.6, macro)
+      s.caps.envMapIntensity = lerp(0.04, 0.16, rLight) * lerp(1, 0.6, macro)
       s.sides.envMapIntensity = lerp(0.35, 1.6, rLight)
       // a faint lift at the silhouette (light caught in the glass); the dark polished rims stay
-      s.rim.uniforms.uStrength.value = 0.15 * rLight * (1 - 0.5 * macro)
+      s.rim.uniforms.uStrength.value = 0.08 * rLight * (1 - 0.5 * macro)
 
       // ---- the thaw: a clear window glides across the face in beat 03
       // it runs down the centre of the lower diagonal band, from the right loop toward the bottom one
@@ -412,8 +412,8 @@ export default function create(): Chapter {
       cu.uRings.value = 1.6
       // close up the card fills the view: dim it there, or the faces clip to flat white
       // (and a little more behind the thaw, so its razor line reads through the clear glass)
-      s.cardK.trans.glow = 0.34 * rLight * lerp(1, 0.55, macro) * (1 - 0.45 * lineK)
-      s.cardK.trans.wide = 0.1 * rLight * lerp(1, 0.4, macro) * (1 - 0.45 * lineK)
+      s.cardK.trans.glow = 0.18 * rLight * lerp(1, 0.55, macro) * (1 - 0.45 * lineK)
+      s.cardK.trans.wide = 0.05 * rLight * lerp(1, 0.4, macro) * (1 - 0.45 * lineK)
       s.cardK.trans.slit = 0
       s.cardK.trans.bar = 0
       // the thaw's light strip, straight behind the thaw path (from the camera): the window
@@ -443,7 +443,7 @@ export default function create(): Chapter {
           n.k.main.tube = 3.0
           n.k.main.glow = 0.55
           n.k.trans.tube = 3.0
-          n.k.trans.glow = 1.1 * lerp(1, 0.6, macro)
+          n.k.trans.glow = 0.78 * lerp(1, 0.6, macro)
         }
       }
       // the reflection: the room's view only (the glass never sees it), dimmer
