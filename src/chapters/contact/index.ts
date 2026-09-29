@@ -233,6 +233,16 @@ export default function create(): Chapter {
       wp.halo = 0.55 + 0.45 * smoothstep(0.02, 0.24, local) + 0.25 * clear - 0.08 * home + 0.12 * hoverAmt + 0.18 * copied
       wp.slits = 0
       set.slitU.uStrength.value = 0.55 + 0.35 * clear
+      // the halo: tubes + sleeves in the room; the glass buffer gets more (the frost diffuses it,
+      // the thawed glass shows the tubes crisp)
+      for (const part of set.neon)
+        for (const n of part) {
+          n.on.value = smoothstep(0.0, 0.12, local)
+          n.k.main.tube = 3.0
+          n.k.main.glow = 0.55
+          n.k.trans.tube = 3.0
+          n.k.trans.glow = 1.0
+        }
       wp.slitAngle = 0
       wp.env = 1.1
       // light sweeps: one glides along the bevels through the thaw, one more

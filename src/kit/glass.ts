@@ -782,3 +782,47 @@ export function neonPath(o: {
   root.add(tube, glow)
   return { root, tube, glow, k, on, color }
 }
+
+/**
+ * The HALO: the Hark mark bent in neon — one glass tube along every contour of
+ * each part (the two loops, the diamond) — in mark units (1u tall), drawn
+ * `scale` x the mark and placed at depth `z`, for mounting just behind a glass
+ * mark like a halo-lit sign. Loop A glacier cyan, loop B ultraviolet, the
+ * diamond ice white. `parts[i]` holds part i's tubes (strike them separately).
+ */
+export function neonMark(o: {
+  z: number
+  scale?: number
+  radius?: number
+  glowRadius?: number
+  colors?: THREE.ColorRepresentation[]
+  isFrameTarget: (rt: THREE.WebGLRenderTarget | null) => boolean
+}): { root: THREE.Group; parts: NeonPath[][] } {
+  const scale = o.scale ?? 1.16
+  const colors = o.colors ?? [G.neonA, G.neonB, '#dfe9ff']
+  const root = new THREE.Group()
+  const lp = logoParts()
+  const parts: NeonPath[][] = []
+  ;[lp.loopA, lp.loopB, lp.diamond].forEach((shapes, pi) => {
+    const tubes: NeonPath[] = []
+    for (const shape of shapes) {
+      for (const path of [shape, ...shape.holes]) {
+        const n = Math.max(24, Math.round(path.getLength() / 0.006))
+        const pts = path.getSpacedPoints(n).slice(0, -1).map(p => new THREE.Vector3(p.x * scale, p.y * scale, o.z))
+        const t = neonPath({
+          points: pts,
+          closed: true,
+          color: colors[pi % colors.length],
+          radius: o.radius ?? 0.0072,
+          glowRadius: o.glowRadius ?? 0.045,
+          segments: n * 2,
+          isFrameTarget: o.isFrameTarget,
+        })
+        root.add(t.root)
+        tubes.push(t)
+      }
+    }
+    parts.push(tubes)
+  })
+  return { root, parts }
+}

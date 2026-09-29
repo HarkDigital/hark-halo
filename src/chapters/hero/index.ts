@@ -4,7 +4,7 @@ import { el, reveal, rise, setRise } from '../../core/dom'
 import { BRAND, MICROCOPY } from '../../content'
 import { clamp, lerp, segment, smoothstep } from '../../core/math'
 import { nextFrame } from '../../core/yield'
-import { FLOOR_MIRROR, FROST, MARK_S, THAW_A, THAW_B, buildCard, buildFloor, buildMark, buildNeon, buildReflection, refineMark, type HeroSet } from './scene'
+import { FLOOR_MIRROR, FROST, MARK_S, THAW_A, THAW_B, buildCard, buildFloor, buildMark, buildNeonMark, buildReflection, refineMark, type HeroSet } from './scene'
 import './hero.css'
 
 /*
@@ -66,7 +66,7 @@ const ROT = 9
 const TILT = 10
 const NV = 11
 
-/** the macro captions' local windows: 01 frosted edge, 02 frosted face, 03 thaw */
+/** the macro captions' local windows: 01 neon halo, 02 frosted face, 03 thaw */
 const BEATS: [number, number][] = [
   [0.14, 0.3],
   [0.31, 0.43],
@@ -237,9 +237,11 @@ export default function create(): Chapter {
       const card = buildCard(rt => ctx.post.isFrameTarget(rt))
       const floor = buildFloor()
       const reflection = buildReflection(mark.logo.mark.geometry)
-      const neon = buildNeon(rt => ctx.post.isFrameTarget(rt))
-      set = { ...mark, ...card, floor, reflection, ...neon }
-      group.add(set.card, set.floor, set.pivot, set.reflection, ...set.neon.map(n => n.mesh), ...set.neonRefl)
+      // the halo: the mark in neon, mounted behind the glass (it turns with it)
+      const halo = buildNeonMark(rt => ctx.post.isFrameTarget(rt))
+      mark.logo.root.add(halo.root)
+      set = { ...mark, ...card, floor, reflection, neon: halo.parts }
+      group.add(set.card, set.floor, set.pivot, set.reflection)
 
       // ---- DOM
       intro = el('div', 'hf-intro', undefined, ctx.stage)
@@ -252,7 +254,7 @@ export default function create(): Chapter {
       // macro captions: a watch-film detail index (decorative)
       const capWrap = el('div', 'hf-caps', undefined, ctx.stage)
       capWrap.setAttribute('aria-hidden', 'true')
-      ;['Frosted edge', 'Frosted face', 'Thaw'].forEach((txt, i) => {
+      ;['Neon halo', 'Frosted face', 'Thaw'].forEach((txt, i) => {
         const c = el('p', 'hud-label hf-cap', undefined, capWrap)
         el('span', 'hf-cap-n', `0${i + 1}`, c)
         el('span', 'hf-cap-line', undefined, c)
@@ -301,7 +303,8 @@ export default function create(): Chapter {
       const rLight = sm(since * rk, 0.0, 1.25)
       const rSpread = sm(since * rk, 0.1, 1.6)
       const rHalo = sm(since * rk, 0.2, 1.8)
-      // the neon strikes: cyan, then violet (one stutter each, well under 3 flashes a second)
+      // the neon mark strikes part by part: loop A, loop B, then the diamond (one stutter each,
+      // well under 3 flashes a second)
       const strike = (t0: number) => {
         const x = since - t0
         if (x <= 0 || revealAt < 0) return 0
@@ -310,7 +313,7 @@ export default function create(): Chapter {
         if (x < 0.15) return 0.22
         return 0.55 + 0.45 * sm(x, 0.15, 0.55)
       }
-      const rNeon = [strike(0.55), strike(0.95)]
+      const rNeon = [strike(0.5), strike(0.85), strike(1.2)]
       const rSweep = reduced ? 0 : 1.1 * (1 - outQuart(segment(since, 0.8, 2.4))) * smoothstep(0.6, 0.9, since)
 
       // ---- camera keys
@@ -428,17 +431,16 @@ export default function create(): Chapter {
       s.cardK.main.glow = 0.035 * rLight * (1 - 0.5 * macro)
       s.cardK.main.slit = 0
 
-      // ---- the neon: tubes + a tight halo in the room, a broad coloured spill in the glass buffer
-      // (close up the tubes fill more of the frost's view: ease the spill so the faces don't clip)
+      // ---- the halo: the neon mark — tubes + halo sleeves in the room, a stronger halo in the
+      // glass buffer (the frost turns it into the mark's shape in coloured light)
       for (let i = 0; i < s.neon.length; i++) {
-        const n = s.neon[i]
-        n.on.value = rNeon[i] * (1 - 0.6 * outW)
-        n.k.main.tube = 3.2
-        n.k.main.glow = 0.34
-        n.k.main.spill = 0.035
-        n.k.trans.tube = 3.2
-        n.k.trans.glow = 0.4 * lerp(1, 0.6, macro)
-        n.k.trans.spill = 0.28 * lerp(1, 0.55, macro)
+        for (const n of s.neon[i]) {
+          n.on.value = rNeon[i] * (1 - 0.5 * outW)
+          n.k.main.tube = 3.0
+          n.k.main.glow = 0.55
+          n.k.trans.tube = 3.0
+          n.k.trans.glow = 1.1 * lerp(1, 0.6, macro)
+        }
       }
 
       // ---- floor pool + reflection

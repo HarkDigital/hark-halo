@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { G, edgeGlow, frostedLogo, neonTube, type FrostedLogo, type NeonTube, flattenCaps, smoothSides } from '../../kit/glass'
+import { G, edgeGlow, frostedLogo, neonMark, type FrostedLogo, type NeonPath, flattenCaps, smoothSides } from '../../kit/glass'
 
 /*
  * FROST — the hero set. A black gallery with one object in it.
@@ -13,11 +13,12 @@ import { G, edgeGlow, frostedLogo, neonTube, type FrostedLogo, type NeonTube, fl
  *                  injected into the roughness (uniforms only, one program,
  *                  never recompiled). A faint fresnel rim (same geometry,
  *                  additive) lights the silhouette from within.
- *   the neon       two NEON tubes standing behind the mark on the mirror
- *                  floor (glacier cyan left, ultraviolet right). The frost
- *                  diffuses them into soft colour across the glass; the room
- *                  sees the tubes themselves, a tight halo and their
- *                  reflections in the floor.
+ *   the halo       the Hark mark bent in NEON (buildNeonMark): a glass tube
+ *                  along every contour, a little larger than the glass and
+ *                  mounted just behind it — loop A glacier cyan, loop B
+ *                  ultraviolet, the diamond ice white. The room sees the
+ *                  tubes around the glass; the frost diffuses the rest into
+ *                  the mark's own shape in coloured light.
  *   the backlight  a camera-facing light card behind the mark. It renders
  *                  BRIGHT into three's transmission buffer (what the frosted
  *                  glass sees and diffuses: a broad light box and a hot core,
@@ -80,9 +81,8 @@ export interface HeroSet {
   cardK: { main: CardPass; trans: CardPass }
   floor: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>
   reflection: THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>
-  /** the two neon tubes behind the mark [cyan left, violet right] and their floor reflections */
-  neon: NeonTube[]
-  neonRefl: THREE.Mesh[]
+  /** the neon mark behind the glass: per part (loop A, loop B, diamond), its tubes */
+  neon: NeonPath[][]
   /** the mark's width / height */
   markAspect: number
 }
@@ -432,29 +432,11 @@ export function buildReflection(geo: THREE.BufferGeometry): THREE.Mesh<THREE.Buf
 /** reflect about the floor plane: y → 2·FLOOR_Y − y */
 export const FLOOR_MIRROR = new THREE.Matrix4().makeTranslation(0, 2 * FLOOR_Y, 0).multiply(new THREE.Matrix4().makeScale(1, -1, 1))
 
-/** the neon tubes (world): x, z behind the mark, colour; they stand on the floor, tops out of frame */
-export const NEON = [
-  { x: -0.66, z: -1.25, color: G.neonA },
-  { x: 0.6, z: -1.45, color: G.neonB },
-]
-const NEON_TOP = 9
-
 /**
- * Two neon tubes standing on the black mirror floor behind the mark, and
- * their reflections. The glass buffer gets a strong coloured spill (the frost
- * turns it into soft colour); the frame gets the tubes and a tight halo.
+ * The HALO behind the glass: the kit's neonMark (the Hark mark bent in neon,
+ * a little larger than the glass and mounted just behind it). Lives in the
+ * mark's own space: add `root` to the logo root, so it turns with the glass.
  */
-export function buildNeon(isFrameTarget: (rt: THREE.WebGLRenderTarget | null) => boolean): Pick<HeroSet, 'neon' | 'neonRefl'> {
-  const neon: NeonTube[] = []
-  const neonRefl: THREE.Mesh[] = []
-  const len = NEON_TOP - FLOOR_Y
-  for (const n of NEON) {
-    const t = neonTube({ color: n.color, length: len, radius: 0.017, glowRadius: 0.1, spillRadius: 0.55, isFrameTarget })
-    t.mesh.position.set(n.x, FLOOR_Y + len / 2 + 0.012, n.z)
-    const r = t.reflection(FLOOR_Y, 0.32, 1.5)
-    r.position.set(n.x, FLOOR_Y - len / 2 - 0.012, n.z)
-    neon.push(t)
-    neonRefl.push(r)
-  }
-  return { neon, neonRefl }
+export function buildNeonMark(isFrameTarget: (rt: THREE.WebGLRenderTarget | null) => boolean) {
+  return neonMark({ z: -(DEPTH / 2) - 0.2, scale: 1.16, isFrameTarget })
 }

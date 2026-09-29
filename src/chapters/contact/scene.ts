@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { frostedLogo, G, type FrostedLogo } from '../../kit/glass'
+import { frostedLogo, G, neonMark, type FrostedLogo, type NeonPath } from '../../kit/glass'
 
 /*
  * THAW — the 3D set for the contact chapter.
@@ -61,6 +61,8 @@ export interface ThawScene {
   rig: THREE.Group
   turn: THREE.Group
   logo: FrostedLogo
+  /** the halo: the mark in neon behind the glass, per part (loop A, loop B, diamond) */
+  neon: NeonPath[][]
   thaw: ThawUniforms
   slits: THREE.Mesh
   slitU: {
@@ -226,6 +228,9 @@ export function buildScene(isFrameTarget: (rt: THREE.WebGLRenderTarget | null) =
   logo.caps.envMapIntensity = 1
   logo.sides.envMapIntensity = 2
   turn.add(logo.root)
+  // the halo: the mark bent in neon, mounted just behind the glass (the hero's; it turns with it)
+  const halo = neonMark({ z: -0.23 / 2 - 0.2, scale: 1.16, isFrameTarget })
+  logo.root.add(halo.root)
 
   const thaw: ThawUniforms = {
     uThaw: { value: -0.2 },
@@ -280,7 +285,9 @@ export function buildScene(isFrameTarget: (rt: THREE.WebGLRenderTarget | null) =
     slitU.uSpill.value = main ? 0.03 : 0.28
     ;(slits.material as THREE.ShaderMaterial).uniformsNeedUpdate = true
   }
+  // (the neon mark took the tubes' place: the plane stays for its layout, hidden)
+  slits.visible = false
   rig.add(slits)
 
-  return { rig, turn, logo, thaw, slits, slitU }
+  return { rig, turn, logo, neon: halo.parts, thaw, slits, slitU }
 }
