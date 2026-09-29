@@ -725,19 +725,38 @@ const NEON_PATH_FADE = /* glsl */ `
     return mix(1.0, exp(-below * uFade) * step(vWY, uFloorY + 0.001), uMirror);
   }
 `
+/**
+ * TONE: the tube drifts between its light colour and a darker tone along its
+ * length (lighter and darker stretches, like real flex neon). Periodic in vU,
+ * so a closed loop has no seam; uToneK / uToneK2 are whole cycles per loop.
+ */
+const NEON_PATH_TONE = /* glsl */ `
+  uniform vec3 uTone;
+  uniform float uToneAmt, uToneK, uToneK2, uSeed;
+  vec3 toneColor(vec3 light, out float dim) {
+    float n = 0.5 + 0.3 * sin(6.2831853 * vU * uToneK + uSeed) + 0.2 * sin(6.2831853 * vU * uToneK2 + uSeed * 2.3);
+    float t = smoothstep(0.32, 0.78, n) * uToneAmt;
+    // darker stretches are also a little dimmer; the lightest a touch brighter
+    dim = mix(1.0 + 0.12 * uToneAmt, 0.72, t);
+    return mix(light, uTone, t);
+  }
+`
 const NEON_PATH_TUBE = /* glsl */ `
   uniform vec3 uColor;
   uniform float uK, uOn;
   varying vec3 vN;
   varying vec3 vV;
   ${NEON_PATH_FADE}
+  ${NEON_PATH_TONE}
   void main() {
     // a round glass tube full of glowing gas: white-hot where it faces you,
     // saturated toward its silhouette
     float f = abs(dot(normalize(vN), normalize(vV)));
     // (only a thin white-hot line down the middle: the colour stays saturated)
-    vec3 gas = mix(uColor, vec3(1.0), smoothstep(0.84, 1.0, f) * 0.85);
-    gl_FragColor = vec4(gas * (0.5 + 0.5 * f) * uK * uOn * mirrorFade() * drawn(), 1.0);
+    float dim;
+    vec3 base = toneColor(uColor, dim);
+    vec3 gas = mix(base, vec3(1.0), smoothstep(0.84, 1.0, f) * 0.85);
+    gl_FragColor = vec4(gas * dim * (0.5 + 0.5 * f) * uK * uOn * mirrorFade() * drawn(), 1.0);
   }
 `
 const NEON_PATH_GLOW = /* glsl */ `
@@ -746,13 +765,31 @@ const NEON_PATH_GLOW = /* glsl */ `
   varying vec3 vN;
   varying vec3 vV;
   ${NEON_PATH_FADE}
+  ${NEON_PATH_TONE}
   void main() {
     // a fat, invisible sleeve around the tube: bright along the middle, gone at its edge
     float f = abs(dot(normalize(vN), normalize(vV)));
     float g = f * f * f;
-    gl_FragColor = vec4(uColor * g * g * uK * uOn * mirrorFade() * drawn(), 1.0);
+    float dim;
+    vec3 base = toneColor(uColor, dim);
+    gl_FragColor = vec4(base * dim * g * g * uK * uOn * mirrorFade() * drawn(), 1.0);
   }
 `
+
+let seedN = 0
+/** the active lights' darker tone for one of its colours (and how strongly tubes drift to it) */
+function toneFor(color: THREE.ColorRepresentation): { tone: string; amt: number } | null {
+  const hex = '#' + new THREE.Color(color).getHexString()
+  const L = ACTIVE
+  const amt = L.drift ?? 1
+  for (const [c, t] of [
+    [L.a, L.aTone],
+    [L.b, L.bTone],
+    [L.c, L.cTone],
+  ] as const)
+    if (t && new THREE.Color(c).getHexString() === hex.slice(1)) return { tone: t, amt }
+  return null
+}
 
 /**
  * A BENT neon tube along any path (the kit's straight `neonTube` is a
@@ -773,6 +810,12 @@ export function neonPath(o: {
   segments?: number
   /** a reflection in a black mirror floor: draw only below floorY, fading with depth (place it with a mirror matrix) */
   mirror?: { floorY: number; fade?: number }
+  /**
+   * the darker tone the tube drifts to along its length, and how far (0..1);
+   * default: the active lights' tone for this colour (kit/palette.ts), if any
+   */
+  tone?: THREE.ColorRepresentation
+  toneAmt?: number
   isFrameTarget: (rt: THREE.WebGLRenderTarget | null) => boolean
 }): NeonPath {
   const curve = new THREE.CatmullRomCurve3(o.points, o.closed ?? false, 'centripetal', 0.5)
@@ -785,7 +828,15 @@ export function neonPath(o: {
   const k = { main: { tube: 3.2, glow: 0.35 } as NeonPathPass, trans: { tube: 3.2, glow: 0.8 } as NeonPathPass }
   const draw = { value: 1 }
   const pulse = { value: new THREE.Vector2(0, 0) }
+  const tone = o.tone !== undefined ? { tone: o.tone, amt: o.toneAmt ?? 1 } : toneFor(o.color)
+  // stretches of ~0.8 and ~0.3 world units, whole cycles round a closed loop
+  const len = curve.getLength()
   const fade = {
+    uTone: { value: new THREE.Color(tone ? tone.tone : o.color) },
+    uToneAmt: { value: tone ? tone.amt : 0 },
+    uToneK: { value: Math.max(1, Math.round(len / 0.8)) },
+    uToneK2: { value: Math.max(2, Math.round(len / 0.3)) },
+    uSeed: { value: (seedN++ * 1.618) % 6.283 },
     uDraw: draw,
     uPulse: pulse,
     uMirror: { value: o.mirror ? 1 : 0 },
