@@ -3,8 +3,8 @@
  * options, all kept so they can be compared and switched back:
  *
  *   Option 1  the original Halo: electric cyan / electric violet / hot magenta
- *   Option 2  Ember: amber / neon red / hot pink (the default)
- *   Option 3  Aurora: neon green / electric blue / acid lime
+ *   Option 2  Ember: amber / neon red / hot pink
+ *   Option 3  Aurora: neon green / electric blue / acid lime (the default)
  *
  * a = loop A (and the first neon of a set), b = loop B, c = the diamond (a third accent).
  * Chosen once at boot: ?lights=N (remembered), else the remembered choice,
@@ -25,7 +25,7 @@ export const LIGHTS: Lights[] = [
   { id: 2, name: 'Option 2', a: '#ffa51f', b: '#ff3326', c: '#ff2f8f' },
   { id: 3, name: 'Option 3', a: '#27ff86', b: '#2f78ff', c: '#d9ff30' },
 ]
-export const DEFAULT_LIGHTS = 2
+export const DEFAULT_LIGHTS = 3
 
 const KEY = 'hark-halo:lights'
 const RESUME_KEY = 'hark-halo:resume'

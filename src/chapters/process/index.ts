@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import type { CameraPose, Chapter, ChapterContext, Frame } from '../../core/types'
 import { el, reveal, rise, setRise } from '../../core/dom'
-import { PROCESS, STATS } from '../../content'
+import { PROCESS } from '../../content'
 import { clamp, ease, lerp, segment, smoothstep, window01 } from '../../core/math'
 import { nextFrame } from '../../core/yield'
 import { G } from '../../kit/glass'
@@ -53,8 +53,7 @@ import './process.css'
  *   0.61–0.78  04 SUPPORT    it stays alive: the finished mark turns slowly,
  *                            sparks of light travel round the neon now and
  *                            then, a steady glow
- *   0.78–0.95  results: pull back; the finished mark above three frosted
- *              stat tiles (10 years, $1M+, 15)
+ *   0.78–0.95  finale: pull back to the finished mark alone, glowing
  *   0.95–1.00  out-beat
  *
  * Everything derives from `local`; frame.time only drives idle motion (the
@@ -68,10 +67,8 @@ const A = 0.1
 const S = 0.17
 const B = A + 4 * S
 const ANCHORS = [0.19, 0.365, 0.535, 0.7]
-const STATS_AT = 0.875
 const HEAD = [0.045, 0.29] as const
 const CARD = [0.13, 0.785] as const
-const TILES = [0.8, 0.955] as const
 
 const DIAMOND = [0.068, 0.118] as const
 const RINGS = [0.085, 0.315] as const
@@ -82,8 +79,6 @@ const RECEDE = [0.446, 0.5] as const
 const PRINT = [0.468, 0.592] as const
 const TURN = [0.6, 0.835] as const
 
-// 10 years, $1M+, 15 — in that order (the accessible copy's order)
-const SHOW = [STATS[0], STATS[2], STATS[1]]
 
 /** smootherstep on a segment */
 const sm = (x: number, a: number, b: number) => {
@@ -119,7 +114,7 @@ const KEYS: Key[] = [
   k(0.6, false, 0.99, -3, 3.5),
   // support: front-on again, the mark turns itself
   k(0.7, false, 0.98, 0, 2.5),
-  // results: pull back above the tiles
+  // finale: pull back to the finished mark
   k(0.865, true, 1.0, 0, 2.0, 1),
   k(0.945, true, 1.0, 0, 2.0, 1),
   k(1.0, false, 0.95, 0, 1.8, 1),
@@ -187,10 +182,7 @@ export default function create(): Chapter {
   const stepTitles: HTMLElement[] = []
   const fills: HTMLElement[] = []
   const segs: HTMLElement[] = []
-  let statsEl: HTMLElement
-  const tiles: HTMLElement[] = []
   let shown = -2
-  let tilesShown = false
   const fillCache = [-1, -1, -1, -1]
 
   // layout (px), measured on resize
@@ -223,8 +215,8 @@ export default function create(): Chapter {
   return {
     id: 'process',
     group,
-    // the four steps, then the stats
-    anchors: [...ANCHORS, STATS_AT],
+    // the four steps
+    anchors: ANCHORS,
 
     async init(ctx: ChapterContext) {
       const isFrame = (rt: THREE.WebGLRenderTarget | null) => ctx.post.isFrameTarget(rt)
@@ -284,17 +276,8 @@ export default function create(): Chapter {
         segs.push(li)
       })
 
-      statsEl = el('div', 'pr-stats', undefined, stage)
-      SHOW.forEach((s, i) => {
-        const t = el('div', 'pr-tile hud-panel hud-panel--strong', undefined, statsEl)
-        t.style.setProperty('--i', String(i))
-        el('p', 'pr-value', s.value, t)
-        el('p', 'pr-label', s.label, t)
-        tiles.push(t)
-      })
       reveal(headEl, 0, 0)
       reveal(cardEl, 0, 0)
-      reveal(statsEl, 0, 0)
 
       // ---- where the mark goes: the biggest square clear of the copy (layout only;
       // opacity / visibility don't affect it)
@@ -304,7 +287,8 @@ export default function create(): Chapter {
         if (W < 10 || H < 10) return
         const top = headEl.offsetTop
         const gut = headEl.offsetLeft
-        const bandBottom = statsEl.offsetTop + statsEl.offsetHeight
+        // the copy band's bottom: the step card's (the finale shows no card)
+        const bandBottom = cardEl.offsetTop + cardEl.offsetHeight
         const pad = Math.max(14, H * 0.025)
         const cTop = cardEl.offsetTop
         const cRight = cardEl.offsetLeft + cardEl.offsetWidth
@@ -326,7 +310,7 @@ export default function create(): Chapter {
           fitSteps.cy = top + sideH / 2
           fitSteps.hpx = Math.min(sideH * 0.8, sideW * 0.8)
         }
-        const rTop = statsEl.offsetTop - pad
+        const rTop = bandBottom
         fitRes.cx = W / 2
         fitRes.cy = top + (rTop - top) / 2
         fitRes.hpx = Math.min((rTop - top) * (W < H ? 0.76 : 0.84), aboveW * wk)
@@ -336,7 +320,6 @@ export default function create(): Chapter {
         const ro = new ResizeObserver(measure)
         ro.observe(stage)
         ro.observe(cardEl)
-        ro.observe(statsEl)
       } else window.addEventListener('resize', measure)
       document.fonts?.ready.then(measure)
       measure()
@@ -576,12 +559,6 @@ export default function create(): Chapter {
           fillCache[i] = q
           fills[i].style.transform = `scaleX(${(q / 1000).toFixed(3)})`
         }
-      }
-      reveal(statsEl, window01(local, TILES[0] - 0.01, TILES[1] + 0.005, 0.02), 0)
-      const tilesOn = local > TILES[0] && local < TILES[1]
-      if (tilesOn !== tilesShown) {
-        tilesShown = tilesOn
-        for (const tile of tiles) tile.classList.toggle('is-on', tilesOn)
       }
     },
 

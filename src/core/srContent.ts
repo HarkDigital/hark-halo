@@ -1,4 +1,4 @@
-import { BRAND, CONTACT, OTHER_CONCEPTS, PROCESS, SECTIONS, SECURITY, SERVICE_CTA, SERVICES, STATS, TESTIMONIALS, WORK, serviceUrl } from '../content'
+import { BRAND, CONTACT, OTHER_CONCEPTS, PROCESS, SECTIONS, SECURITY, SERVICE_CTA, SERVICES, TESTIMONIALS, WORK, serviceUrl } from '../content'
 
 /*
  * The accessible layer. Each chapter's copy, as plain linear semantic HTML,
@@ -66,8 +66,7 @@ const COPY: Record<string, () => string> = {
   process: () => `
     <p>How it works</p>
     <h2 tabindex="0">We listen first. Then we build.</h2>
-    <ol>${PROCESS.map((p, i) => `<li><h3>${stop('process', i, p.title)}</h3><p>${esc(p.text)}</p></li>`).join('')}</ol>
-    <ul>${[STATS[0], STATS[2], STATS[1]].map((s, i) => `<li>${i === 0 ? `${stop('process', 4, s.value)}: ${esc(s.label)}` : `${esc(s.value)}: ${esc(s.label)}`}</li>`).join('')}</ul>`,
+    <ol>${PROCESS.map((p, i) => `<li><h3>${stop('process', i, p.title)}</h3><p>${esc(p.text)}</p></li>`).join('')}</ol>`,
 
   contact: () => `
     <h2 tabindex="0">${esc(CONTACT.title)}</h2>

@@ -1,6 +1,8 @@
 /* Etched — the services chapter. Every selector is scoped to .stage-services. */
 
 .stage-services {
+  /* the plate in view's neon (index.ts sets it per service) */
+  --et-neon: var(--neon-a, #ffffff);
   --et-col: min(440px, 34vw);
   --et-ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -89,6 +91,18 @@
   flex-direction: column;
   gap: 18px;
   padding: 24px 26px 16px;
+}
+/* a neon hairline along the card's top edge, in the plate's colour */
+.stage-services .et-card::after {
+  content: '';
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), var(--et-neon) 18%, var(--et-neon) 82%, rgba(255, 255, 255, 0));
+  box-shadow: 0 0 12px var(--et-neon);
+  pointer-events: none;
 }
 .stage-services .et-head {
   display: flex;
@@ -185,6 +199,8 @@
 .stage-services .et-more-arrow {
   display: inline-block;
   transition: transform 0.4s var(--et-ease);
+  color: var(--et-neon);
+  text-shadow: 0 0 10px var(--et-neon);
 }
 .stage-services .et-more:hover .et-more-arrow {
   transform: translate3d(6px, 0, 0);
@@ -258,6 +274,8 @@
 .stage-services .et-key.is-on::after {
   opacity: 1;
   transform: none;
+  background: var(--et-neon);
+  box-shadow: 0 0 8px var(--et-neon);
 }
 .stage-services .et-key:focus-visible {
   outline: 2px solid var(--paper);

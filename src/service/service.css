@@ -9,11 +9,11 @@
 :root {
   --svc-max: 1560px;
   --svc-ease: cubic-bezier(0.16, 1, 0.3, 1);
-  /* the active lights (kit/palette.ts sets these on <html>; Option 2 as a fallback) */
-  --neon-a: #ffa51f;
-  --neon-b: #ff3326;
-  --neon-a-rgb: 255, 165, 31;
-  --neon-b-rgb: 255, 51, 38;
+  /* the active lights (kit/palette.ts sets these on <html>; Option 3 as a fallback) */
+  --neon-a: #27ff86;
+  --neon-b: #2f78ff;
+  --neon-a-rgb: 39, 255, 134;
+  --neon-b-rgb: 47, 120, 255;
   --neon-line: linear-gradient(90deg, var(--neon-a), var(--neon-b));
 }
 

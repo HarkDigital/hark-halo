@@ -4,6 +4,7 @@ import { clamp, damp, lerp, smoothstep } from '../../core/math'
 import { nextFrame } from '../../core/yield'
 import { N, TILE_H, TILE_W, buildDeck, type Deck } from './deck'
 import { Hud, type HudMetrics } from './hud'
+import { G } from '../../kit/glass'
 import './services.css'
 
 /*
@@ -72,9 +73,19 @@ function plateAt(local: number) {
   return { f, u, turning }
 }
 
+/** the plates' colours: the three neon lights in turn */
+const PLATE_HEX = [G.neonA, G.neonB, G.neonC]
+const PLATE_COL = PLATE_HEX.map(h => new THREE.Color(h))
+const WHITE = new THREE.Color(1, 1, 1)
+const ICE = new THREE.Color(G.ice)
+
 export default function create(): Chapter {
   const group = new THREE.Group()
   let deck: Deck
+  let stageEl: HTMLElement
+  let accentFor = -1
+  const litCol = new THREE.Color()
+  const haloCol = new THREE.Color()
   let hud: Hud
   let canvas: HTMLCanvasElement | null = null
   let active = false
@@ -193,6 +204,14 @@ export default function create(): Chapter {
       mobile = ctx.mobile
       deck = buildDeck(ctx.mobile, ctx.world.envMap)
       group.add(deck.column, deck.back)
+      // colour: each plate is lit by one of the three neon lights in turn — the light
+      // bleeding into its frost takes the colour, its etched lines a tint of it
+      stageEl = ctx.stage
+      for (const p of deck.plates) {
+        const c = PLATE_COL[p.index % 3]
+        ;(p.glowMat.uniforms.uColor.value as THREE.Color).copy(c)
+        ;(p.faceMat.uniforms.uColor.value as THREE.Color).copy(WHITE).lerp(c, 0.5)
+      }
       await nextFrame()
       hud = new Hud(ctx.stage, k => window.__hark?.land('services', true, ANCHORS[k]))
 
@@ -297,6 +316,12 @@ export default function create(): Chapter {
       // the backlight breathes, very slowly (idle only)
       const breathe = 1 + idle * 0.035 * Math.sin(t * 0.55)
       const bu = deck.backMat.uniforms
+      // the softbox takes the colour of the plate in view (blending as the next turns in);
+      // the whole column's light slit (intro / out) stays mostly white
+      const i0 = clamp(Math.floor(f), 0, N - 1)
+      const i1 = clamp(i0 + 1, 0, N - 1)
+      litCol.copy(PLATE_COL[i0 % 3]).lerp(PLATE_COL[i1 % 3], f - Math.floor(f))
+      ;(bu.uColor.value as THREE.Color).copy(WHITE).lerp(litCol, 0.25 + 0.6 * open)
       const colHalf = ((N - 1) / 2) * SP + 0.3
       // a light slit behind the whole column → a plate-sized softbox behind the plate in view
       const lit = 0.3 * swell * breathe * (0.3 + 0.7 * louvreIn) * (1 - 0.7 * louvreOut)
@@ -315,7 +340,7 @@ export default function create(): Chapter {
       const pitch = Math.asin(clamp(dir.y, -1, 1))
       w.top = '#030304'
       w.bottom = '#000000'
-      w.haloColor = '#e6eeff'
+      w.haloColor = haloCol.copy(ICE).lerp(litCol, 0.15 + 0.4 * open)
       if (slot.ok) w.focus.set(slot.x + Math.sin(cyaw) * 0.25, slot.y + pitch * 0.2)
       w.halo = (0.4 + 0.3 * open * swell) * (1 - 0.6 * louvreOut)
       w.haloSize = lerp(1.3, 1.0, open)
@@ -352,6 +377,11 @@ export default function create(): Chapter {
       const introOn = local >= INTRO_IN && local < CARD_IN
       const shown = local >= CARD_IN && local < CARD_OUT ? Math.max(0, Math.min(N - 1, Math.round(f))) : -1
       hud.update(introOn, shown, shown)
+      // the card's accents (the lit key, the arrow) follow the plate's colour
+      if (shown >= 0 && shown !== accentFor) {
+        accentFor = shown
+        stageEl.style.setProperty('--et-neon', PLATE_HEX[shown % 3])
+      }
 
       // ---------- hover: a pointer over a plate (desktop)
       if (active && !mobile && canvas) {

@@ -156,67 +156,6 @@
 
 /* ---------------- the results: three frosted tiles ---------------- */
 
-.stage-process .pr-stats {
-  position: absolute;
-  left: var(--gutter);
-  right: var(--gutter);
-  bottom: var(--safe-bottom);
-  margin: 0 auto;
-  max-width: 1040px;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-}
-.stage-process .pr-tile {
-  display: grid;
-  gap: 10px;
-  align-content: start;
-  padding: 20px 24px 22px;
-  opacity: 0;
-  transform: translate3d(0, 12px, 0);
-  transition:
-    opacity 0.4s ease,
-    transform 0.5s ease;
-}
-.stage-process .pr-tile.is-on {
-  opacity: 1;
-  transform: none;
-  transition:
-    opacity 0.8s ease calc(var(--i, 0) * 120ms),
-    transform 1.1s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--i, 0) * 120ms);
-}
-/* each tile's contents come into focus, like frost clearing */
-.stage-process .pr-tile > * {
-  filter: blur(12px);
-  opacity: 0.2;
-  transition:
-    filter 0.4s ease,
-    opacity 0.4s ease;
-}
-.stage-process .pr-tile.is-on > * {
-  filter: blur(0);
-  opacity: 1;
-  transition:
-    filter 1s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--i, 0) * 120ms + 120ms),
-    opacity 0.7s ease calc(var(--i, 0) * 120ms + 120ms);
-}
-.stage-process .pr-value {
-  margin: 0;
-  font-family: var(--font-display);
-  font-weight: 560;
-  font-size: clamp(2.1rem, 3.3vw, 3.2rem);
-  line-height: 1;
-  letter-spacing: -0.05em;
-  color: var(--fg);
-}
-.stage-process .pr-label {
-  margin: 0;
-  font-family: var(--font-sans);
-  font-size: clamp(13.5px, 1vw, 15px);
-  line-height: 1.5;
-  color: var(--fg-muted);
-  max-width: 36ch;
-}
 
 /* ---------------- narrower landscape: the placard stacks ---------------- */
 
@@ -258,27 +197,6 @@
     padding-top: 12px;
     gap: 8px;
   }
-  .stage-process .pr-stats {
-    /* one value column for every tile so the labels line up ("10 years" is ~3.6em wide) */
-    --pr-v: clamp(1.8rem, 7.2vw, 2.5rem);
-    grid-template-columns: minmax(0, 1fr);
-    max-width: 560px;
-    gap: 10px;
-  }
-  .stage-process .pr-tile {
-    grid-template-columns: calc(var(--pr-v) * 3.6) minmax(0, 1fr);
-    align-items: center;
-    gap: 16px;
-    padding: 16px 18px;
-  }
-  .stage-process .pr-value {
-    font-size: var(--pr-v);
-    white-space: nowrap;
-  }
-  .stage-process .pr-label {
-    font-size: 13.5px;
-    line-height: 1.45;
-  }
 }
 
 /* phones: tighter still; the track keeps only the numbers */
@@ -294,13 +212,6 @@
     font-size: 10px;
     letter-spacing: 0.05em;
     gap: 6px;
-  }
-  .stage-process .pr-tile {
-    padding: 13px 16px;
-    gap: 14px;
-  }
-  .stage-process .pr-label {
-    font-size: 13px;
   }
 }
 /* phones: only the active step keeps its name, and its segment widens to hold it */
@@ -335,17 +246,6 @@
   .stage-process .pr-text {
     font-size: 14px;
     line-height: 1.45;
-  }
-  .stage-process .pr-stats {
-    --pr-v: 1.7rem;
-    gap: 8px;
-  }
-  .stage-process .pr-tile {
-    padding: 11px 14px;
-  }
-  .stage-process .pr-label {
-    font-size: 12.5px;
-    line-height: 1.4;
   }
 }
 
@@ -383,19 +283,5 @@
   }
   .stage-process .pr-name {
     display: none;
-  }
-  .stage-process .pr-stats {
-    gap: 8px;
-  }
-  .stage-process .pr-tile {
-    padding: 10px 12px;
-    gap: 6px;
-  }
-  .stage-process .pr-value {
-    font-size: 1.5rem;
-  }
-  .stage-process .pr-label {
-    font-size: 12px;
-    line-height: 1.35;
   }
 }
