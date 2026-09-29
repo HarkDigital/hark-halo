@@ -683,6 +683,10 @@ export interface NeonPath {
   /** 0..1 ignition (multiplies every pass) */
   on: { value: number }
   color: { value: THREE.Color }
+  /** 0..1: how much of the tube (by length, from its start) exists — draw it in like a pen stroke */
+  draw: { value: number }
+  /** a spark of light travelling along the tube: x = position 0..1 along it, y = strength */
+  pulse: { value: THREE.Vector2 }
 }
 
 const NEON_PATH_VERT = /* glsl */ `
@@ -699,10 +703,22 @@ const NEON_PATH_VERT = /* glsl */ `
     gl_Position = projectionMatrix * mv;
   }
 `
-/** a mirrored copy (a black mirror floor) draws only below the floor, fading with depth */
+/** a mirrored copy (a black mirror floor) draws only below the floor, fading with depth;
+ * uDraw clips the tube to its first part (drawing it in), uPulse runs a spark along it */
 const NEON_PATH_FADE = /* glsl */ `
-  uniform float uMirror, uFloorY, uFade;
+  uniform float uMirror, uFloorY, uFade, uDraw;
+  uniform vec2 uPulse;
   varying float vWY;
+  varying float vU;
+  float pow2(float x) { return x * x; }
+  float drawn() {
+    if (vU > uDraw + 1e-4) discard;
+    // a hot head where the stroke is being drawn, and the travelling spark
+    float head = uDraw < 0.999 ? exp(-pow2((vU - uDraw) * 90.0)) * 1.6 : 0.0;
+    float d = abs(vU - uPulse.x);
+    d = min(d, 1.0 - d);
+    return 1.0 + head + uPulse.y * exp(-pow2(d * 40.0));
+  }
   float mirrorFade() {
     float below = max(uFloorY - vWY, 0.0);
     return mix(1.0, exp(-below * uFade) * step(vWY, uFloorY + 0.001), uMirror);
@@ -720,7 +736,7 @@ const NEON_PATH_TUBE = /* glsl */ `
     float f = abs(dot(normalize(vN), normalize(vV)));
     // (only a thin white-hot line down the middle: the colour stays saturated)
     vec3 gas = mix(uColor, vec3(1.0), smoothstep(0.84, 1.0, f) * 0.85);
-    gl_FragColor = vec4(gas * (0.5 + 0.5 * f) * uK * uOn * mirrorFade(), 1.0);
+    gl_FragColor = vec4(gas * (0.5 + 0.5 * f) * uK * uOn * mirrorFade() * drawn(), 1.0);
   }
 `
 const NEON_PATH_GLOW = /* glsl */ `
@@ -733,7 +749,7 @@ const NEON_PATH_GLOW = /* glsl */ `
     // a fat, invisible sleeve around the tube: bright along the middle, gone at its edge
     float f = abs(dot(normalize(vN), normalize(vV)));
     float g = f * f * f;
-    gl_FragColor = vec4(uColor * g * g * uK * uOn * mirrorFade(), 1.0);
+    gl_FragColor = vec4(uColor * g * g * uK * uOn * mirrorFade() * drawn(), 1.0);
   }
 `
 
@@ -766,7 +782,11 @@ export function neonPath(o: {
   const color = { value: new THREE.Color(o.color) }
   const on = { value: 1 }
   const k = { main: { tube: 3.2, glow: 0.35 } as NeonPathPass, trans: { tube: 3.2, glow: 0.8 } as NeonPathPass }
+  const draw = { value: 1 }
+  const pulse = { value: new THREE.Vector2(0, 0) }
   const fade = {
+    uDraw: draw,
+    uPulse: pulse,
     uMirror: { value: o.mirror ? 1 : 0 },
     uFloorY: { value: o.mirror?.floorY ?? 0 },
     uFade: { value: o.mirror?.fade ?? 1.5 },
@@ -803,7 +823,7 @@ export function neonPath(o: {
   bind(glow, 'glow')
   const root = new THREE.Group()
   root.add(tube, glow)
-  return { root, tube, glow, k, on, color }
+  return { root, tube, glow, k, on, color, draw, pulse }
 }
 
 /**
