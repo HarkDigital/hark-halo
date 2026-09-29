@@ -1,254 +1,187 @@
 import * as THREE from 'three'
 import type { CameraPose, Chapter, ChapterContext, Frame } from '../../core/types'
-import { el, rise, setRise, reveal } from '../../core/dom'
+import { el, reveal, rise, setRise } from '../../core/dom'
 import { PROCESS, STATS } from '../../content'
 import { clamp, ease, lerp, segment, smoothstep, window01 } from '../../core/math'
 import { nextFrame } from '../../core/yield'
-import { buildPatternSdf } from './sdf'
+import { G } from '../../kit/glass'
 import {
-  BLOCK,
-  FACE_Z,
-  MARK_H,
-  PANE,
-  makeBlock,
-  makeFilm,
-  makeImpact,
-  makeKerf,
-  makeLightCard,
-  makeNozzle,
-  makePane,
-  makePool,
-  makeShaft,
-  makeSpray,
-  type Block,
-  type Film,
-  type Kerf,
-  type Pane,
-  type Spray,
+  DEPTH,
+  FLOOR_MIRROR,
+  HALO_SCALE,
+  HALO_Z,
+  MARK_S,
+  buildCard,
+  buildFloor,
+  buildGlass,
+  buildHead,
+  buildNeon,
+  buildReflection,
+  buildSketch,
+  buildSpark,
+  FLOOR_Y,
+  type Neon,
+  type PrintedMark,
+  type Spark,
 } from './scene'
 import './process.css'
 
 /*
- * ANNEALED — "We listen first. Then we build."
+ * ASSEMBLY — "We listen first. Then we build."
  *
- * How frosted glass is made, as four vignettes in the black room, the camera
- * travelling along:
+ * The process literally builds the Hark mark, one step at a time, front-on
+ * and centred in the black room over the mirror floor:
  *
- *   0.00–0.10  in-beat (under the breath cut): a raw block of clear glass
- *              under a single spotlight; the headline comes into focus
- *   0.10–0.27  01 LISTEN     a ring of light (the inspection scan) slides
- *                            slowly down through the block
- *   0.27–0.44  02 PROTOTYPE  the camera travels on to the pane; a thin matte
- *                            resist film is laid on it and a gantry line cuts
- *                            the Hark mark into it: the cut shows as crisp
- *                            light. The field of the film is weeded away.
- *   0.44–0.61  03 BUILD      SANDBLASTING: a chrome nozzle and a fine stream
- *                            of grains; the frost spreads across the exposed
- *                            glass behind a grainy front, the resist keeps the
- *                            mark clear
- *   0.61–0.78  04 SUPPORT    POLISH: the resist lifts off, a glint glides
- *                            round the polished bevel; the finished panel —
- *                            frosted field, razor-clear mark — glows backlit
- *   0.78–0.95  results: pull back to the finished panel; three frosted stat
- *              tiles (10 years, $1M+, 15)
+ *   0.00–0.10  intro (the breath cut clears): darkness, one faint point of
+ *              light where the mark's centre will be; the headline
+ *   0.10–0.27  01 LISTEN     only the mark's DIAMOND exists: a small neon
+ *                            diamond draws itself from the point, and rings
+ *                            ripple slowly out of it — its own outline,
+ *                            rounding into circles as they spread (hark:
+ *                            listen)
+ *   0.27–0.44  02 PROTOTYPE  a construction drawing spreads over the room —
+ *                            fine grid, axes, the circles every curl is drawn
+ *                            from, the tangents the bars run along — and the
+ *                            two LOOPS sketch themselves over it in neon (the
+ *                            tubes draw in like pen strokes, a hot head at the
+ *                            nib): the full neon outline, a working model
+ *   0.44–0.61  03 BUILD      the drawing clears; the outline glides back and
+ *                            grows into the halo, and the frosted GLASS mark
+ *                            is printed inside it from the floor up — a line
+ *                            of light rides the print front, each fresh layer
+ *                            glows and cools
+ *   0.61–0.78  04 SUPPORT    it stays alive: the finished mark turns slowly,
+ *                            sparks of light travel round the neon now and
+ *                            then, a steady glow
+ *   0.78–0.95  results: pull back; the finished mark above three frosted
+ *              stat tiles (10 years, $1M+, 15)
  *   0.95–1.00  out-beat
  *
- * Everything is derived from `local`; frame.time only drives the spray and a
- * slow breathing sway (both held still under reduced motion / Motion off).
- * The one follower: the nozzle's vertical raster is a single pass across the
- * blast, eased and speed-capped (≤ 1.5 sweeps/s at any scroll speed — the lit
- * stream crossing the frame must never strobe, WCAG 2.3.1).
+ * Everything derives from `local`; frame.time only drives idle motion (the
+ * rings' slow drift, the sparks, a gentle sway; held under Motion off, gone
+ * under reduced motion, where the rings and sparks follow the scroll alone).
  */
-
-// ---------------------------------------------------------------- layout
-
-const FLOOR = -PANE.h / 2 - PANE.bevel * 0.85
-const PX = 6.2
-/** block and pane centers (world) */
-const CB = new THREE.Vector3(0, FLOOR + BLOCK.h / 2 + BLOCK.bevel * 0.85, 0)
-const CP = new THREE.Vector3(PX, 0, 0)
-const FILM_MARGIN = 0.05
 
 // ---------------------------------------------------------------- timeline
 
 const A = 0.1
-const B = 0.78
-const S = (B - A) / PROCESS.length
-const ANCHORS = PROCESS.map((_, k) => A + S * (k + 0.55))
+const S = 0.17
+const B = A + 4 * S
+const ANCHORS = [0.19, 0.365, 0.535, 0.7]
 const STATS_AT = 0.875
 const HEAD = [0.045, 0.29] as const
 const CARD = [0.13, 0.785] as const
 const TILES = [0.8, 0.955] as const
 
-const SCAN = [0.07, 0.255] as const
-const LAY = [0.272, 0.324] as const
-const CUT = [0.32, 0.357] as const
-const PEEL = [0.392, 0.452] as const
-const NOZ_IN = [0.44, 0.475] as const
-const BLAST = [0.462, 0.598] as const
-const NOZ_OUT = [0.598, 0.632] as const
-const LIFT = [0.604, 0.66] as const
-const POLISH = [0.635, 0.775] as const
+const DIAMOND = [0.068, 0.118] as const
+const RINGS = [0.085, 0.315] as const
+const GUIDES = [0.262, 0.478] as const
+const LOOP_A = [0.298, 0.392] as const
+const LOOP_B = [0.312, 0.406] as const
+const RECEDE = [0.446, 0.5] as const
+const PRINT = [0.468, 0.592] as const
+const TURN = [0.6, 0.835] as const
 
-// 10 years, $1M+, 15 — in that order
+// 10 years, $1M+, 15 — in that order (the accessible copy's order)
 const SHOW = [STATS[0], STATS[2], STATS[1]]
 
-/** a triangle wave in [-1, 1] */
-const tri = (x: number) => 1 - 4 * Math.abs(x - Math.floor(x + 0.5))
-/** the nozzle's raster: top speed in pane heights per second (a sweep is 0.8) */
-const RASTER_SPEED = 1.2
-const RASTER_SPEED_CALM = 0.7
+/** smootherstep on a segment */
+const sm = (x: number, a: number, b: number) => {
+  const t = segment(x, a, b)
+  return t * t * t * (t * (t * 6 - 15) + 10)
+}
+const fract = (x: number) => x - Math.floor(x)
+/** a stable 0..1 hash of an integer */
+const hash = (n: number) => fract(Math.sin(n * 127.1 + 311.7) * 43758.5453)
 
-// ---------------------------------------------------------------- camera keys
+// ---------------------------------------------------------------- camera
 
+/** [ln distance factor, azimuth (deg), elevation (deg), results framing 0..1] */
 interface Key {
-  t: number
-  pos: THREE.Vector3
-  tgt: THREE.Vector3
-  fov: number
-  focus: THREE.Vector3
-  /** on the glide INTO this key, ease back by this fraction mid-way */
-  lift?: number
+  at: number
+  hold: boolean
+  v: number[]
 }
-const DEG = Math.PI / 180
-const UP = new THREE.Vector3(0, 1, 0)
-const _f = new THREE.Vector3()
-const _r = new THREE.Vector3()
-const _u = new THREE.Vector3()
-
-/** A key orbiting `c` (phi: degrees from the front, + = from the left), with `c` placed at screen NDC (sx, sy). */
-function orbit(t: number, c: THREE.Vector3, phi: number, d: number, elev: number, sx: number, sy: number, aspect: number, fov: number, lift?: number): Key {
-  const p = phi * DEG
-  const e = elev * DEG
-  const pos = new THREE.Vector3(c.x - Math.sin(p) * Math.cos(e) * d, c.y + Math.sin(e) * d, c.z + Math.cos(p) * Math.cos(e) * d)
-  _f.subVectors(c, pos).normalize()
-  _r.crossVectors(_f, UP).normalize()
-  _u.crossVectors(_r, _f)
-  const halfH = Math.tan((fov * DEG) / 2) * d
-  const tgt = c.clone().addScaledVector(_r, -sx * halfH * aspect).addScaledVector(_u, -sy * halfH)
-  return { t, pos, tgt, fov, focus: c.clone(), lift }
+const NV = 4
+const k = (at: number, hold: boolean, f: number, az: number, el: number, res = 0): Key => ({ at, hold, v: [Math.log(f), az, el, res] })
+const KEYS: Key[] = [
+  // the point of light, close
+  k(0.0, true, 0.6, 0, 1.2),
+  k(0.075, false, 0.62, 0, 1.2),
+  // listen: the diamond and its rings; the camera eases back as they spread
+  k(0.19, false, 0.68, 0, 1.4),
+  k(0.265, false, 0.8, 0, 1.4),
+  // prototype: square to the drawing board
+  k(0.345, false, 1.0, 0, 1.0),
+  k(0.43, true, 1.0, 0, 1.0),
+  // build: a little from the side and above, the print front's cut face in view
+  k(0.525, false, 0.97, -8, 5.5),
+  k(0.6, false, 0.99, -3, 3.5),
+  // support: front-on again, the mark turns itself
+  k(0.7, false, 0.98, 0, 2.5),
+  // results: pull back above the tiles
+  k(0.865, true, 1.0, 0, 2.0, 1),
+  k(0.945, true, 1.0, 0, 2.0, 1),
+  k(1.0, false, 0.95, 0, 1.8, 1),
+]
+const TANG: number[][] = KEYS.map((key, i) => {
+  const t = new Array<number>(NV).fill(0)
+  if (!key.hold && i > 0 && i < KEYS.length - 1) {
+    const a = KEYS[i - 1]
+    const b = KEYS[i + 1]
+    for (let j = 0; j < NV; j++) t[j] = (b.v[j] - a.v[j]) / (b.at - a.at)
+  }
+  return t
+})
+{
+  // the last key keeps drifting through the cut
+  const n = KEYS.length - 1
+  for (let j = 0; j < NV; j++) TANG[n][j] = (KEYS[n].v[j] - KEYS[n - 1].v[j]) / (KEYS[n].at - KEYS[n - 1].at)
+}
+const val = new Array<number>(NV).fill(0)
+function sampleKeys(local: number) {
+  let i = 0
+  while (i < KEYS.length - 2 && local > KEYS[i + 1].at) i++
+  const a = KEYS[i]
+  const b = KEYS[i + 1]
+  const h = b.at - a.at
+  const t = clamp((local - a.at) / h)
+  const t2 = t * t
+  const t3 = t2 * t
+  const h00 = 2 * t3 - 3 * t2 + 1
+  const h10 = t3 - 2 * t2 + t
+  const h01 = -2 * t3 + 3 * t2
+  const h11 = t3 - t2
+  for (let j = 0; j < NV; j++) val[j] = h00 * a.v[j] + h10 * h * TANG[i][j] + h01 * b.v[j] + h11 * h * TANG[i + 1][j]
 }
 
-/**
- * The results pose: fit the finished panel into the band between the safe
- * top and the stat tiles (fractions of the viewport height, measured from the
- * DOM), square to the camera. Falls back to a fixed pose before layout.
- */
-function resultsPose(aspect: number, fov: number, fit: Fit, fallbackD: number, fallbackSy: number): { d: number; sy: number } {
-  if (!(fit.bottom > fit.top + 0.2)) return { d: fallbackD, sy: fallbackSy }
-  const half = fit.bottom - fit.top // NDC half-height of the band
-  const sy = 1 - (fit.top + fit.bottom)
-  const tanH = Math.tan((fov * DEG) / 2)
-  // the panel (with its bevel) fills ~86% of the band, and never runs off the sides
-  const halfWorld = Math.max(1.26 / (0.86 * half), 1.2 / aspect)
-  return { d: clamp(halfWorld / tanH, 7.2, 13), sy }
-}
-
+/** where the mark sits on screen: centre (px) and height (px) */
 interface Fit {
-  top: number
-  bottom: number
-}
-
-function keysFor(aspect: number, fit: Fit): Key[] {
-  const k: Key[] = []
-  if (aspect >= 0.9) {
-    const narrow = clamp((1.6 - aspect) / 0.6) // 0 at 16:10, 1 at 1:1
-    const back = 1 + 0.2 * narrow
-    const sx = 0.27 + 0.08 * narrow
-    const f = 32
-    k.push(orbit(0, CB, 26, 8.4 * back, 9, sx, 0.02, aspect, f))
-    k.push(orbit(0.1, CB, 22, 7.7 * back, 8, sx, 0.02, aspect, f))
-    k.push(orbit(0.2, CB, 15, 7.1 * back, 7, sx, 0.02, aspect, f))
-    k.push(orbit(0.25, CB, 10, 6.9 * back, 7, sx, 0.02, aspect, f))
-    k.push(orbit(0.315, CP, 14, 7.5 * back, 5, sx, 0.02, aspect, f, 0.2))
-    k.push(orbit(0.425, CP, 9, 7.1 * back, 5, sx, 0.02, aspect, f))
-    k.push(orbit(0.5, CP, -30, 7.3 * back, 9, sx, 0.01, aspect, f))
-    k.push(orbit(0.585, CP, -26, 7.0 * back, 8, sx, 0.01, aspect, f))
-    k.push(orbit(0.665, CP, 15, 6.8 * back, 5, sx, 0.02, aspect, f))
-    k.push(orbit(0.77, CP, 21, 6.5 * back, 4, sx, 0.02, aspect, f))
-    const r = resultsPose(aspect, 30, fit, 9.0 * (1 + 0.12 * narrow), 0.2)
-    k.push(orbit(0.86, CP, 0, r.d, 3, 0, r.sy, aspect, 30))
-    k.push(orbit(0.95, CP, 2, r.d * 0.97, 3, 0, r.sy, aspect, 30))
-    k.push(orbit(1, CP, 3, r.d * 0.99, 3, 0, r.sy, aspect, 30))
-  } else {
-    const tall = clamp((0.62 - aspect) / 0.16) // 0 at tablet, 1 at phone
-    const back = 1 + 0.12 * tall
-    const sy = lerp(0.12, 0.16, tall)
-    const f = 42
-    k.push(orbit(0, CB, 22, 9.6 * back, 9, 0, sy, aspect, f))
-    k.push(orbit(0.1, CB, 18, 9.0 * back, 8, 0, sy, aspect, f))
-    k.push(orbit(0.2, CB, 12, 8.5 * back, 7, 0, sy, aspect, f))
-    k.push(orbit(0.25, CB, 8, 8.3 * back, 7, 0, sy, aspect, f))
-    k.push(orbit(0.315, CP, 12, 9.6 * back, 5, 0, sy, aspect, f, 0.45))
-    k.push(orbit(0.425, CP, 8, 9.2 * back, 5, 0, sy, aspect, f))
-    k.push(orbit(0.5, CP, -26, 9.4 * back, 9, 0, sy, aspect, f))
-    k.push(orbit(0.585, CP, -22, 9.1 * back, 8, 0, sy, aspect, f))
-    k.push(orbit(0.665, CP, 12, 8.9 * back, 5, 0, sy, aspect, f))
-    k.push(orbit(0.77, CP, 17, 8.6 * back, 4, 0, sy, aspect, f))
-    const r = resultsPose(aspect, f, fit, 10.6 * back, lerp(0.3, 0.38, tall))
-    k.push(orbit(0.86, CP, 0, r.d, 3, 0, r.sy, aspect, f))
-    k.push(orbit(0.95, CP, 2, r.d * 0.97, 3, 0, r.sy, aspect, f))
-    k.push(orbit(1, CP, 3, r.d * 0.99, 3, 0, r.sy, aspect, f))
-  }
-  return k
-}
-
-const smoother = (t: number) => t * t * t * (t * (t * 6 - 15) + 10)
-
-function sample(keys: Key[], local: number, pos: THREE.Vector3, tgt: THREE.Vector3, focus: THREE.Vector3): number {
-  if (local <= keys[0].t) {
-    pos.copy(keys[0].pos)
-    tgt.copy(keys[0].tgt)
-    focus.copy(keys[0].focus)
-    return keys[0].fov
-  }
-  for (let i = 0; i < keys.length - 1; i++) {
-    const a = keys[i]
-    const b = keys[i + 1]
-    if (local <= b.t) {
-      const e = smoother(segment(local, a.t, b.t))
-      pos.lerpVectors(a.pos, b.pos, e)
-      tgt.lerpVectors(a.tgt, b.tgt, e)
-      focus.lerpVectors(a.focus, b.focus, e)
-      if (b.lift) pos.sub(tgt).multiplyScalar(1 + b.lift * Math.sin(Math.PI * e)).add(tgt)
-      return lerp(a.fov, b.fov, e)
-    }
-  }
-  const z = keys[keys.length - 1]
-  pos.copy(z.pos)
-  tgt.copy(z.tgt)
-  focus.copy(z.focus)
-  return z.fov
+  cx: number
+  cy: number
+  hpx: number
 }
 
 // ---------------------------------------------------------------- chapter
 
 export default function create(): Chapter {
   const group = new THREE.Group()
-
-  let ctxRef: ChapterContext | null = null
-  let block: Block
-  let shaft: ReturnType<typeof makeShaft>
-  let blockPool: ReturnType<typeof makePool>
-  let blockCard: ReturnType<typeof makeLightCard>
-  // the pane rig: fixed light behind, a turntable with the pane and its tools
-  const paneG = new THREE.Group()
-  const turn = new THREE.Group()
-  let pane: Pane
-  let card: ReturnType<typeof makeLightCard>
-  let panePool: ReturnType<typeof makePool>
-  const filmG = new THREE.Group()
-  const peel = new THREE.Group()
-  let field: Film
-  let resist: Film
-  let kerf: Kerf
-  let nozzle: THREE.Mesh
-  let spray: Spray
-  let impact: ReturnType<typeof makeImpact>
+  const pivot = new THREE.Group()
+  let glass: PrintedMark
+  let neon: Neon
+  let neonRefl: Neon
+  let sketch: ReturnType<typeof buildSketch>
+  let head: ReturnType<typeof buildHead>
+  let card: ReturnType<typeof buildCard>
+  let floor: ReturnType<typeof buildFloor>
+  let reflection: ReturnType<typeof buildReflection>
+  const sparks: Spark[] = []
+  const sparkP = new THREE.Vector3()
   let ready = false
 
   // DOM
-  let head: HTMLElement, headline: HTMLElement
+  let headEl: HTMLElement
+  let headline: HTMLElement
   let cardEl: HTMLElement
   const stepEls: HTMLElement[] = []
   const stepTitles: HTMLElement[] = []
@@ -259,23 +192,33 @@ export default function create(): Chapter {
   let shown = -2
   let tilesShown = false
   const fillCache = [-1, -1, -1, -1]
-  /** the nozzle's raster height (pane uv), following its scroll-driven target */
-  let rasterY = 0.5
-  let rasterSnap = true
 
-  const tmpPos = new THREE.Vector3()
-  const tmpTgt = new THREE.Vector3()
-  const tmpFocus = new THREE.Vector3()
-  const scratch = new THREE.PerspectiveCamera(40, 1, 0.1, 200)
-  const impactLocal = new THREE.Vector3()
-  const tipLocal = new THREE.Vector3()
-  const dirLocal = new THREE.Vector3()
-  const NOZ_AXIS = new THREE.Vector3(0, -1, 0)
-  let keys: Key[] = []
-  let keysAspect = -1
-  /** band free for the results pose (fractions of the stage height), measured on resize */
-  const fit: Fit = { top: 0, bottom: 0 }
-  let fitDirty = true
+  // layout (px), measured on resize
+  const fitSteps: Fit = { cx: 0, cy: 0, hpx: 0 }
+  const fitRes: Fit = { cx: 0, cy: 0, hpx: 0 }
+  let measured = false
+
+  // pose (computed in update, written in camera)
+  const pos = new THREE.Vector3()
+  const tgt = new THREE.Vector3()
+  let fov = 30
+  const tmpF = new THREE.Vector3()
+  const tmpR = new THREE.Vector3()
+  const tmpU = new THREE.Vector3()
+  const tmpC = new THREE.Vector3()
+  const tmpM = new THREE.Matrix4()
+  const UP = new THREE.Vector3(0, 1, 0)
+  const haloCol = new THREE.Color()
+  const ICE = new THREE.Color(G.ice)
+  const NEON_C = new THREE.Color(G.neonC)
+
+  /** fall-back framing before the DOM has laid out */
+  const fallbackFit = (W: number, H: number, results: boolean, out: Fit) => {
+    const portrait = W < H
+    out.cx = W / 2
+    out.cy = H * (portrait ? 0.36 : results ? 0.36 : 0.42)
+    out.hpx = Math.min(H * (portrait ? 0.4 : results ? 0.46 : 0.56), W * 0.8)
+  }
 
   return {
     id: 'process',
@@ -283,102 +226,61 @@ export default function create(): Chapter {
     // the four steps, then the stats
     anchors: [...ANCHORS, STATS_AT],
 
-    onEnter() {
-      // arriving (a cut or a jump hides the swap): the nozzle starts where it belongs
-      rasterSnap = true
-    },
+    async init(ctx: ChapterContext) {
+      const isFrame = (rt: THREE.WebGLRenderTarget | null) => ctx.post.isFrameTarget(rt)
 
-    async init(ctx) {
-      ctxRef = ctx
-      const mobile = ctx.mobile
-
-      // ---- station 1: the raw block, its spotlight and the inspection ring
-      block = makeBlock(mobile)
-      block.root.position.copy(CB)
-      group.add(block.root)
-      shaft = makeShaft(1.05, 4.2)
-      shaft.mesh.position.set(CB.x, CB.y + BLOCK.h / 2 + 2.1 + 0.08, CB.z)
-      group.add(shaft.mesh)
-      blockPool = makePool(3.4, 2.4)
-      blockPool.mesh.position.set(CB.x, FLOOR - 0.002, CB.z + 0.1)
-      group.add(blockPool.mesh)
-      // light behind the block: thick clear glass needs something crisp to bend
-      blockCard = makeLightCard(3.8, 4.4)
-      blockCard.mesh.position.set(CB.x + 0.1, CB.y + 0.2, CB.z - 1.5)
-      blockCard.u.uSlitX.value = 0.05
-      group.add(blockCard.mesh)
+      // ---- the glass mark (printed in step 03) with the neon, the drawing and the print head in its space
+      glass = buildGlass(ctx.world.envMap)
+      pivot.add(glass.logo.root)
       await nextFrame()
-
-      // ---- the pane: the resist pattern as a distance field (razor edges at any zoom)
-      const sdf = await buildPatternSdf({
-        w: PANE.w,
-        h: PANE.h,
-        markH: MARK_H,
-        markY: 0.02,
-        keyInset: 0.11,
-        keyWidth: 0.018,
-        keyRadius: 0.03,
-        res: mobile ? 640 : 1024,
-        spread: mobile ? 16 : 24,
+      neon = buildNeon(isFrame)
+      glass.logo.root.add(neon.root)
+      ;[G.neonA, G.neonB, G.neonC].forEach((c, i) => {
+        const sp = buildSpark(c, isFrame, i < 2 ? 0.28 : 0.12)
+        neon.root.add(sp.mesh)
+        sparks.push(sp)
       })
+      sketch = buildSketch()
+      glass.logo.root.add(sketch.mesh)
+      head = buildHead()
+      glass.logo.root.add(head.mesh)
       await nextFrame()
-      pane = makePane(sdf, mobile)
-      paneG.position.copy(CP)
-      group.add(paneG)
-      paneG.add(turn)
-      turn.add(pane.mesh)
 
-      card = makeLightCard(4.2, 4.6)
-      card.mesh.position.set(0, 0.05, -1.25)
-      paneG.add(card.mesh)
-      panePool = makePool(3.6, 2.2)
-      panePool.mesh.position.set(0, FLOOR - 0.002, 0.2)
-      paneG.add(panePool.mesh)
-
-      // the resist film: the field (on a hinge at its top edge) + the pattern pieces
-      field = makeFilm(sdf, -1, FILM_MARGIN)
-      resist = makeFilm(sdf, 1, FILM_MARGIN)
-      const hingeY = PANE.h / 2 - FILM_MARGIN
-      peel.position.set(0, hingeY, 0)
-      // the field lies a hair in front of the resist (no depth fight at the seam)
-      field.mesh.position.set(0, -hingeY, 0.0008)
-      peel.add(field.mesh)
-      filmG.add(peel, resist.mesh)
-      turn.add(filmG)
-      kerf = makeKerf(sdf, FILM_MARGIN)
-      kerf.mesh.position.z = FACE_Z + 0.004
-      turn.add(kerf.mesh)
-
-      // sandblasting
-      nozzle = makeNozzle()
-      turn.add(nozzle)
-      spray = makeSpray(mobile ? 1100 : 2600)
-      turn.add(spray.points)
-      impact = makeImpact()
-      turn.add(impact.mesh)
+      // ---- the room: backlight, floor, and everything mirrored in it
+      card = buildCard(isFrame)
+      floor = buildFloor()
+      reflection = buildReflection(glass.logo.mark.geometry, glass.print)
+      neonRefl = buildNeon(isFrame, { floorY: FLOOR_Y, fade: 2.2 })
+      neonRefl.root.matrixAutoUpdate = false
+      group.add(card.mesh, floor, pivot, reflection, neonRefl.root, sketch.mirror)
       await nextFrame()
 
       // ---- DOM
       const stage = ctx.stage
-      head = el('div', 'pr-head', undefined, stage)
-      el('p', 'hud-eyebrow', 'How it works', head)
-      headline = rise(el('h2', 'hud-h2 pr-headline', undefined, head), 'We listen first. <em>Then we build.</em>')
+      headEl = el('div', 'pr-head', undefined, stage)
+      el('p', 'hud-eyebrow', 'How it works', headEl)
+      headline = rise(el('h2', 'hud-h2 pr-headline', undefined, headEl), 'We listen first. <em>Then we build.</em>')
 
       cardEl = el('div', 'pr-card hud-panel hud-panel--strong', undefined, stage)
       const steps = el('div', 'pr-steps', undefined, cardEl)
       PROCESS.forEach((p, i) => {
         const s = el('div', 'pr-step', undefined, steps)
-        const n = String(i + 1).padStart(2, '0')
-        stepTitles.push(rise(el('h3', 'pr-title', undefined, s), `<em>${n}</em> — ${p.title}`))
+        const lead = el('div', 'pr-lead', undefined, s)
+        const idx = el('p', 'pr-idx', undefined, lead)
+        el('span', 'pr-idx-n', String(i + 1).padStart(2, '0'), idx)
+        el('span', 'pr-idx-of', ` / ${String(PROCESS.length).padStart(2, '0')}`, idx)
+        stepTitles.push(rise(el('h3', 'pr-title', undefined, lead), p.title))
         el('p', 'hud-body pr-text', p.text, s)
         stepEls.push(s)
       })
       const track = el('ol', 'pr-track', undefined, cardEl)
-      PROCESS.forEach(p => {
+      PROCESS.forEach((p, i) => {
         const li = el('li', 'pr-seg', undefined, track)
         const bar = el('span', 'pr-bar', undefined, li)
         fills.push(el('span', 'pr-fill', undefined, bar))
-        el('span', 'pr-name', p.title, li)
+        const name = el('span', 'pr-name', undefined, li)
+        el('span', 'pr-name-n', String(i + 1).padStart(2, '0'), name)
+        el('span', 'pr-name-t', p.title, name)
         segs.push(li)
       })
 
@@ -390,194 +292,273 @@ export default function create(): Chapter {
         el('p', 'pr-label', s.label, t)
         tiles.push(t)
       })
-      reveal(head, 0, 0)
+      reveal(headEl, 0, 0)
       reveal(cardEl, 0, 0)
       reveal(statsEl, 0, 0)
-      // measure the band above the tiles (layout only; opacity/visibility don't affect it)
+
+      // ---- where the mark goes: the biggest square clear of the copy (layout only;
+      // opacity / visibility don't affect it)
       const measure = () => {
+        const W = stage.clientWidth
         const H = stage.clientHeight
-        if (H < 10) return
-        const top = head.offsetTop / H
-        const bottom = (statsEl.offsetTop - 18) / H
-        if (Math.abs(top - fit.top) > 1e-3 || Math.abs(bottom - fit.bottom) > 1e-3) {
-          fit.top = top
-          fit.bottom = bottom
-          fitDirty = true
+        if (W < 10 || H < 10) return
+        const top = headEl.offsetTop
+        const gut = headEl.offsetLeft
+        const bandBottom = statsEl.offsetTop + statsEl.offsetHeight
+        const pad = Math.max(14, H * 0.025)
+        const cTop = cardEl.offsetTop
+        const cRight = cardEl.offsetLeft + cardEl.offsetWidth
+        // above the card (the card spans the bottom) or beside it (a short landscape)
+        const aboveW = W - 2 * gut
+        const aboveH = cTop - pad - top
+        const sideW = W - gut - (cRight + pad)
+        const sideH = bandBottom - top
+        const above = Math.min(aboveW, aboveH)
+        const side = Math.min(sideW, sideH)
+        // (the halo reaches 1.16x the mark, its glow a little further: keep it off the edges)
+        const wk = W < H ? 0.68 : 0.8
+        if (above >= side) {
+          fitSteps.cx = W / 2
+          fitSteps.cy = top + aboveH / 2
+          fitSteps.hpx = Math.min(aboveH * 0.84, aboveW * wk)
+        } else {
+          fitSteps.cx = cRight + pad + sideW / 2
+          fitSteps.cy = top + sideH / 2
+          fitSteps.hpx = Math.min(sideH * 0.8, sideW * 0.8)
         }
+        const rTop = statsEl.offsetTop - pad
+        fitRes.cx = W / 2
+        fitRes.cy = top + (rTop - top) / 2
+        fitRes.hpx = Math.min((rTop - top) * (W < H ? 0.76 : 0.84), aboveW * wk)
+        measured = fitSteps.hpx > 20 && fitRes.hpx > 20
       }
       if (typeof ResizeObserver !== 'undefined') {
         const ro = new ResizeObserver(measure)
         ro.observe(stage)
+        ro.observe(cardEl)
         ro.observe(statsEl)
-      }
+      } else window.addEventListener('resize', measure)
+      document.fonts?.ready.then(measure)
       measure()
       ready = true
     },
 
-    update(local, frame, ctx) {
+    update(local: number, frame: Frame, ctx: ChapterContext) {
       if (!ready) return
-      // the reduced-motion preference calms the scroll-coupled extras (the env turn,
-      // the glint); calm adds the visitor's Motion switch for the spray and the
-      // raster (frame.time already holds still under it, so the sways freeze)
-      const rm = ctx.reducedMotion || frame.reducedMotion
-      const calm = rm || !!frame.still
+      const W = frame.width
+      const H = frame.height
+      const aspect = W / Math.max(1, H)
+      const portrait = W < H
       const t = frame.time
-      const portrait = frame.height > frame.width * 1.1
+      // reduced motion: rings and sparks follow the scroll alone, no sway;
+      // Motion off: frame.time holds, so the idle drift holds with it
+      const rm = ctx.reducedMotion || frame.reducedMotion
+      const idle = rm ? 0 : 1
 
-      // ---- beat state
-      const inSteps = local >= A && local <= B
-      const idx = clamp(Math.floor((local - A) / S), 0, 3)
-      const phase = clamp((local - A - idx * S) / S)
-      const results = smoothstep(0.775, 0.86, local)
+      // ================= camera
+      sampleKeys(local)
+      const fs = measured ? fitSteps : null
+      const fr = measured ? fitRes : null
+      const fitA = fs ?? { cx: 0, cy: 0, hpx: 0 }
+      const fitB = fr ?? { cx: 0, cy: 0, hpx: 0 }
+      if (!fs) fallbackFit(W, H, false, fitA)
+      if (!fr) fallbackFit(W, H, true, fitB)
+      const res = clamp(val[3])
+      fov = portrait ? 34 : 30
+      const tanV = Math.tan(THREE.MathUtils.degToRad(fov / 2))
+      const dFor = (f: Fit) => MARK_S / (Math.max(0.05, f.hpx / H) * 2 * tanV)
+      const baseD = Math.exp(lerp(Math.log(dFor(fitA)), Math.log(dFor(fitB)), res))
+      const sx = lerp((fitA.cx / W) * 2 - 1, (fitB.cx / W) * 2 - 1, res)
+      const sy = lerp(1 - (fitA.cy / H) * 2, 1 - (fitB.cy / H) * 2, res)
+      const dist = baseD * Math.exp(val[0])
+      const az = THREE.MathUtils.degToRad(val[1])
+      const elv = THREE.MathUtils.degToRad(val[2])
+      tgt.set(0, 0, 0)
+      const ce = Math.cos(elv)
+      pos.set(Math.sin(az) * ce, Math.sin(elv), Math.cos(az) * ce).multiplyScalar(dist)
+      // a slow breath in the pose (idle only)
+      pos.y += 0.025 * Math.sin(t * 0.35) * idle
+      tmpF.subVectors(tgt, pos).normalize()
+      tmpR.crossVectors(tmpF, UP).normalize()
+      tmpU.crossVectors(tmpR, tmpF)
+      const shiftR = -sx * dist * tanV * aspect
+      const shiftU = -sy * dist * tanV
+      pos.addScaledVector(tmpR, shiftR).addScaledVector(tmpU, shiftU)
+      tgt.addScaledVector(tmpR, shiftR).addScaledVector(tmpU, shiftU)
 
-      // ================= 01 LISTEN: the block, the spotlight, the scan
-      const atBlock = 1 - smoothstep(0.255, 0.32, local)
-      const scanU = segment(local, SCAN[0], SCAN[1])
-      const scanE = ease.inOutQuad(scanU)
-      const top = BLOCK.h / 2 + BLOCK.bevel * 0.5
-      const scanY = lerp(top - 0.06, -top + 0.06, scanE)
-      block.ring.position.y = scanY
-      block.haze.position.y = scanY
-      const scanOn = window01(local, SCAN[0] - 0.005, SCAN[1] + 0.012, 0.025)
-      block.ringMat.color.setScalar(1.25 * scanOn)
-      block.hazeMat.color.setScalar(0.09 * scanOn)
-      block.mat.envMapIntensity = 1.2 + 0.25 * scanOn
-      // a slow turntable, settling as the inspection runs
-      block.root.rotation.y = lerp(-0.34, 0.2, ease.outCubic(segment(local, 0, 0.3))) + (rm ? 0 : Math.sin(t * 0.25) * 0.015)
-      shaft.u.uIntensity.value = atBlock * (0.75 + 0.25 * scanOn)
-      blockPool.u.uIntensity.value = atBlock * 0.55
-      blockCard.u.uIntensity.value = atBlock * 0.34
-      blockCard.u.uSlit.value = 2.2
-      block.root.visible = shaft.mesh.visible = blockPool.mesh.visible = blockCard.mesh.visible = local < 0.335
+      // ================= beats
+      const proto = smoothstep(0.27, 0.34, local)
+      const lit = smoothstep(PRINT[0], PRINT[0] + 0.09, local) // the glass is there to light
+      const alive = smoothstep(0.6, 0.66, local) * (1 - smoothstep(0.955, 0.995, local))
 
-      // ================= 02 PROTOTYPE: lay the film, cut the mark in light, weed
-      const lay = ease.inOutCubic(segment(local, LAY[0], LAY[1]))
-      filmG.position.set(0, 0.35 * (1 - lay), FACE_Z + 0.0025 + 0.95 * (1 - lay))
-      filmG.rotation.x = -0.55 * (1 - lay)
-      const cutU = segment(local, CUT[0], CUT[1])
-      kerf.u.uGantryY.value = lerp(1.02, -0.02, cutU)
-      kerf.u.uGantry.value = window01(local, CUT[0] - 0.008, CUT[1] + 0.006, 0.01)
-      const peelU = segment(local, PEEL[0], PEEL[1])
-      kerf.u.uKerf.value = smoothstep(CUT[0] - 0.004, CUT[0] + 0.006, local) * (1 - smoothstep(PEEL[0], PEEL[0] + 0.02, local))
-      // (kept in the scene at zero light through its station so its program compiles at prewarm)
-      kerf.mesh.visible = local > 0.24 && local < 0.52
-      // weeding: the field of the film swings up off its hinge and away
-      const peelSwing = ease.inOutCubic(clamp(peelU / 0.7))
-      const peelAway = ease.inCubic(segment(peelU, 0.45, 1))
-      peel.rotation.x = -1.75 * peelSwing
-      peel.position.y = PANE.h / 2 - FILM_MARGIN + 3.2 * peelAway
-      peel.position.z = 0.25 * peelSwing
-      // whole until it is weeded (the kerf light covers the seam while it is cut)
-      field.u.uCut.value = local >= PEEL[0] ? 1 : 0
-      field.mat.opacity = 1 - smoothstep(0.55, 1, peelU)
-      field.mesh.visible = local > LAY[0] - 0.01 && peelU < 1
-      // the resist peels away before the polish: lifts a touch and clears
-      const liftU = ease.inOutCubic(segment(local, LIFT[0], LIFT[1]))
-      resist.mesh.position.set(0, 0.12 * liftU, 0.28 * liftU)
-      resist.mat.opacity = 1 - smoothstep(0.1, 0.85, liftU)
-      resist.mesh.visible = local > LAY[0] - 0.01 && liftU < 1
+      // ================= the mark: square to the camera; in support it turns slowly
+      const turnE = ease.inOutQuad(segment(local, TURN[0], TURN[1]))
+      const yaw = 0.3 * Math.sin(Math.PI * turnE) + 0.05 * Math.sin(t * 0.31) * alive * idle
+      const tilt = -0.025 * Math.sin(Math.PI * turnE) + 0.012 * Math.sin(t * 0.23) * alive * idle
+      // the mark faces the camera even where it sits off-centre on screen (a short
+      // landscape, the results pose): cancel the view angle the screen offset adds
+      const faceYaw = Math.atan2(pos.x, pos.z) - az
+      const facePitch = Math.atan2(pos.y, Math.hypot(pos.x, pos.z)) - elv
+      pivot.rotation.set(tilt - facePitch, yaw + faceYaw, 0, 'YXZ')
 
-      // ================= 03 BUILD: sandblasting
-      const blastU = segment(local, BLAST[0], BLAST[1])
-      const front = lerp(-0.1, 1.1, blastU)
-      const blasting = window01(local, BLAST[0] - 0.004, BLAST[1] + 0.006, 0.012)
-      // the nozzle works the front in one pass (middle, down, up, middle) while it
-      // advances; the head follows that target eased and speed-capped, so no scroll
-      // speed (or scrubbing) can make the lit stream sweep the frame > 1.5×/s
-      const iyT = 0.5 + 0.4 * tri(blastU + 0.25)
-      if (rasterSnap) {
-        rasterY = iyT
-        rasterSnap = false
-      } else {
-        const cap = (calm ? RASTER_SPEED_CALM : RASTER_SPEED) * frame.dt
-        rasterY += clamp((iyT - rasterY) * (1 - Math.exp(-7 * frame.dt)), -cap, cap)
+      // ================= 03 BUILD: the outline glides back into the halo; the glass is printed
+      const recede = ease.inOutCubic(segment(local, RECEDE[0], RECEDE[1]))
+      neon.root.position.z = lerp(0, HALO_Z, recede)
+      neon.root.scale.setScalar(lerp(1, HALO_SCALE, recede))
+
+      const pr = segment(local, PRINT[0], PRINT[1])
+      const front = lerp(-0.535, 0.535, 0.5 - 0.5 * Math.cos(Math.PI * pr))
+      glass.print.uPrint.value = front
+      glass.print.uHot.value = 0.9 * window01(local, PRINT[0], PRINT[1] + 0.03, 0.02)
+      glass.logo.mark.visible = local > PRINT[0]
+      reflection.visible = local > PRINT[0]
+      const headK = window01(local, PRINT[0] - 0.004, PRINT[1] + 0.01, 0.014) * (1 - smoothstep(0.44, 0.53, front)) * smoothstep(-0.53, -0.46, front)
+      head.u.uK.value = headK
+      head.mesh.visible = headK > 0.001
+      head.mesh.position.set(0, front, DEPTH / 2 + 0.006)
+      glass.logo.caps.envMapIntensity = 0.13
+      glass.logo.sides.envMapIntensity = lerp(0.3, 1.5, lit)
+
+      pivot.updateMatrixWorld(true)
+      reflection.matrix.multiplyMatrices(FLOOR_MIRROR, glass.logo.root.matrixWorld)
+      neonRefl.root.matrix.multiplyMatrices(FLOOR_MIRROR, neon.root.matrixWorld)
+      sketch.mirror.matrix.multiplyMatrices(FLOOR_MIRROR, sketch.mesh.matrixWorld)
+
+      // ================= the neon: the diamond (01), the loops (02), the halo + sparks (04)
+      const dDraw = sm(local, DIAMOND[0], DIAMOND[1])
+      const aDraw = sm(local, LOOP_A[0], LOOP_A[1])
+      const bDraw = sm(local, LOOP_B[0], LOOP_B[1])
+      const draws = [aDraw, bDraw, dDraw]
+      const starts = [LOOP_A[0], LOOP_B[0], DIAMOND[0]]
+      // sparks: one per tube, now and then (idle); on the scroll alone under reduced motion
+      const periods = [4.8, 5.6, 2.6]
+      const offs = [0.0, 0.47, 0.23]
+      const reflK = portrait ? 0.15 : 1
+      for (let i = 0; i < 3; i++) {
+        let px = 0
+        let py = 0
+        if (alive > 0) {
+          if (rm) {
+            px = fract(local * 3.2 + offs[i])
+            py = 2.6 * Math.sqrt(Math.sin(Math.PI * px))
+          } else {
+            const ph = t / periods[i] + offs[i] + local * 2
+            const lap = Math.floor(ph)
+            px = ph - lap
+            // the loops always carry a spark; the diamond's comes now and then
+            const gate = i < 2 || hash(lap * 7 + i * 31) < 0.6 ? 1 : 0
+            py = 3.6 * gate * Math.sqrt(Math.sin(Math.PI * px))
+          }
+          py *= alive
+        }
+        const on = local > starts[i] ? 1 : 0
+        const sp = sparks[i]
+        sp.k.value = py / 3.6
+        sp.mesh.visible = py > 0.01
+        if (sp.mesh.visible) sp.mesh.position.copy(neon.curves[i].getPointAt(px, sparkP))
+        for (const n of neon.parts[i]) {
+          n.root.visible = on > 0 && draws[i] > 0
+          n.on.value = on
+          n.draw.value = draws[i]
+          n.pulse.value.set(px, py)
+          n.k.main.tube = 3.0
+          n.k.main.glow = 0.55
+          n.k.trans.tube = 3.0
+          n.k.trans.glow = 0.78
+        }
+        for (const n of neonRefl.parts[i]) {
+          n.root.visible = on > 0 && draws[i] > 0
+          n.on.value = on * reflK
+          n.draw.value = draws[i]
+          n.pulse.value.set(px, py * 0.6)
+          n.k.main.tube = 0.9
+          n.k.main.glow = 0.3
+          n.k.trans.tube = 0
+          n.k.trans.glow = 0
+        }
       }
-      const iy = rasterY
-      const ix = clamp(front + 0.015, 0, 1)
-      pane.u.uFront.value = local < BLAST[0] ? -0.3 : front
-      pane.u.uImpact.value.set(ix, iy)
-      pane.u.uImpactR.value = 0.14 * blasting
-      impactLocal.set((ix - 0.5) * PANE.w, (iy - 0.5) * PANE.h, FACE_Z + 0.004)
-      const nozIn = ease.outCubic(segment(local, NOZ_IN[0], NOZ_IN[1]))
-      const nozOut = ease.inCubic(segment(local, NOZ_OUT[0], NOZ_OUT[1]))
-      const nozVis = nozIn * (1 - nozOut)
-      // the tip stands off the glass up and to the left, aimed at the impact
-      tipLocal.set(impactLocal.x - 0.78, impactLocal.y + 0.42, FACE_Z + 0.62)
-      tipLocal.x -= 2.6 * (1 - nozIn) + 2.6 * nozOut
-      tipLocal.y += 0.8 * (1 - nozIn) + 1.2 * nozOut
-      dirLocal.subVectors(impactLocal, tipLocal).normalize()
-      nozzle.position.copy(tipLocal)
-      nozzle.quaternion.setFromUnitVectors(NOZ_AXIS, dirLocal)
-      nozzle.visible = nozVis > 0.002
-      spray.u.uFrom.value.copy(tipLocal).addScaledVector(dirLocal, 0.005)
-      spray.u.uTo.value.copy(impactLocal)
-      spray.u.uTime.value = rm ? t * 0.15 : t
-      // a fine stream of grains, not a beam: its peak stays low enough that the
-      // stream crossing a region never swings it by a flash's worth of light
-      spray.u.uIntensity.value = blasting * (calm ? 0.42 : 0.55)
-      spray.u.uSize.value = 2.6 * (ctx.renderer.getPixelRatio() || 1)
-      spray.points.visible = blasting > 0.002
-      impact.mesh.position.copy(impactLocal)
-      impact.u.uIntensity.value = blasting * (calm ? 0.55 : 0.62 + 0.06 * Math.sin(t * 5.1) * Math.sin(t * 3.3))
-      impact.mesh.visible = blasting > 0.002
 
-      // ================= the frost itself: glow while blasting, swelling when finished
-      const frosted = smoothstep(BLAST[0], BLAST[0] + 0.02, local)
-      const finished = smoothstep(LIFT[0], POLISH[0] + 0.03, local)
-      pane.u.uGlow.value = frosted * lerp(0.27, 0.36, finished) + 0.03 * results
-      pane.u.uRim.value = 0.95 * smoothstep(LIFT[0] + 0.015, LIFT[1] + 0.01, local)
-      pane.u.uFrostR.value = 0.5
+      // ================= the sketch plane: the point, the listen rings, the construction drawing
+      const su = sketch.u
+      const breath = 1 + 0.12 * Math.sin(t * 1.1) * idle
+      su.uDot.value = lerp(0.45, 1, smoothstep(0.0, 0.07, local)) * (1 - smoothstep(0.08, 0.118, local)) * breath
+      su.uRings.value = window01(local, RINGS[0], RINGS[1], 0.035)
+      su.uRingPhase.value = local * 2.4 + t * 0.1 * idle
+      su.uRingMax.value = 0.95
+      const g = window01(local, GUIDES[0], GUIDES[1], 0.032)
+      su.uGrid.value = g
+      su.uGridR.value = lerp(0.05, 1.0, ease.outCubic(segment(local, 0.268, 0.345)))
+      su.uAxes.value.set(g, sm(local, 0.27, 0.33))
+      su.uFrame.value.set(g, sm(local, 0.278, 0.33))
+      su.uCircles.value.set(g, sm(local, 0.284, 0.35))
+      su.uTangents.value.set(g, sm(local, 0.294, 0.36))
+      su.uK.value = 1
+      const sketchOn = local < GUIDES[1] + 0.005
+      sketch.mesh.visible = sketchOn
+      sketch.mirror.visible = sketchOn
+      sketch.mirror.material.uniforms.uK.value = 0.4 * reflK
 
-      // ================= 04 SUPPORT: polish — a glint glides round the bevel
-      const polU = segment(local, POLISH[0], POLISH[1])
-      pane.su.uSweep.value = Math.PI * 0.62 - ease.inOutQuad(polU) * Math.PI * 2
-      pane.su.uGlint.value = window01(local, POLISH[0], POLISH[1] + 0.01, 0.02) * (rm ? 0.6 : 1)
-      pane.sides.envMapIntensity = 1.15 + 0.35 * window01(local, POLISH[0], 0.95, 0.04)
+      // ================= the room
+      // the backlight: bright in the glass buffer (the frost glows), faint in the frame
+      const camToMark = tmpC.copy(pos).negate().normalize()
+      card.mesh.position.copy(camToMark).multiplyScalar(1.7)
+      tmpM.lookAt(pos, card.mesh.position, UP)
+      card.mesh.quaternion.setFromRotationMatrix(tmpM)
+      const cardSize = MARK_S * 5.2
+      card.mesh.scale.set(cardSize, cardSize, 1)
+      const cu = card.mesh.material.uniforms
+      cu.uHalf.value = cardSize / 2
+      cu.uCore.value = 0.62
+      cu.uWideR.value = 1.6
+      card.k.trans.glow = 0.19 * lit
+      card.k.trans.wide = 0.055 * lit
+      card.k.main.glow = 0.035 * lit
+      card.k.main.wide = 0
+      card.mesh.visible = lit > 0.001
 
-      // the turntable: square to the film and the cut, turned to the nozzle, a slow
-      // quarter-turn under the polish, square again for the results
-      let yaw = 0
-      yaw += 0.16 * ease.inOutCubic(segment(local, 0.44, 0.5))
-      yaw += -0.16 * ease.inOutCubic(segment(local, 0.6, 0.65))
-      yaw += 0.26 * Math.sin(Math.PI * ease.inOutQuad(segment(local, 0.63, 0.83)))
-      turn.rotation.y = yaw + (rm ? 0 : Math.sin(t * 0.3) * 0.012)
-      paneG.visible = local > 0.2
+      floor.material.uniforms.uK.value = 0.012 + 0.012 * proto + 0.028 * lit
+      reflection.material.uniforms.uStrength.value = 0.2 * lit * (portrait ? 0.35 : 1)
+      reflection.material.uniforms.uFade.value = portrait ? 4 : 1.6
 
-      // light behind the pane: a soft card with a crisp slit
-      // the glow behind drops as the frost takes over (clear glass then reads dark and see-through)
-      card.u.uIntensity.value = lerp(lerp(0.72, 0.46, frosted), 0.3, finished) * smoothstep(0.24, 0.32, local)
-      card.u.uSlit.value = lerp(1, 0.7, results)
-      panePool.u.uIntensity.value = lerp(0.3, 0.55, finished)
+      // ---- world: black; a backlight halo behind the mark — faint and warm while only
+      // the diamond exists, the frost's broad white-cool glow once the glass is there
+      const wp = ctx.world.params
+      wp.top = '#020203'
+      wp.bottom = '#000000'
+      const w = tmpC.set(0, 0, 0).sub(pos)
+      const depth = Math.max(0.1, w.dot(tmpF))
+      const ndcX = w.dot(tmpR) / (depth * tanV * aspect)
+      const ndcY = w.dot(tmpU) / (depth * tanV)
+      wp.focus.set(ndcX * aspect, ndcY)
+      const markH = MARK_S / (depth * tanV * 2)
+      wp.halo = lerp(0.1, 0.22, proto) + 0.5 * lit
+      wp.haloSize = clamp(markH * lerp(0.7, 1.15, Math.max(proto * 0.6, lit)), 0.35, 2)
+      haloCol.copy(NEON_C).lerp(ICE, lerp(0.55, 1, Math.max(proto, lit)))
+      wp.haloColor = haloCol
+      wp.slits = 0
+      wp.slitAngle = 0
+      wp.env = 1
+      wp.envTurn = -0.3 + 0.6 * turnE + 0.25 * sm(local, 0.44, 0.6)
+      wp.key = lerp(0.1, 0.6, lit)
+      wp.keyDir.set(-0.45, 0.8, 0.5)
+      wp.fill = 0.04
 
-      // ---- world: black, the halo behind the subject
-      const w = ctx.world.params
-      const atPane = smoothstep(0.25, 0.32, local)
-      w.halo = lerp(0.82, 0.72, atPane) - 0.14 * finished
-      w.haloSize = (lerp(0.72, 1.0, atPane) + 0.1 * results) * (portrait ? 0.85 : 1)
-      w.slits = lerp(0.32, 0.18, atPane)
-      w.env = 1.1
-      let envTurn = 0.2 + 0.5 * scanE
-      envTurn += 0.6 * ease.inOutCubic(segment(local, 0.26, 0.4))
-      envTurn += 2.2 * ease.inOutQuad(polU)
-      envTurn += 0.25 * results
-      w.envTurn = rm ? 0.2 + (envTurn - 0.2) * 0.3 : envTurn
-      w.keyDir.set(lerp(0.12, -0.45, atPane), 1, lerp(0.18, 0.5, atPane))
-      w.key = 1.7
-      w.fill = 0.08
+      // ---- post: bloom only on true highlights (the tubes, the print head)
+      const pp = ctx.post.params
+      pp.bloomStrength = 0.24
+      pp.bloomRadius = 0.28
+      pp.bloomThreshold = 1.5
+      pp.vignette = 0.62
+      pp.grain = 0.016
 
-      // ---- post: bloom only where a light needs to read as light — the scan ring
-      // and the polish glint on the bevel (elsewhere it adds nothing, or smears
-      // the stream); off, the pass costs nothing
-      const post = ctx.post.params
-      post.bloomStrength = Math.max(0.32 * scanOn, 0.42 * window01(local, POLISH[0] - 0.01, POLISH[1] + 0.02, 0.025))
-      post.bloomRadius = 0.35
-      post.vignette = 0.55
-
-      // ---- DOM
-      reveal(head, window01(local, HEAD[0], HEAD[1], 0.03), 0)
+      // ================= DOM
+      reveal(headEl, window01(local, HEAD[0], HEAD[1], 0.03), 0)
       setRise(headline, local > HEAD[0] + 0.005 && local < HEAD[1] - 0.01)
       const cardV = window01(local, CARD[0], CARD[1], 0.018)
       reveal(cardEl, cardV, 0)
+      const inSteps = local >= A && local <= B
+      const idx = clamp(Math.floor((local - A) / S), 0, 3)
+      const phase = clamp((local - A - idx * S) / S)
       const cur = local > CARD[0] && local < CARD[1] ? idx : -1
       if (cur !== shown) {
         shown = cur
@@ -589,7 +570,7 @@ export default function create(): Chapter {
       }
       for (let i = 0; i < stepTitles.length; i++) setRise(stepTitles[i], i === cur && cardV > 0.05)
       for (let i = 0; i < 4; i++) {
-        const f = i < idx ? 1 : i === idx ? (inSteps ? ease.outCubic(clamp(phase / 0.6)) : local > B ? 1 : 0) : 0
+        const f = i < idx ? 1 : i === idx ? (inSteps ? ease.outCubic(clamp(phase / 0.7)) : local > B ? 1 : 0) : 0
         const q = Math.round(f * 1000)
         if (fillCache[i] !== q) {
           fillCache[i] = q
@@ -604,36 +585,12 @@ export default function create(): Chapter {
       }
     },
 
-    camera(local: number, frame: Frame, out: CameraPose) {
-      const aspect = frame.width / Math.max(1, frame.height)
-      if (Math.abs(aspect - keysAspect) > 1e-3 || fitDirty) {
-        keys = keysFor(aspect, fit)
-        keysAspect = aspect
-        fitDirty = false
-      }
-      const fov = sample(keys, local, tmpPos, tmpTgt, tmpFocus)
-      // a slow breath in the pose (idle only)
-      if (!frame.reducedMotion && !frame.still) tmpPos.y += Math.sin(frame.time * 0.35) * 0.03
-      out.position.copy(tmpPos)
-      out.target.copy(tmpTgt)
+    camera(_local: number, frame: Frame, out: CameraPose) {
+      out.position.copy(pos)
+      out.target.copy(tgt)
       out.fov = fov
       out.roll = 0
-      out.parallax = frame.reducedMotion ? 0 : 0.22
-
-      // put the backlight halo behind the subject
-      if (ctxRef) {
-        scratch.position.copy(tmpPos)
-        scratch.fov = fov
-        scratch.aspect = aspect
-        scratch.updateProjectionMatrix()
-        scratch.lookAt(tmpTgt)
-        scratch.updateMatrixWorld()
-        tmpFocus.y += 0.1
-        tmpFocus.project(scratch)
-        if (Number.isFinite(tmpFocus.x) && Number.isFinite(tmpFocus.y)) {
-          ctxRef.world.params.focus.set(clamp(tmpFocus.x, -1.2, 1.2) * aspect, clamp(tmpFocus.y, -0.9, 0.9))
-        }
-      }
+      out.parallax = frame.reducedMotion ? 0 : 0.14
     },
   }
 }

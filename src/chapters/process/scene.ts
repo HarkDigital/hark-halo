@@ -1,654 +1,675 @@
 import * as THREE from 'three'
-import { smoothExtrude, sharpTransmission } from '../../kit/glass'
-import type { PatternSdf } from './sdf'
+import { G, frostedLogo, neonPath, type FrostedLogo, type NeonPath } from '../../kit/glass'
+import { logoParts } from '../../logo/logo'
 
 /*
- * ANNEALED — scene parts for the process chapter (how frosted glass is made).
+ * ASSEMBLY — the process chapter's set. The process builds the Hark mark,
+ * one step at a time, in the black room over the mirror floor.
  *
- *  - BLOCK: a raw block of clear, polished glass under a single spotlight; a
- *    ring of light (the inspection scan) slides down around it.
- *  - PANE: the working piece. Its faces are ONE physical glass material whose
- *    roughness is decided per fragment: the resist pattern (the Hark mark and
- *    a fine keyline, read from a signed distance field, antialiased in screen
- *    space) stays clear; everything else frosts behind a noisy sandblast
- *    front. Frosted areas glow with the light behind (a soft scatter term) and
- *    the step between frost and clear catches a hairline of light. Its bevels
- *    are polished glass that carries a gliding glint (the polish).
- *  - STENCIL: a thin matte-black resist film in two complementary pieces cut
- *    from the same field (the FIELD sheet, weeded away after the cut, and the
- *    RESIST, the mark-shaped pieces that stay on through the blast). Both are
- *    transparent (smooth SDF edges) and drawn over the glass.
- *  - KERF: an additive overlay that draws the cut in light, revealed by a
- *    gantry line travelling down the sheet.
- *  - NOZZLE + SPRAY: a chrome nozzle and a fine stream of additive grains that
- *    strike the pane and ricochet.
- *  - LIGHT CARD: an additive plane kept in the OPAQUE list behind the pane, so
- *    three's transmission pass sees it and the frost has light to diffuse.
+ *   sketch     one additive plane in the mark's own plane (mark units): the
+ *              point of light where the mark's centre will be, the LISTEN
+ *              rings (the diamond's outline, rounding into circles as they
+ *              spread) and the PROTOTYPE construction drawing — a fine grid,
+ *              the axes and diagonals, the four circles every curl is drawn
+ *              from and the tangent lines the bars run along (the mark's real
+ *              geometry: curls r 0.15 / 0.054 at (0, ±0.35), (±0.35, 0); bar
+ *              edges at x − y = ±0.135, ±0.277), crop marks. Mirrored copy in
+ *              the floor.
+ *   neon       the kit's neonMark (loop A, loop B, the diamond), drawn in with
+ *              `draw` and sparked with `pulse`. It starts in the mark's plane
+ *              (the working model), then glides back and grows into the
+ *              hero's halo behind the glass. Mirrored copy in the floor.
+ *   glass      the frosted mark (kit frostedLogo, straight walls), PRINTED
+ *              from the floor up: everything above the print front is
+ *              discarded, the freshly fused layer glows and cools.
+ *   head       the print head: a line of light riding the print front.
+ *   card       the backlight: bright in three's glass buffer (the frost
+ *              glows), faint in the frame (the room stays black).
+ *   floor      the black mirror floor: a soft pool of light under the mark.
+ *   reflection the glass mark mirrored in the floor (cheap, not transmissive).
  */
 
-export const PANE = { w: 1.8, h: 2.4, d: 0.1, bevel: 0.034, radius: 0.045 }
-/** the front face (local z) */
-export const FACE_Z = PANE.d / 2 + PANE.bevel
-export const MARK_H = 1.28
-export const BLOCK = { w: 1.3, h: 1.7, d: 0.95, bevel: 0.07, radius: 0.08 }
+/** mark height in world units */
+export const MARK_S = 2.2
+/** the black mirror floor, a little below the mark */
+export const FLOOR_Y = -MARK_S / 2 - 0.36
+/** the glass slab's depth (mark units): straight walls, sharp edges */
+export const DEPTH = 0.24
+/** the frost: translucent, the neon and the backlight read through it as soft shapes */
+export const FROST = 0.36
+/** how far the frost spreads the light behind it, past three's own blur */
+const DIFFUSE = 1.55
+/** the finished halo: the neon mark this far behind the glass, this much larger (the hero's) */
+export const HALO_Z = -(DEPTH / 2) - 0.2
+export const HALO_SCALE = 1.16
 
-export function roundedRect(w: number, h: number, r: number): THREE.Shape {
-  const s = new THREE.Shape()
-  const x = -w / 2
-  const y = -h / 2
-  s.moveTo(x + r, y)
-  s.lineTo(x + w - r, y)
-  s.quadraticCurveTo(x + w, y, x + w, y + r)
-  s.lineTo(x + w, y + h - r)
-  s.quadraticCurveTo(x + w, y + h, x + w - r, y + h)
-  s.lineTo(x + r, y + h)
-  s.quadraticCurveTo(x, y + h, x, y + h - r)
-  s.lineTo(x, y + r)
-  s.quadraticCurveTo(x, y, x + r, y)
-  return s
+/** reflect about the floor plane: y → 2·FLOOR_Y − y */
+export const FLOOR_MIRROR = new THREE.Matrix4().makeTranslation(0, 2 * FLOOR_Y, 0).multiply(new THREE.Matrix4().makeScale(1, -1, 1))
+
+type IsFrame = (rt: THREE.WebGLRenderTarget | null) => boolean
+
+// ------------------------------------------------------------------ sketch
+
+export interface SketchUniforms {
+  uIce: { value: THREE.Color }
+  uColA: { value: THREE.Color }
+  uColB: { value: THREE.Color }
+  uColC: { value: THREE.Color }
+  /** overall strength */
+  uK: { value: number }
+  /** the point of light at the centre */
+  uDot: { value: number }
+  /** listen rings: strength, phase (rings travel outward as it grows), how far they spread */
+  uRings: { value: number }
+  uRingPhase: { value: number }
+  uRingMax: { value: number }
+  /** construction drawing: each layer's strength and how far it has been drawn (0..1) */
+  uGrid: { value: number }
+  uGridR: { value: number }
+  uAxes: { value: THREE.Vector2 }
+  uCircles: { value: THREE.Vector2 }
+  uTangents: { value: THREE.Vector2 }
+  uFrame: { value: THREE.Vector2 }
+  /** floor clip / mirror */
+  uFloorY: { value: number }
+  uMirror: { value: number }
+  uFade: { value: number }
 }
 
-const NOISE = /* glsl */ `
-  float prHash(vec2 p) { vec3 p3 = fract(vec3(p.xyx) * .1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
-  float prNoise(vec2 p) {
-    vec2 i = floor(p), f = fract(p);
-    vec2 u = f * f * (3.0 - 2.0 * f);
-    return mix(mix(prHash(i), prHash(i + vec2(1.0, 0.0)), u.x), mix(prHash(i + vec2(0.0, 1.0)), prHash(i + vec2(1.0, 1.0)), u.x), u.y);
+const SKETCH_VERT = /* glsl */ `
+  varying vec2 vP;
+  varying float vWY;
+  void main() {
+    vP = position.xy;
+    vec4 w = modelMatrix * vec4(position, 1.0);
+    vWY = w.y;
+    gl_Position = projectionMatrix * viewMatrix * w;
   }
 `
 
-// ------------------------------------------------------------------ pane
+const SKETCH_FRAG = /* glsl */ `
+  uniform vec3 uIce, uColA, uColB, uColC;
+  uniform float uK, uDot, uRings, uRingPhase, uRingMax, uGrid, uGridR;
+  uniform vec2 uAxes, uCircles, uTangents, uFrame;
+  uniform float uFloorY, uMirror, uFade;
+  varying vec2 vP;
+  varying float vWY;
 
-export interface PaneUniforms {
-  uSdf: { value: THREE.Texture }
-  uSdfScale: { value: number }
-  uRect: { value: THREE.Vector4 }
-  uSize: { value: THREE.Vector2 }
-  /** roughness of the sandblasted field */
-  uFrostR: { value: number }
-  /** sandblast front in pane uv.x (−0.2 = untouched … 1.2 = done) */
-  uFront: { value: number }
-  uImpact: { value: THREE.Vector2 }
-  uImpactR: { value: number }
-  /** backlit scatter glow of the frost */
-  uGlow: { value: number }
-  uGlowC: { value: THREE.Vector2 }
-  uGlowColor: { value: THREE.Color }
-  /** hairline of light where frost meets the clear pattern */
-  uRim: { value: number }
+  const float TAU = 6.28318531;
+  const float S2 = 0.70710678;
+
+  // a hairline about 1.3 px wide (aa = one pixel in mark units)
+  float hair(float d, float aa) { return 1.0 - smoothstep(aa * 0.35, aa * 1.35, d); }
+  // a straight line segment grown from its middle: d across, s along (0 at the middle), half-length L
+  float grown(float d, float s, float L, float aa) {
+    return hair(d, aa) * (1.0 - smoothstep(L - aa * 2.0, L, abs(s)));
+  }
+  // a circle drawn round from angle a0 like a compass
+  float arc(vec2 p, vec2 c, float r, float a0, float draw, float aa) {
+    vec2 q = p - c;
+    float t = fract((atan(q.y, q.x) - a0) / TAU);
+    float on = 1.0 - smoothstep(draw - 0.012, draw, t);
+    return hair(abs(length(q) - r), aa) * on * step(0.001, draw);
+  }
+
+  void main() {
+    vec2 p = vP;
+    float aa = max(length(fwidth(p)) * 0.7071, 1e-5);
+    float r = length(p);
+    vec3 col = vec3(0.0);
+
+    // ---- the point of light where the mark's centre will be
+    if (uDot > 0.0) {
+      col += (uIce * exp(-r * r / 0.00012) * 1.4 + uColC * exp(-r * r / 0.0035) * 0.35) * uDot;
+    }
+
+    // ---- LISTEN: rings leave the diamond, its outline rounding into circles as they spread
+    if (uRings > 0.0) {
+      vec2 a = max(abs(p), vec2(1e-6));
+      // which loop's side of the mark a point is on (loop A up-left, loop B down-right)
+      float side = clamp((p.y - p.x) / max(r * 1.4, 1e-3) * 0.5 + 0.5, 0.0, 1.0);
+      vec3 sideCol = mix(uColB, uColA, side);
+      for (int i = 0; i < 5; i++) {
+        float ph = fract(uRingPhase + float(i) * 0.2);
+        float rr = mix(0.085, uRingMax, ph);
+        float round01 = smoothstep(0.0, 0.5, ph);
+        float pn = 1.0 + round01;
+        float n = pow(pow(a.x, pn) + pow(a.y, pn), 1.0 / pn);
+        float d = abs(n - rr) / mix(1.41421356, 1.0, round01);
+        float fade = (1.0 - ph) * (1.0 - ph) * smoothstep(0.0, 0.08, ph);
+        vec3 c = mix(uColC, sideCol, smoothstep(0.1, 0.75, ph));
+        float core = hair(d, aa);
+        float glow = exp(-d * d / 0.00012);
+        col += c * (core * 1.25 + glow * 0.45) * fade * uRings;
+      }
+    }
+
+    // ---- PROTOTYPE: the construction drawing
+    if (uGrid > 0.0) {
+      float box = max(abs(p.x), abs(p.y));
+      float m = (1.0 - smoothstep(uGridR - 0.16, uGridR, r)) * (1.0 - smoothstep(0.5, 0.66, box));
+      vec2 g = abs(fract(p / 0.05 + 0.5) - 0.5) * 0.05;
+      vec2 g2 = abs(fract(p / 0.25 + 0.5) - 0.5) * 0.25;
+      float fine = max(hair(g.x, aa), hair(g.y, aa));
+      float major = max(hair(g2.x, aa), hair(g2.y, aa));
+      col += uIce * (fine * 0.12 + major * 0.26) * m * uGrid;
+    }
+    if (uAxes.x > 0.0) {
+      float L = 0.66 * uAxes.y;
+      float u = (p.x + p.y) * S2;
+      float v = (p.x - p.y) * S2;
+      float ax = max(grown(abs(p.y), p.x, L, aa), grown(abs(p.x), p.y, L, aa));
+      // the diagonals the bars run along: dashed
+      float dash = smoothstep(0.35, 0.5, abs(fract(max(abs(u), abs(v)) / 0.024) - 0.5) * 2.0);
+      float dg = max(grown(abs(v), u, L * 1.05, aa), grown(abs(u), v, L * 1.05, aa)) * (0.35 + 0.65 * dash);
+      col += uIce * (ax * 0.5 + dg * 0.42) * uAxes.x;
+    }
+    if (uCircles.x > 0.0) {
+      float dr = uCircles.y;
+      // loop A's curls (top, left) and loop B's (bottom, right): outer 0.15, inner 0.054
+      float ca = arc(p, vec2(0.0, 0.35), 0.15, 1.57, dr, aa) + arc(p, vec2(-0.35, 0.0), 0.15, 3.14, dr, aa)
+               + 0.8 * (arc(p, vec2(0.0, 0.352), 0.054, 1.57, dr, aa) + arc(p, vec2(-0.352, 0.0), 0.054, 3.14, dr, aa));
+      float cb = arc(p, vec2(0.0, -0.35), 0.15, -1.57, dr, aa) + arc(p, vec2(0.35, 0.0), 0.15, 0.0, dr, aa)
+               + 0.8 * (arc(p, vec2(0.0, -0.352), 0.054, -1.57, dr, aa) + arc(p, vec2(0.352, 0.0), 0.054, 0.0, dr, aa));
+      col += (mix(uIce, uColA, 0.55) * ca + mix(uIce, uColB, 0.55) * cb) * 0.85 * uCircles.x;
+    }
+    if (uTangents.x > 0.0) {
+      float L = 0.62 * uTangents.y;
+      float u = (p.x + p.y) * S2;
+      float v = (p.x - p.y) * S2;
+      // the bars' edges: tangent to the outer and inner circles of both curls
+      float ta = grown(abs(v + 0.0955), u, L, aa) + grown(abs(v + 0.1959), u, L, aa);
+      float tb = grown(abs(v - 0.0955), u, L, aa) + grown(abs(v - 0.1959), u, L, aa);
+      col += (mix(uIce, uColA, 0.4) * ta + mix(uIce, uColB, 0.4) * tb) * 0.55 * uTangents.x;
+    }
+    if (uFrame.x > 0.0) {
+      // crop marks at the corners of the mark's square, and a centre cross
+      vec2 q = abs(p);
+      float E = 0.56;
+      float len = 0.07 * uFrame.y;
+      float cm = hair(abs(q.x - E), aa) * step(E - len, q.y) * step(q.y, E) + hair(abs(q.y - E), aa) * step(E - len, q.x) * step(q.x, E);
+      float cx = 0.02 * uFrame.y;
+      float cc = hair(abs(p.y), aa) * step(q.x, cx) + hair(abs(p.x), aa) * step(q.y, cx);
+      col += uIce * (cm * 0.7 + cc * 0.6) * uFrame.x;
+    }
+
+    // the floor: the drawing stops at it; the mirrored copy shows only below, fading with depth
+    float below = uFloorY - vWY;
+    float keep = mix(1.0 - smoothstep(-0.03, -0.004, below), exp(-max(below, 0.0) * uFade) * step(0.0, below), uMirror);
+    gl_FragColor = vec4(col * uK * keep, 1.0);
+  }
+`
+
+export function buildSketch(): { mesh: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>; mirror: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>; u: SketchUniforms } {
+  const u: SketchUniforms = {
+    uIce: { value: new THREE.Color(G.ice) },
+    uColA: { value: new THREE.Color(G.neonA) },
+    uColB: { value: new THREE.Color(G.neonB) },
+    uColC: { value: new THREE.Color(G.neonC) },
+    uK: { value: 1 },
+    uDot: { value: 0 },
+    uRings: { value: 0 },
+    uRingPhase: { value: 0 },
+    uRingMax: { value: 0.9 },
+    uGrid: { value: 0 },
+    uGridR: { value: 0 },
+    uAxes: { value: new THREE.Vector2() },
+    uCircles: { value: new THREE.Vector2() },
+    uTangents: { value: new THREE.Vector2() },
+    uFrame: { value: new THREE.Vector2() },
+    uFloorY: { value: FLOOR_Y },
+    uMirror: { value: 0 },
+    uFade: { value: 2.2 },
+  }
+  const make = (uu: SketchUniforms) => {
+    const mat = new THREE.ShaderMaterial({
+      uniforms: uu as unknown as Record<string, THREE.IUniform>,
+      vertexShader: SKETCH_VERT,
+      fragmentShader: SKETCH_FRAG,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      toneMapped: false,
+    })
+    // in mark units (the plane lives in the mark's own space); rings spread past the mark
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 2.4), mat)
+    m.frustumCulled = false
+    m.renderOrder = 3
+    return m
+  }
+  const mesh = make(u)
+  const mirror = make({ ...u, uMirror: { value: 1 }, uK: { value: 0 } })
+  mirror.matrixAutoUpdate = false
+  return { mesh, mirror, u }
 }
 
-export interface Pane {
-  mesh: THREE.Mesh
-  caps: THREE.MeshPhysicalMaterial
-  sides: THREE.MeshPhysicalMaterial
-  u: PaneUniforms
-  su: { uGlint: { value: number }; uSweep: { value: number }; uHalf: { value: THREE.Vector2 }; uGlintColor: { value: THREE.Color } }
+// ------------------------------------------------------------------ the printed glass mark
+
+export interface PrintUniforms {
+  /** the print front (object y, mark units): glass above it isn't there yet */
+  uPrint: { value: number }
+  /** the freshly fused layer's glow */
+  uHot: { value: number }
+  uHotColor: { value: THREE.Color }
 }
 
-export function makePane(sdf: PatternSdf, mobile: boolean): Pane {
-  const geo = smoothExtrude(roundedRect(PANE.w, PANE.h, PANE.radius), {
-    depth: PANE.d,
-    bevel: PANE.bevel,
-    bevelSegments: mobile ? 4 : 7,
-    curveSegments: 10,
-    crease: Math.PI / 4.5,
-  })
-  const u: PaneUniforms = {
-    uSdf: { value: sdf.tex },
-    uSdfScale: { value: sdf.scale },
-    uRect: { value: new THREE.Vector4(-PANE.w / 2, -PANE.h / 2, PANE.w, PANE.h) },
-    uSize: { value: new THREE.Vector2(PANE.w, PANE.h) },
-    uFrostR: { value: 0.5 },
-    uFront: { value: -0.3 },
-    uImpact: { value: new THREE.Vector2(-5, -5) },
-    uImpactR: { value: 0 },
-    uGlow: { value: 0 },
-    uGlowC: { value: new THREE.Vector2(0.5, 0.56) },
-    uGlowColor: { value: new THREE.Color('#e9eef6') },
-    uRim: { value: 0 },
-  }
-  // faces: clear glass whose roughness the pattern + blast decide per fragment
-  const caps = new THREE.MeshPhysicalMaterial({
-    color: 0xffffff,
-    metalness: 0,
-    roughness: 0.02,
-    transmission: 1,
-    thickness: 0.32,
-    ior: 1.5,
-    specularIntensity: 1,
-    envMapIntensity: 1,
-    attenuationColor: new THREE.Color('#eef3ff'),
-    attenuationDistance: 6,
-  })
-  caps.dispersion = 0
-  caps.onBeforeCompile = shader => {
-    Object.assign(shader.uniforms, u)
-    shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nuniform vec4 uRect;\nvarying vec2 vPUv;')
-      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvPUv = (position.xy - uRect.xy) / uRect.zw;')
-    shader.fragmentShader = shader.fragmentShader
-      .replace(
-        '#include <common>',
-        `#include <common>
-        uniform sampler2D uSdf;
-        uniform float uSdfScale, uFrostR, uFront, uImpactR, uGlow, uRim;
-        uniform vec2 uSize, uImpact, uGlowC;
-        uniform vec3 uGlowColor;
-        varying vec2 vPUv;
-        ${NOISE}`,
-      )
-      .replace(
-        '#include <roughnessmap_fragment>',
-        `#include <roughnessmap_fragment>
-        // + inside the resist pattern (stays clear), − in the field
-        float prSd = (texture2D(uSdf, vPUv).r - 0.5) * uSdfScale;
-        float prAa = max(fwidth(prSd), 1e-5);
-        float prKeep = smoothstep(-prAa, prAa, prSd);
-        vec2 prW = vPUv * uSize;
-        float prN = prNoise(prW * 6.0) * 0.62 + prNoise(prW * 21.0) * 0.38;
-        // the sandblast front (grainy edge) and the fresh bloom around the impact
-        float prBlast = smoothstep(0.0, 0.03, uFront - vPUv.x + (prN - 0.5) * 0.16);
-        float prD = length((vPUv - uImpact) * uSize) + (prN - 0.5) * 0.07;
-        prBlast = max(prBlast, 1.0 - smoothstep(uImpactR * 0.45, uImpactR + 1e-4, prD));
-        float prFrost = prBlast * (1.0 - prKeep);
-        roughnessFactor = mix(roughnessFactor, uFrostR, prFrost);`,
-      )
-      .replace(
-        '#include <emissivemap_fragment>',
-        `#include <emissivemap_fragment>
-        // light scattered by the sandblasted surface: brightest over the backlight
-        vec2 prG = (vPUv - uGlowC) * uSize;
-        float prFall = 0.12 + 0.88 * exp(-dot(prG, prG) * 1.05);
-        float prGrain = prHash(floor(gl_FragCoord.xy));
-        totalEmissiveRadiance += uGlowColor * (uGlow * prFrost * prFall * (0.88 + 0.24 * prGrain));
-        // the step between frost and clear catches a hairline of light
-        float prLine = exp(-(prSd * prSd) / (prAa * prAa * 1.6));
-        totalEmissiveRadiance += uGlowColor * (uRim * prLine * prBlast * (0.55 + 0.45 * prFall));`,
-      )
-  }
-  caps.customProgramCacheKey = () => 'frost-process-pane-caps'
+const LOD_RE = /float lod = log2\( transmissionSamplerSize\.x \) \* applyIorToRoughness\( roughness, ior \);\s*return textureBicubic\( transmissionSamplerMap, fragCoord\.xy, lod \);/
 
-  const su = {
-    uGlint: { value: 0 },
-    uSweep: { value: 0 },
-    uHalf: { value: new THREE.Vector2(PANE.w / 2, PANE.h / 2) },
-    uGlintColor: { value: new THREE.Color('#f4f7ff') },
+/** three's transmission read with the frost spread wider (light arrives through it as soft washes) */
+function diffuseTransmissionChunk(): string | null {
+  const chunk = THREE.ShaderChunk.transmission_pars_fragment
+  if (!LOD_RE.test(chunk)) {
+    if (import.meta.env.DEV) console.warn('[process] three transmission chunk changed; the frost keeps three’s blur')
+    return null
   }
-  // polished bevels: crisp strip reflections + a glint that glides around the rim
-  const sides = new THREE.MeshPhysicalMaterial({
-    color: 0xffffff,
-    metalness: 0,
-    roughness: 0.015,
-    transmission: 1,
-    thickness: 0.6,
-    ior: 1.5,
-    specularIntensity: 1,
-    envMapIntensity: 1.2,
-    clearcoat: 1,
-    clearcoatRoughness: 0.03,
-  })
-  // monochrome: no spectral split on the polished bevel (USE_DISPERSION compiled out)
+  return chunk.replace(
+    LOD_RE,
+    `float lod = log2( transmissionSamplerSize.x ) * applyIorToRoughness( roughness, ior ) * ${DIFFUSE.toFixed(2)};
+		return textureBicubic( transmissionSamplerMap, fragCoord.xy, lod );`,
+  )
+}
+
+const PRINT_PARS = /* glsl */ `
+varying vec3 vPrP;
+uniform float uPrint, uHot;
+uniform vec3 uHotColor;`
+
+const PRINT_CLIP = /* glsl */ `#include <clipping_planes_fragment>
+	if ( vPrP.y > uPrint ) discard;`
+
+const PRINT_GLOW = /* glsl */ `#include <emissivemap_fragment>
+	if ( uHot > 0.0 ) {
+		// the fused layer: a razor-bright edge, a warm band under it, cooling fast
+		float prD = max( uPrint - vPrP.y, 0.0 );
+		float prK = prD / 0.0055;
+		totalEmissiveRadiance += uHotColor * uHot * ( exp( -prK * prK ) * 1.5 + 0.22 * exp( -prD / 0.05 ) );
+	}`
+
+function patchPrint(m: THREE.MeshPhysicalMaterial, u: PrintUniforms, key: string, diffuse: boolean) {
+  const chunk = diffuse ? diffuseTransmissionChunk() : null
+  m.onBeforeCompile = sh => {
+    Object.assign(sh.uniforms, u)
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vPrP;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvPrP = position;')
+    let f = sh.fragmentShader
+    if (chunk) f = f.replace('#include <transmission_pars_fragment>', chunk)
+    sh.fragmentShader = f
+      .replace('#include <common>', `#include <common>\n${PRINT_PARS}`)
+      .replace('#include <clipping_planes_fragment>', PRINT_CLIP)
+      .replace('#include <emissivemap_fragment>', PRINT_GLOW)
+  }
+  m.customProgramCacheKey = () => key
+}
+
+export interface PrintedMark {
+  logo: FrostedLogo
+  print: PrintUniforms
+}
+
+export function buildGlass(envMap: THREE.Texture | null): PrintedMark {
+  const logo = frostedLogo({ depth: DEPTH, bevel: 0, frost: FROST })
+  const { caps, sides } = logo
+  // fully frosted, like the hero: satin walls meeting the frosted faces at crisp edges
+  sides.roughness = FROST * 0.8
+  sides.clearcoat = 0
   sides.dispersion = 0
-  sides.onBeforeCompile = shader => {
-    Object.assign(shader.uniforms, su)
-    shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nvarying vec3 vPLoc;')
-      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvPLoc = position;')
-    shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', '#include <common>\nuniform float uGlint, uSweep;\nuniform vec2 uHalf;\nuniform vec3 uGlintColor;\nvarying vec3 vPLoc;')
-      .replace(
-        '#include <emissivemap_fragment>',
-        `#include <emissivemap_fragment>
-        float glA = atan(vPLoc.y / uHalf.y, vPLoc.x / uHalf.x + 1e-5);
-        float glD = abs(mod(glA - uSweep + PI, 2.0 * PI) - PI);
-        totalEmissiveRadiance += uGlintColor * (uGlint * (exp(-glD * glD / 0.006) * 1.5 + exp(-glD * glD / 0.07) * 0.32));`,
-      )
+  sides.thickness = 0.12
+  sides.color.setScalar(1)
+  caps.thickness = 0.16
+  if (envMap) {
+    caps.envMap = envMap
+    sides.envMap = envMap
   }
-  sides.customProgramCacheKey = () => 'frost-process-pane-sides'
-
-  const mesh = new THREE.Mesh(geo, [caps, sides])
-  return { mesh, caps, sides, u, su }
+  caps.envMapIntensity = 0.12
+  sides.envMapIntensity = 1.2
+  const print: PrintUniforms = {
+    uPrint: { value: -1 },
+    uHot: { value: 0 },
+    uHotColor: { value: new THREE.Color(G.ice) },
+  }
+  patchPrint(caps, print, 'hark-halo-process-caps-1', true)
+  patchPrint(sides, print, 'hark-halo-process-sides-1', false)
+  logo.root.scale.setScalar(MARK_S)
+  return { logo, print }
 }
 
-// ------------------------------------------------------------------ stencil (resist film)
+// ------------------------------------------------------------------ the print head
 
-export interface Film {
-  mesh: THREE.Mesh
-  mat: THREE.MeshStandardMaterial
-  /** 0 = the film is whole (uncut), 1 = the pattern is cut out of it */
-  u: { uCut: { value: number } }
-}
-
-/**
- * One piece of the resist film: `keep` +1 keeps the pattern (the resist that
- * stays on), −1 keeps the field (the sheet weeded away after the cut).
- */
-export function makeFilm(sdf: PatternSdf, keep: 1 | -1, margin: number): Film {
-  const mat = new THREE.MeshStandardMaterial({
-    // satin vinyl: a touch above the room's black and glossy enough to catch
-    // the studio strips as it is laid (a flat black would read as a hole)
-    color: new THREE.Color('#141619'),
-    roughness: 0.24,
-    metalness: 0,
-    envMapIntensity: 1.5,
-    transparent: true,
-    side: THREE.DoubleSide,
-  })
-  const fu = {
-    uSdf: { value: sdf.tex },
-    uSdfScale: { value: sdf.scale * keep },
-    uRect: { value: new THREE.Vector4(-PANE.w / 2, -PANE.h / 2, PANE.w, PANE.h) },
-    uMargin: { value: margin },
-    uCut: { value: 1 },
-  }
-  mat.onBeforeCompile = shader => {
-    Object.assign(shader.uniforms, fu)
-    shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nuniform vec4 uRect;\nvarying vec2 vPUv;')
-      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvPUv = (position.xy - uRect.xy) / uRect.zw;')
-    shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', '#include <common>\nuniform sampler2D uSdf;\nuniform vec4 uRect;\nuniform float uSdfScale, uCut, uMargin;\nvarying vec2 vPUv;')
-      .replace(
-        '#include <color_fragment>',
-        `#include <color_fragment>
-        float fmSd = (texture2D(uSdf, vPUv).r - 0.5) * uSdfScale;
-        float fmAa = max(fwidth(fmSd), 1e-5);
-        diffuseColor.a *= mix(1.0, smoothstep(-fmAa, fmAa, fmSd), uCut);`,
-      )
-      .replace(
-        '#include <emissivemap_fragment>',
-        `#include <emissivemap_fragment>
-        // the satin sheen of the sheet: a soft overhead strip seen in its mirror
-        // direction (it slides across the film as the film is laid), a grazing lift
-        vec3 fmV = normalize(vViewPosition);
-        vec3 fmR = reflect(-fmV, normal);
-        float fmBox = smoothstep(-0.2, 0.3, fmR.y) * (1.0 - smoothstep(0.55, 0.95, fmR.y)) * (1.0 - smoothstep(0.3, 0.85, abs(fmR.x)));
-        float fmG = 1.0 - clamp(dot(normal, fmV), 0.0, 1.0);
-        float fmFres = fmG * fmG * fmG;
-        // the sheet's own edge (its thickness catches the light) and, once cut, a faint lit cut edge
-        vec2 fmP = vPUv * uRect.zw;
-        vec2 fmE2 = min(fmP - uMargin, uRect.zw - uMargin - fmP);
-        float fmE = min(fmE2.x, fmE2.y);
-        float fmEa = max(fwidth(fmE), 1e-5);
-        float fmEdge = exp(-(fmE * fmE) / (fmEa * fmEa * 1.4));
-        float fmCutEdge = exp(-(fmSd * fmSd) / (fmAa * fmAa * 1.2)) * uCut;
-        totalEmissiveRadiance += vec3(0.86, 0.89, 0.94) * (fmBox * 0.1 + fmFres * 0.12 + fmEdge * 0.4 + fmCutEdge * 0.16);`,
-      )
-  }
-  // both pieces share one program (the side kept is a uniform sign)
-  mat.customProgramCacheKey = () => 'frost-process-film'
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(PANE.w - 2 * margin, PANE.h - 2 * margin), mat)
-  mesh.renderOrder = keep > 0 ? 2 : 3
-  return { mesh, mat, u: { uCut: fu.uCut } }
-}
-
-// ------------------------------------------------------------------ kerf (the cut, drawn in light)
-
-export interface Kerf {
-  mesh: THREE.Mesh
-  u: { uKerf: { value: number }; uGantry: { value: number }; uGantryY: { value: number }; uEdge: { value: number } }
-}
-
-export function makeKerf(sdf: PatternSdf, margin: number): Kerf {
-  const u = {
-    uSdf: { value: sdf.tex },
-    uSdfScale: { value: sdf.scale },
-    uRect: { value: new THREE.Vector4(-PANE.w / 2, -PANE.h / 2, PANE.w, PANE.h) },
-    uKerf: { value: 0 },
-    uGantry: { value: 0 },
-    uGantryY: { value: 1.2 },
-    uEdge: { value: (PANE.h - 2 * margin) / PANE.h },
-    uColor: { value: new THREE.Color('#f2f6ff') },
-  }
+export function buildHead(): { mesh: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>; u: { uK: { value: number }; uColor: { value: THREE.Color } } } {
+  const u = { uK: { value: 0 }, uColor: { value: new THREE.Color(G.ice) } }
   const mat = new THREE.ShaderMaterial({
     uniforms: u,
     transparent: true,
-    depthWrite: false,
     blending: THREE.AdditiveBlending,
-    vertexShader: /* glsl */ `
-      uniform vec4 uRect;
-      varying vec2 vPUv;
-      void main() {
-        vPUv = (position.xy - uRect.xy) / uRect.zw;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
+    depthWrite: false,
+    depthTest: false,
+    toneMapped: false,
+    vertexShader: /* glsl */ `varying vec2 vP; void main() { vP = position.xy; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
     fragmentShader: /* glsl */ `
-      uniform sampler2D uSdf;
-      uniform float uSdfScale, uKerf, uGantry, uGantryY;
-      uniform vec3 uColor;
-      varying vec2 vPUv;
-      float sq(float x) { return x * x; }
+      uniform float uK; uniform vec3 uColor; varying vec2 vP;
       void main() {
-        float sd = (texture2D(uSdf, vPUv).r - 0.5) * uSdfScale;
-        float aa = max(fwidth(sd), 1e-5);
-        // a razor line of light along the cut, and a faint bleed beside it
-        float line = exp(-sq(sd / aa) / 1.1);
-        float bleed = exp(-abs(sd) / 0.005) * 0.07;
-        float ay = max(fwidth(vPUv.y), 1e-5);
-        float dy = vPUv.y - uGantryY;
-        float done = smoothstep(-ay, ay, dy);                 // above the gantry: cut
-        float head = exp(-sq(dy / (ay * 5.0)));               // where the gantry crosses the kerf
-        float k = (line + bleed) * (done + head * 2.2) * uKerf;
-        float gantry = exp(-sq(dy / (ay * 0.9))) * uGantry;   // the gantry: a hairline across the sheet
-        gl_FragColor = vec4(uColor * (k * 1.05 + gantry * 0.8), 1.0);
+        // (mark units) a line across the mark at the print front, brackets at its ends
+        float aa = max(length(fwidth(vP)) * 0.7071, 1e-5);
+        float y = abs(vP.y);
+        float x = abs(vP.x);
+        float line = 1.0 - smoothstep(aa * 0.6, aa * 1.6, y);
+        float halo = exp(-y * y / 0.00008) * 0.5 + exp(-y * y / 0.0012) * 0.12;
+        float span = 1.0 - smoothstep(0.6, 0.64, x);
+        // the head's end stops: short vertical ticks just past the mark's sides
+        float tick = (1.0 - smoothstep(aa * 0.6, aa * 1.6, abs(x - 0.6))) * step(y, 0.018);
+        gl_FragColor = vec4(uColor * ((line * 1.6 + halo) * span + tick * 1.1) * uK, 1.0);
       }
     `,
   })
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(PANE.w - 2 * margin, PANE.h - 2 * margin), mat)
+  // in mark units: 1.4 wide, 0.2 tall around the line (the halo is gone by its edges)
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.2), mat)
+  mesh.frustumCulled = false
   mesh.renderOrder = 4
   return { mesh, u }
 }
 
-// ------------------------------------------------------------------ block (station 1)
+// ------------------------------------------------------------------ the neon (the hero's halo, drawn in)
 
-export interface Block {
+export interface Neon {
   root: THREE.Group
-  mesh: THREE.Mesh
-  mat: THREE.MeshPhysicalMaterial
-  ring: THREE.Mesh
-  ringMat: THREE.MeshBasicMaterial
-  haze: THREE.Mesh
-  hazeMat: THREE.MeshBasicMaterial
+  /** loop A, loop B, the diamond: each part's tubes */
+  parts: NeonPath[][]
+  /** each part's first tube's axis (root space; getPointAt(u) matches the tube's `draw` / `pulse` u) */
+  curves: THREE.Curve<THREE.Vector3>[]
 }
 
-export function makeBlock(mobile: boolean): Block {
+/**
+ * The diamond's contour with softly rounded corners (mark units, from the
+ * top corner, counter-clockwise like the loops): a tube bent through a
+ * dead-sharp corner folds its halo sleeve into streaks, and the diamond is
+ * seen close up here.
+ */
+function diamondContour(): THREE.Vector3[] {
+  const R = 0.0765
+  const rf = 0.013
+  const inset = R - rf * Math.SQRT2
+  const pts: THREE.Vector3[] = []
+  for (let k = 0; k < 4; k++) {
+    const th = Math.PI / 2 + (k * Math.PI) / 2
+    const cx = Math.cos(th) * inset
+    const cy = Math.sin(th) * inset
+    // the fillet round this corner
+    for (let j = 0; j <= 8; j++) {
+      const a = th - Math.PI / 4 + (j / 8) * (Math.PI / 2)
+      pts.push(new THREE.Vector3(cx + Math.cos(a) * rf, cy + Math.sin(a) * rf, 0))
+    }
+    // the straight edge to the next corner
+    const a1 = th + Math.PI / 4
+    const th2 = th + Math.PI / 2
+    const nx = Math.cos(th2) * inset + Math.cos(th2 - Math.PI / 4) * rf
+    const ny = Math.sin(th2) * inset + Math.sin(th2 - Math.PI / 4) * rf
+    const ex = cx + Math.cos(a1) * rf
+    const ey = cy + Math.sin(a1) * rf
+    for (let j = 1; j < 8; j++) pts.push(new THREE.Vector3(lerpN(ex, nx, j / 8), lerpN(ey, ny, j / 8), 0))
+  }
+  // start at the top corner's apex
+  const start = 4
+  return [...pts.slice(start), ...pts.slice(0, start)]
+}
+const lerpN = (a: number, b: number, t: number) => a + (b - a) * t
+
+/**
+ * The Hark mark in neon (the kit's neonMark, with a rounded diamond): one
+ * glass tube along every contour, in the mark's own plane (z 0, 1:1). Animate
+ * root.position.z / root.scale to mount it behind the glass as the halo.
+ * Loop A neonA, loop B neonB, the diamond neonC.
+ */
+export function buildNeon(isFrameTarget: IsFrame, mirror?: { floorY: number; fade?: number }): Neon {
   const root = new THREE.Group()
-  const geo = smoothExtrude(roundedRect(BLOCK.w, BLOCK.h, BLOCK.radius), {
-    depth: BLOCK.d,
-    bevel: BLOCK.bevel,
-    bevelSegments: mobile ? 4 : 7,
-    curveSegments: 10,
-    crease: Math.PI / 4.5,
+  const lp = logoParts()
+  const colors = [G.neonA, G.neonB, G.neonC]
+  const parts: NeonPath[][] = []
+  const curves: THREE.Curve<THREE.Vector3>[] = []
+  // (the kit's neonPath curve: centripetal Catmull-Rom through the points, closed)
+  const curveOf = (pts: THREE.Vector3[]) => new THREE.CatmullRomCurve3(pts, true, 'centripetal', 0.5)
+  ;[lp.loopA, lp.loopB].forEach((shapes, pi) => {
+    const tubes: NeonPath[] = []
+    for (const shape of shapes) {
+      for (const path of [shape, ...shape.holes]) {
+        const n = Math.max(24, Math.round(path.getLength() / 0.006))
+        const pts = path.getSpacedPoints(n).slice(0, -1).map(p => new THREE.Vector3(p.x, p.y, 0))
+        const t = neonPath({ points: pts, closed: true, color: colors[pi], radius: 0.0072, glowRadius: 0.045, segments: n * 2, mirror, isFrameTarget })
+        root.add(t.root)
+        if (!tubes.length) curves.push(curveOf(pts))
+        tubes.push(t)
+      }
+    }
+    parts.push(tubes)
   })
-  const mat = new THREE.MeshPhysicalMaterial({
-    color: 0xffffff,
-    metalness: 0,
-    roughness: 0.0,
-    transmission: 1,
-    thickness: 1.5,
-    ior: 1.52,
-    specularIntensity: 1,
-    envMapIntensity: 1.25,
-    clearcoat: 1,
-    clearcoatRoughness: 0.03,
-    attenuationColor: new THREE.Color('#e9f1f7'),
-    attenuationDistance: 5,
-  })
-  // monochrome: no spectral split at the corners (USE_DISPERSION compiled out)
-  mat.dispersion = 0
-  sharpTransmission(mat)
-  const mesh = new THREE.Mesh(geo, mat)
-  root.add(mesh)
-
-  // the inspection ring: hugs the block's horizontal cross-section
-  const bs = BLOCK.bevel * 0.85
-  const ow = BLOCK.w + 2 * bs + 0.014
-  const od = BLOCK.d + 2 * BLOCK.bevel + 0.014
-  const lw = 0.011
-  const outer = roundedRect(ow, od, BLOCK.bevel * 0.9)
-  outer.holes.push(roundedRect(ow - 2 * lw, od - 2 * lw, BLOCK.bevel * 0.9 - lw * 0.5))
-  const ringMat = new THREE.MeshBasicMaterial({
-    color: new THREE.Color('#f4f8ff').multiplyScalar(2.4),
-    blending: THREE.AdditiveBlending,
-    transparent: false,
-    depthWrite: true,
-    toneMapped: false,
-    side: THREE.DoubleSide,
-  })
-  // a thin belt (not a flat ring): seen from near eye level it keeps its height, so it never dots out
-  const ringGeo = new THREE.ExtrudeGeometry(outer, { depth: 0.011, bevelEnabled: false, curveSegments: 12 })
-  ringGeo.translate(0, 0, -0.0055)
-  const ring = new THREE.Mesh(ringGeo, ringMat)
-  ring.rotation.x = -Math.PI / 2
-  root.add(ring)
-  // the plane of the scan inside the glass: a faint sheet of light (opaque list → refracted)
-  const hazeMat = new THREE.MeshBasicMaterial({
-    color: new THREE.Color('#dfe7f2').multiplyScalar(0.1),
-    blending: THREE.AdditiveBlending,
-    transparent: false,
-    depthWrite: false,
-    toneMapped: false,
-    side: THREE.DoubleSide,
-  })
-  const haze = new THREE.Mesh(new THREE.PlaneGeometry(BLOCK.w + 0.02, BLOCK.d + 0.1), hazeMat)
-  haze.rotation.x = -Math.PI / 2
-  root.add(haze)
-  return { root, mesh, mat, ring, ringMat, haze, hazeMat }
+  const dp = diamondContour()
+  const d = neonPath({ points: dp, closed: true, color: colors[2], radius: 0.0068, glowRadius: 0.026, segments: 220, mirror, isFrameTarget })
+  root.add(d.root)
+  parts.push([d])
+  curves.push(curveOf(dp))
+  return { root, parts, curves }
 }
 
-// ------------------------------------------------------------------ light
+// ------------------------------------------------------------------ sparks
 
-/** A soft backlight (with one crisp slit) kept in the opaque list so glass in front diffuses/refracts it. */
-export function makeLightCard(w: number, h: number): { mesh: THREE.Mesh; u: { uIntensity: { value: number }; uSlit: { value: number }; uSlitX: { value: number } } } {
+export interface Spark {
+  mesh: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>
+  /** 0..1 */
+  k: { value: number }
+}
+
+/**
+ * A spark of light riding a neon tube: a camera-facing bead in the opaque
+ * list, so three's glass buffer sees it and the frost in front turns it into
+ * a soft glow travelling through the glass; where the tube shows past the
+ * glass, a white-hot bead on it. (The tube's own `pulse` brightens the tube
+ * with it.) Place it in the neon root's space.
+ */
+export function buildSpark(color: THREE.ColorRepresentation, isFrameTarget: IsFrame, size = 0.16): Spark {
+  const k = { value: 0 }
   const u = {
-    uIntensity: { value: 1 },
-    uSlit: { value: 1 },
-    uSlitX: { value: 0.22 },
-    uColor: { value: new THREE.Color('#e8eef8') },
+    uColor: { value: new THREE.Color(color) },
+    uSize: { value: size },
+    uK: k,
+    uCore: { value: 0 },
+    uHalo: { value: 0 },
   }
   const mat = new THREE.ShaderMaterial({
     uniforms: u,
     transparent: false,
-    depthWrite: false,
     blending: THREE.AdditiveBlending,
-    vertexShader: /* glsl */ `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-    fragmentShader: /* glsl */ `
-      uniform float uIntensity, uSlit, uSlitX;
-      uniform vec3 uColor;
-      varying vec2 vUv;
-      float sq(float x) { return x * x; }
-      void main() {
-        vec2 p = (vUv - 0.5) * vec2(${w.toFixed(3)}, ${h.toFixed(3)});
-        float r2 = p.x * p.x * 1.15 + p.y * p.y * 0.8;
-        float glow = exp(-r2 / 0.9) * 0.34 + exp(-r2 / 0.16) * 0.28;
-        // a crisp slit of light, fading top and bottom
-        float ax = max(fwidth(p.x), 1e-5);
-        float slit = exp(-sq((p.x - uSlitX) / (ax * 1.3))) * exp(-sq(p.y / 1.2)) * uSlit;
-        float edge = (1.0 - smoothstep(0.35, 0.5, abs(vUv.x - 0.5))) * (1.0 - smoothstep(0.35, 0.5, abs(vUv.y - 0.5)));
-        gl_FragColor = vec4(uColor * ((glow * edge) + slit * 0.9) * uIntensity, 1.0);
-      }
-    `,
-  })
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat)
-  return { mesh, u }
-}
-
-/** A light pool on the (invisible) floor. */
-export function makePool(w: number, d: number): { mesh: THREE.Mesh; u: { uIntensity: { value: number } } } {
-  const u = { uIntensity: { value: 1 }, uColor: { value: new THREE.Color('#e3eaf4') } }
-  const mat = new THREE.ShaderMaterial({
-    uniforms: u,
-    transparent: true,
     depthWrite: false,
-    blending: THREE.AdditiveBlending,
-    vertexShader: /* glsl */ `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-    fragmentShader: /* glsl */ `
-      uniform float uIntensity;
-      uniform vec3 uColor;
-      varying vec2 vUv;
-      void main() {
-        vec2 p = (vUv - 0.5) * 2.0;
-        float r2 = dot(p, p);
-        float pool = exp(-r2 * 3.2) * 0.5 + exp(-r2 * 14.0) * 0.35;
-        gl_FragColor = vec4(uColor * pool * uIntensity, 1.0);
-      }
-    `,
-  })
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, d), mat)
-  mesh.rotation.x = -Math.PI / 2
-  return { mesh, u }
-}
-
-/** The spotlight's shaft: a faint additive cone (apex up). */
-export function makeShaft(radius: number, height: number): { mesh: THREE.Mesh; u: { uIntensity: { value: number } } } {
-  const u = { uIntensity: { value: 1 }, uH: { value: height } }
-  const mat = new THREE.ShaderMaterial({
-    uniforms: u,
-    transparent: true,
-    depthWrite: false,
-    side: THREE.DoubleSide,
-    blending: THREE.AdditiveBlending,
+    toneMapped: false,
     vertexShader: /* glsl */ `
-      uniform float uH;
-      varying float vY;
-      varying vec3 vN;
-      varying vec3 vV;
+      uniform float uSize;
+      varying vec2 vQ;
       void main() {
-        vY = position.y / uH + 0.5;             // 0 at the base (the block) … 1 at the lamp
-        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+        vQ = position.xy * 2.0;
+        vec4 mv = modelViewMatrix * vec4(0.0, 0.0, 0.0, 1.0);
+        // world-sized billboard (the parents' scale sets it: mark units x the mark's height)
+        float s = length((modelMatrix * vec4(1.0, 0.0, 0.0, 0.0)).xyz);
+        mv.xy += position.xy * uSize * s;
+        gl_Position = projectionMatrix * mv;
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform vec3 uColor;
+      uniform float uK, uCore, uHalo;
+      varying vec2 vQ;
+      void main() {
+        float r2 = dot(vQ, vQ);
+        float core = exp(-r2 * 60.0);
+        float halo = exp(-r2 * 7.0) * (1.0 - smoothstep(0.7, 1.0, r2));
+        vec3 c = (mix(uColor, vec3(1.0), 0.6) * core * uCore + uColor * halo * uHalo) * uK;
+        gl_FragColor = vec4(c, 1.0);
+      }
+    `,
+  })
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), mat)
+  mesh.frustumCulled = false
+  mesh.renderOrder = -3
+  mesh.onBeforeRender = renderer => {
+    const rt = renderer.getRenderTarget()
+    const main = rt === null || isFrameTarget(rt as THREE.WebGLRenderTarget)
+    // the frame: a small hot bead; the glass buffer: a broad glow for the frost to spread
+    u.uCore.value = main ? 2.4 : 4.0
+    u.uHalo.value = main ? 0.25 : 5.0
+    mat.uniformsNeedUpdate = true
+  }
+  return { mesh, k }
+}
+
+// ------------------------------------------------------------------ backlight card
+
+export interface CardPass {
+  glow: number
+  wide: number
+}
+
+const CARD_FRAG = /* glsl */ `
+  uniform vec3 uColor;
+  uniform float uHalf, uCore, uWideR, uGlow, uWide;
+  varying vec2 vUv;
+  void main() {
+    vec2 p = (vUv - 0.5) * 2.0 * uHalf;
+    float r2 = dot(p, p);
+    float C = max(uCore, 0.01);
+    float W = max(uWideR, 0.01);
+    float glow = exp(-r2 / (C * C)) + 0.12 * exp(-r2 / (C * C * 6.0));
+    float wide = exp(-r2 / (W * W));
+    float edge = 1.0 - smoothstep(0.7, 1.0, sqrt(r2) / uHalf);
+    gl_FragColor = vec4(uColor * (glow * uGlow + wide * uWide) * edge, 1.0);
+  }
+`
+
+/**
+ * The backlight: an additive card in the opaque list (three's glass buffer
+ * sees it) with per-pass strengths — bright where the frost reads it, faint
+ * in the frame.
+ */
+export function buildCard(isFrameTarget: IsFrame) {
+  const k = { main: { glow: 0, wide: 0 } as CardPass, trans: { glow: 0, wide: 0 } as CardPass }
+  const mat = new THREE.ShaderMaterial({
+    transparent: false,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    depthTest: false,
+    toneMapped: false,
+    uniforms: {
+      uColor: { value: new THREE.Color(G.ice) },
+      uHalf: { value: 5 },
+      uCore: { value: 0.6 },
+      uWideR: { value: 1.6 },
+      uGlow: { value: 0 },
+      uWide: { value: 0 },
+    },
+    vertexShader: /* glsl */ `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+    fragmentShader: CARD_FRAG,
+  })
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), mat)
+  mesh.renderOrder = -6
+  mesh.frustumCulled = false
+  const u = mat.uniforms
+  mesh.onBeforeRender = renderer => {
+    const rt = renderer.getRenderTarget()
+    const p = rt === null || isFrameTarget(rt as THREE.WebGLRenderTarget) ? k.main : k.trans
+    u.uGlow.value = p.glow
+    u.uWide.value = p.wide
+    mat.uniformsNeedUpdate = true
+  }
+  return { mesh, k }
+}
+
+// ------------------------------------------------------------------ floor + reflection
+
+export function buildFloor(): THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial> {
+  const mat = new THREE.ShaderMaterial({
+    transparent: false,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    toneMapped: false,
+    uniforms: {
+      uColor: { value: new THREE.Color(G.ice) },
+      uK: { value: 0 },
+      uPool: { value: new THREE.Vector2(0, -0.4) },
+      uPoolR: { value: new THREE.Vector2(1.1, 0.6) },
+    },
+    vertexShader: /* glsl */ `
+      varying vec2 vUv; varying vec3 vW;
+      void main() {
+        vUv = uv;
+        vec4 w = modelMatrix * vec4(position, 1.0);
+        vW = w.xyz;
+        gl_Position = projectionMatrix * viewMatrix * w;
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform vec3 uColor; uniform float uK; uniform vec2 uPool, uPoolR;
+      varying vec2 vUv; varying vec3 vW;
+      void main() {
+        vec2 d = (vW.xz - uPool) / uPoolR;
+        float pool = exp(-dot(d, d));
+        float edge = 1.0 - smoothstep(0.35, 0.5, length(vUv - 0.5));
+        gl_FragColor = vec4(uColor * pool * edge * uK, 1.0);
+      }
+    `,
+  })
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), mat)
+  floor.rotation.x = -Math.PI / 2
+  floor.position.y = FLOOR_Y
+  floor.renderOrder = -7
+  return floor
+}
+
+/**
+ * The glass mark mirrored in the black floor: a frosted glow toward the
+ * centre and a bright rim on the walls, fading with depth below the floor,
+ * printed up to the same front. Transparent + additive, so the glass buffer
+ * never sees it.
+ */
+export function buildReflection(geo: THREE.BufferGeometry, print: PrintUniforms): THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial> {
+  const mat = new THREE.ShaderMaterial({
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    toneMapped: false,
+    uniforms: {
+      uColor: { value: new THREE.Color(G.ice) },
+      uStrength: { value: 0 },
+      uFloorY: { value: FLOOR_Y },
+      uFade: { value: 1.6 },
+      uPrint: print.uPrint,
+    },
+    vertexShader: /* glsl */ `
+      varying vec3 vP; varying vec3 vN; varying vec3 vV; varying float vWY;
+      void main() {
+        vP = position;
+        vec4 w = modelMatrix * vec4(position, 1.0);
+        vWY = w.y;
+        vec4 mv = viewMatrix * w;
         vN = normalize(normalMatrix * normal);
         vV = normalize(-mv.xyz);
         gl_Position = projectionMatrix * mv;
       }
     `,
     fragmentShader: /* glsl */ `
-      uniform float uIntensity;
-      varying float vY;
-      varying vec3 vN;
-      varying vec3 vV;
+      uniform vec3 uColor; uniform float uStrength, uFloorY, uFade, uPrint;
+      varying vec3 vP; varying vec3 vN; varying vec3 vV; varying float vWY;
       void main() {
-        float f = abs(dot(normalize(vN), normalize(vV)));
-        float body = f * f;
-        float fall = smoothstep(0.0, 0.25, vY) * (1.0 - smoothstep(0.55, 1.0, vY));
-        gl_FragColor = vec4(vec3(0.9, 0.93, 1.0) * body * fall * 0.07 * uIntensity, 1.0);
+        if (vP.y > uPrint) discard;
+        float below = max(uFloorY - vWY, 0.0);
+        float fade = exp(-below * uFade) * step(vWY, uFloorY + 0.001);
+        float glow = 0.22 + 0.78 * exp(-dot(vP.xy, vP.xy) / 0.1);
+        float nv = clamp(abs(dot(normalize(vN), normalize(vV))), 0.0, 1.0);
+        float f = 1.0 - nv;
+        vec3 col = uColor * (glow * nv * 0.75 + f * f * f * 1.4);
+        gl_FragColor = vec4(col * fade * uStrength, 1.0);
       }
     `,
   })
-  const mesh = new THREE.Mesh(new THREE.ConeGeometry(radius, height, 48, 1, true), mat)
-  mesh.renderOrder = 1
-  return { mesh, u }
-}
-
-// ------------------------------------------------------------------ nozzle + spray
-
-export function makeNozzle(): THREE.Mesh {
-  const pts = [
-    [0.0, 0.0],
-    [0.014, 0.0],
-    [0.02, 0.012],
-    [0.028, 0.06],
-    [0.04, 0.13],
-    [0.042, 0.16],
-    [0.042, 0.56],
-    [0.05, 0.57],
-    [0.05, 0.64],
-    [0.034, 0.66],
-    [0.034, 0.9],
-  ].map(([r, y]) => new THREE.Vector2(r, y))
-  const geo = new THREE.LatheGeometry(pts, 40)
-  const mat = new THREE.MeshStandardMaterial({ color: new THREE.Color('#b9bfc8'), metalness: 1, roughness: 0.14, envMapIntensity: 1.3 })
-  return new THREE.Mesh(geo, mat)
-}
-
-export interface Spray {
-  points: THREE.Points
-  u: {
-    uFrom: { value: THREE.Vector3 }
-    uTo: { value: THREE.Vector3 }
-    uTime: { value: number }
-    uIntensity: { value: number }
-    uSize: { value: number }
-    uSpread: { value: number }
-  }
-}
-
-export function makeSpray(count: number): Spray {
-  const geo = new THREE.BufferGeometry()
-  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(count * 3), 3))
-  const seeds = new Float32Array(count * 4)
-  let a = 1234567
-  const r = () => {
-    a = (a * 16807) % 2147483647
-    return (a - 1) / 2147483646
-  }
-  for (let i = 0; i < count * 4; i++) seeds[i] = r()
-  geo.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 4))
-  geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 50)
-  const u = {
-    uFrom: { value: new THREE.Vector3() },
-    uTo: { value: new THREE.Vector3() },
-    uTime: { value: 0 },
-    uIntensity: { value: 0 },
-    uSize: { value: 2 },
-    uSpread: { value: 0.12 },
-  }
-  const mat = new THREE.ShaderMaterial({
-    uniforms: u,
-    transparent: true,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-    vertexShader: /* glsl */ `
-      attribute vec4 aSeed;
-      uniform vec3 uFrom, uTo;
-      uniform float uTime, uIntensity, uSize, uSpread;
-      varying float vA;
-      void main() {
-        float speed = 1.3 + aSeed.y * 1.1;
-        float life = fract(aSeed.x + uTime * speed);
-        vec3 dir = uTo - uFrom;
-        vec3 nd = normalize(dir);
-        vec3 up = abs(nd.y) > 0.95 ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 1.0, 0.0);
-        vec3 s1 = normalize(cross(nd, up));
-        vec3 s2 = cross(nd, s1);
-        float ang = aSeed.z * 6.2831853;
-        vec3 p;
-        float a;
-        if (aSeed.w < 0.74) {
-          // the stream: a fine cone widening toward the glass
-          float rr = sqrt(fract(aSeed.w * 7.13)) * uSpread * (0.12 + life * life);
-          p = uFrom + dir * life + (s1 * cos(ang) + s2 * sin(ang)) * rr;
-          a = smoothstep(0.0, 0.1, life) * (0.12 + 0.28 * life);
-        } else {
-          // ricochet: grains bounce off the glass in a low fan and fall
-          float sp = 0.18 + 0.5 * fract(aSeed.w * 13.7);
-          vec3 o = vec3(cos(ang), sin(ang) * 0.8, 0.0) * sp + vec3(0.0, 0.0, 0.12 + 0.3 * fract(aSeed.y * 5.3));
-          p = uTo + o * life * 0.9 + vec3(0.0, -0.45, 0.0) * life * life;
-          a = (1.0 - life) * (1.0 - life) * 0.9;
-        }
-        vA = a * uIntensity;
-        vec4 mv = modelViewMatrix * vec4(p, 1.0);
-        gl_Position = projectionMatrix * mv;
-        gl_PointSize = uSize * (0.55 + 0.9 * fract(aSeed.x * 17.31));
-      }
-    `,
-    fragmentShader: /* glsl */ `
-      varying float vA;
-      void main() {
-        vec2 c = gl_PointCoord - 0.5;
-        float m = 1.0 - smoothstep(0.06, 0.25, dot(c, c));
-        gl_FragColor = vec4(vec3(0.93, 0.95, 1.0) * vA * m * 2.1, 1.0);
-      }
-    `,
-  })
-  const points = new THREE.Points(geo, mat)
-  points.frustumCulled = false
-  points.renderOrder = 4
-  return { points, u }
-}
-
-/** The bright point where the stream strikes the glass. */
-export function makeImpact(): { mesh: THREE.Mesh; u: { uIntensity: { value: number } } } {
-  const u = { uIntensity: { value: 0 } }
-  const mat = new THREE.ShaderMaterial({
-    uniforms: u,
-    transparent: true,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-    vertexShader: /* glsl */ `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-    fragmentShader: /* glsl */ `
-      uniform float uIntensity;
-      varying vec2 vUv;
-      void main() {
-        vec2 p = (vUv - 0.5) * 2.0;
-        float r2 = dot(p, p);
-        float g = exp(-r2 * 42.0) * 0.9 + exp(-r2 * 6.0) * 0.12;
-        gl_FragColor = vec4(vec3(0.95, 0.97, 1.0) * g * uIntensity, 1.0);
-      }
-    `,
-  })
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.5), mat)
-  mesh.renderOrder = 4
-  return { mesh, u }
+  const m = new THREE.Mesh(geo, mat)
+  m.matrixAutoUpdate = false
+  m.frustumCulled = false
+  m.renderOrder = 1
+  return m
 }

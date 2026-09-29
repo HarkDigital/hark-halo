@@ -1,7 +1,9 @@
 /* ------------------------------------------------------------------
-   Annealed (process) — the headline, the frosted step card with its
-   4-step track, and the three frosted stat tiles. Monochrome: white,
-   silver, black. Every selector is scoped under .stage-process.
+   Assembly (process) — the headline, the step placard under the mark
+   (index, title, text, a 4-step track), and three frosted stat tiles.
+   The mark stands front-on and centred above them, like an object on a
+   plinth with its label beneath. Every selector is scoped under
+   .stage-process.
    ------------------------------------------------------------------ */
 
 .stage-process .pr-head {
@@ -13,20 +15,17 @@
   gap: 18px;
   justify-items: start;
 }
-/* the headline sits in the spotlight's cone (on portrait right over it): end
-   the accent gradient on a lighter silver so 'Then we build.' holds ≥ 3:1 */
-.stage-process .pr-headline {
-  --accent-grad: linear-gradient(100deg, #ffffff 0%, #e2e6ec 45%, #b3b9c2 100%);
-}
 
-/* ---------------- the step card ---------------- */
+/* ---------------- the step placard ---------------- */
 
 .stage-process .pr-card {
   position: absolute;
-  left: var(--gutter);
+  left: 0;
+  right: 0;
   bottom: var(--safe-bottom);
-  width: min(440px, calc(100vw - 2 * var(--gutter)));
-  padding: 24px 26px 22px;
+  margin: 0 auto;
+  width: min(880px, calc(100vw - 2 * var(--gutter)));
+  padding: 22px 28px 20px;
   display: grid;
   gap: 18px;
 }
@@ -38,8 +37,9 @@
 .stage-process .pr-step {
   grid-area: 1 / 1;
   display: grid;
-  gap: 12px;
-  align-content: start;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  column-gap: 36px;
+  align-items: end;
   visibility: hidden;
   transition: visibility 0s linear 0.4s;
 }
@@ -47,26 +47,35 @@
   visibility: visible;
   transition-delay: 0s;
 }
+.stage-process .pr-lead {
+  display: grid;
+  gap: 10px;
+  align-content: end;
+}
+/* the index: "01 / 04", like a part number on a drawing */
+.stage-process .pr-idx {
+  margin: 0;
+  font-family: var(--font-label);
+  font-weight: var(--label-weight);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--fg-faint);
+  font-variant-numeric: tabular-nums;
+}
+.stage-process .pr-idx-n {
+  color: var(--fg);
+}
 .stage-process .pr-title {
   font-family: var(--font-display);
   font-weight: 560;
-  font-size: clamp(1.9rem, 2.8vw, 2.7rem);
+  font-size: clamp(2rem, 3.1vw, 2.9rem);
   line-height: 1;
   letter-spacing: -0.045em;
   color: var(--fg);
   margin: 0;
 }
-/* the step number: mono, silver, set on the cap height */
-.stage-process .pr-title em {
-  font-style: normal;
-  font-family: var(--font-label);
-  font-weight: var(--label-weight);
-  font-size: 0.5em;
-  letter-spacing: 0.011em;
-  vertical-align: 0.5em;
-}
 .stage-process .pr-text {
-  max-width: 38ch;
+  max-width: 46ch;
   opacity: 0;
   filter: blur(8px);
   transform: translate3d(0, 6px, 0);
@@ -85,14 +94,15 @@
     transform 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.12s;
 }
 
-/* the 4-step track: polished hairlines that fill with light */
+/* the 4-step track: hairlines that fill with light */
 .stage-process .pr-track {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--line);
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
+  gap: 10px;
 }
 .stage-process .pr-seg {
   display: grid;
@@ -104,7 +114,7 @@
   height: 2px;
   border-radius: 999px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.14);
 }
 .stage-process .pr-fill {
   display: block;
@@ -116,17 +126,26 @@
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.55);
 }
 .stage-process .pr-name {
-  display: block;
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
   font-family: var(--font-label);
   font-weight: var(--label-weight);
   font-size: 10.5px;
-  letter-spacing: 0.044em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--fg-faint);
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
   transition: color 0.4s ease;
+}
+.stage-process .pr-name-n {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+}
+.stage-process .pr-name-t {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .stage-process .pr-seg.is-done .pr-name {
   color: var(--fg-muted);
@@ -143,7 +162,7 @@
   right: var(--gutter);
   bottom: var(--safe-bottom);
   margin: 0 auto;
-  max-width: 1120px;
+  max-width: 1040px;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
@@ -152,7 +171,7 @@
   display: grid;
   gap: 10px;
   align-content: start;
-  padding: 22px 24px 24px;
+  padding: 20px 24px 22px;
   opacity: 0;
   transform: translate3d(0, 12px, 0);
   transition:
@@ -185,7 +204,7 @@
   margin: 0;
   font-family: var(--font-display);
   font-weight: 560;
-  font-size: clamp(2.2rem, 3.5vw, 3.4rem);
+  font-size: clamp(2.1rem, 3.3vw, 3.2rem);
   line-height: 1;
   letter-spacing: -0.05em;
   color: var(--fg);
@@ -199,7 +218,16 @@
   max-width: 36ch;
 }
 
-/* ---------------- portrait: subject above, copy below ---------------- */
+/* ---------------- narrower landscape: the placard stacks ---------------- */
+
+@media (max-width: 900px) and (min-aspect-ratio: 9/10) {
+  .stage-process .pr-step {
+    grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
+    column-gap: 24px;
+  }
+}
+
+/* ---------------- portrait: the mark above, the copy below ---------------- */
 
 @media (max-aspect-ratio: 9/10) {
   .stage-process .pr-head {
@@ -207,12 +235,17 @@
     gap: 12px;
   }
   .stage-process .pr-card {
-    left: 0;
-    right: 0;
-    margin: 0 auto;
     width: min(560px, calc(100vw - 2 * var(--gutter)));
-    padding: 18px 20px 18px;
+    padding: 18px 20px 16px;
     gap: 14px;
+  }
+  .stage-process .pr-step {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 10px;
+    align-items: start;
+  }
+  .stage-process .pr-lead {
+    gap: 8px;
   }
   .stage-process .pr-title {
     font-size: clamp(1.75rem, 7.2vw, 2.5rem);
@@ -220,6 +253,10 @@
   .stage-process .pr-text {
     font-size: 15px;
     line-height: 1.5;
+  }
+  .stage-process .pr-track {
+    padding-top: 12px;
+    gap: 8px;
   }
   .stage-process .pr-stats {
     /* one value column for every tile so the labels line up ("10 years" is ~3.6em wide) */
@@ -244,10 +281,10 @@
   }
 }
 
-/* phones: tighter still */
+/* phones: tighter still; the track keeps only the numbers */
 @media (max-aspect-ratio: 9/10) and (max-width: 420px) {
   .stage-process .pr-card {
-    padding: 16px 18px 16px;
+    padding: 16px 18px 14px;
     gap: 12px;
   }
   .stage-process .pr-text {
@@ -256,6 +293,7 @@
   .stage-process .pr-name {
     font-size: 10px;
     letter-spacing: 0.05em;
+    gap: 6px;
   }
   .stage-process .pr-tile {
     padding: 13px 16px;
@@ -263,6 +301,25 @@
   }
   .stage-process .pr-label {
     font-size: 13px;
+  }
+}
+/* phones: only the active step keeps its name, and its segment widens to hold it */
+@media (max-aspect-ratio: 9/10) and (max-width: 480px) {
+  .stage-process .pr-track {
+    display: flex;
+  }
+  .stage-process .pr-seg {
+    flex: 1 1 0;
+    transition: flex-grow 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .stage-process .pr-seg.is-on {
+    flex-grow: 2.6;
+  }
+  .stage-process .pr-name-t {
+    display: none;
+  }
+  .stage-process .pr-seg.is-on .pr-name-t {
+    display: inline;
   }
 }
 @media (max-aspect-ratio: 9/10) and (max-height: 700px) {
@@ -273,7 +330,7 @@
     font-size: 1.6rem;
   }
   .stage-process .pr-step {
-    gap: 8px;
+    row-gap: 8px;
   }
   .stage-process .pr-text {
     font-size: 14px;
@@ -292,7 +349,7 @@
   }
 }
 
-/* short landscape (a phone on its side): thin bands, compact panels */
+/* short landscape (a phone on its side): the placard moves beside the mark */
 @media (orientation: landscape) and (max-height: 500px) {
   .stage-process .pr-head {
     gap: 10px;
@@ -302,21 +359,26 @@
     font-size: clamp(1.6rem, 4.2vw, 2.2rem);
   }
   .stage-process .pr-card {
+    right: auto;
+    left: var(--gutter);
+    margin: 0;
     width: min(360px, 46vw);
-    padding: 12px 16px 14px;
+    padding: 12px 16px 12px;
     gap: 8px;
+  }
+  .stage-process .pr-step {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 6px;
   }
   .stage-process .pr-title {
     font-size: 1.45rem;
-  }
-  .stage-process .pr-step {
-    gap: 6px;
   }
   .stage-process .pr-text {
     font-size: 13px;
     line-height: 1.4;
   }
   .stage-process .pr-track {
+    padding-top: 8px;
     gap: 6px;
   }
   .stage-process .pr-name {
