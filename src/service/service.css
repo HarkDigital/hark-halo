@@ -538,8 +538,54 @@ body.svc {
   outline: none;
 }
 .svc-contact-card.hud-panel {
-  max-width: 820px;
+  max-width: 1240px;
   padding: clamp(28px, 4.5vw, 56px);
+  overflow: visible;
+}
+.svc-contact-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: clamp(32px, 5vw, 72px);
+  align-items: start;
+}
+.svc-contact-copy .hud-body {
+  max-width: 44ch;
+}
+@media (max-width: 900px) {
+  .svc-contact-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* the neon edge (neonFrame.ts): drawn in on scroll, in the active lights */
+.neon-frame {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  top: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+.neon-frame path {
+  fill: none;
+  stroke-linecap: round;
+}
+.neon-frame .nf-soft path {
+  stroke-width: 10;
+  opacity: 0.45;
+}
+.neon-frame .nf-bloom path {
+  stroke-width: 4;
+  opacity: 0.9;
+}
+.neon-frame .nf-tube path {
+  stroke-width: 2.2;
+}
+.neon-frame .nf-core path {
+  stroke: #ffffff;
+  stroke-width: 0.9;
+  opacity: 0.85;
 }
 .svc-contact-t {
   margin: 20px 0 18px;

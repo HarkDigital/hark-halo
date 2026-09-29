@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { G, frostedLogo, neonPath, type FrostedLogo, type NeonPath } from '../../kit/glass'
+import { G, frostedLogo, neonPath, type FrostedLogo, type NeonPath, closedOutline } from '../../kit/glass'
 import { logoParts } from '../../logo/logo'
 
 /*
@@ -432,8 +432,9 @@ export function buildNeon(isFrameTarget: IsFrame, mirror?: { floorY: number; fad
     const tubes: NeonPath[] = []
     for (const shape of shapes) {
       for (const path of [shape, ...shape.holes]) {
-        const n = Math.max(24, Math.round(path.getLength() / 0.006))
-        const pts = path.getSpacedPoints(n).slice(0, -1).map(p => new THREE.Vector3(p.x, p.y, 0))
+        const ring = closedOutline(path, 0.004)
+        const n = ring.length
+        const pts = ring.map(p => new THREE.Vector3(p.x, p.y, 0))
         const t = neonPath({ points: pts, closed: true, color: colors[pi], radius: 0.0072, glowRadius: 0.045, segments: n * 2, mirror, isFrameTarget })
         root.add(t.root)
         if (!tubes.length) curves.push(curveOf(pts))

@@ -407,6 +407,38 @@ export const SECURITY = {
   href: 'mailto:mike@hark.digital?subject=Emergency%3A%20my%20site%20was%20hacked',
 }
 
+/**
+ * The contact form: fields, options and messages verbatim from the classic
+ * site's /contact page. Submissions POST JSON {name, email, company, service,
+ * message, website (honeypot)} to `endpoint` — the classic site's own
+ * /api/contact takes exactly this payload, as do form services such as
+ * Formspree. With no endpoint (a static host), the form composes the message
+ * in the visitor's email app instead, addressed to BRAND.email.
+ */
+export const CONTACT_FORM = {
+  endpoint: '',
+  services: [
+    'Web Design',
+    'Software Development',
+    'Ecommerce',
+    'SEO / GEO',
+    'AI Consulting',
+    'Aerial Photography & Video',
+    'Hack Remediation',
+    'Website & Data Security',
+    'ADA Accessibility',
+    'WordPress',
+    'Something else',
+  ],
+  submit: 'Send message',
+  sending: 'Sending…',
+  note: 'We reply to every message. No spam, ever.',
+  sentTitle: 'Message sent.',
+  sentBody: 'Thanks for reaching out. We will get back to you shortly, usually within a business day.',
+  missing: 'Please fill in your name, email, and message',
+  badEmail: 'That email address looks off',
+}
+
 export const CONTACT = {
   eyebrow: 'Start a project',
   title: 'Say hello.',

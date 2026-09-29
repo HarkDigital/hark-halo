@@ -828,6 +828,59 @@ export function neonPath(o: {
 }
 
 /**
+ * Evenly spaced points round a CLOSED outline (a Shape or a hole path), the
+ * closing edge included (`getSpacedPoints` skips it, and a closed spline
+ * then bridges the gap with a curve). The spacing is uniform, so a spline
+ * through the points keeps straight edges straight and only softens corners
+ * by a fraction of a step. `step` in the path's units.
+ */
+export function closedOutline(path: THREE.Path, step: number, corner = step * 2): THREE.Vector2[] {
+  const raw = path.getPoints().map(p => p.clone())
+  if (raw.length > 1 && raw[0].distanceTo(raw[raw.length - 1]) < 1e-9) raw.pop()
+  // round the sharp corners a little (a bent tube turns, it doesn't kink): a spline
+  // through samples that straddle a kink overshoots it into a small hook
+  const v: THREE.Vector2[] = []
+  const m = raw.length
+  const a = new THREE.Vector2()
+  const b = new THREE.Vector2()
+  for (let i = 0; i < m; i++) {
+    const p = raw[(i - 1 + m) % m]
+    const c = raw[i]
+    const q = raw[(i + 1) % m]
+    a.subVectors(p, c)
+    b.subVectors(q, c)
+    const la = a.length()
+    const lb = b.length()
+    const cos = la > 0 && lb > 0 ? -a.dot(b) / (la * lb) : 1
+    if (cos < Math.cos(THREE.MathUtils.degToRad(25)) && la > corner * 2.2 && lb > corner * 2.2) {
+      const s0 = c.clone().addScaledVector(a, corner / la)
+      const s1 = c.clone().addScaledVector(b, corner / lb)
+      for (let k = 0; k <= 6; k++) {
+        const t = k / 6
+        const u = 1 - t
+        v.push(new THREE.Vector2(u * u * s0.x + 2 * u * t * c.x + t * t * s1.x, u * u * s0.y + 2 * u * t * c.y + t * t * s1.y))
+      }
+    } else v.push(c.clone())
+  }
+  const n = v.length
+  const cum = [0]
+  for (let i = 0; i < n; i++) cum.push(cum[i] + v[i].distanceTo(v[(i + 1) % n]))
+  const total = cum[n]
+  const count = Math.max(24, Math.round(total / step))
+  const out: THREE.Vector2[] = []
+  let seg = 0
+  for (let k = 0; k < count; k++) {
+    const d = (k / count) * total
+    while (seg < n - 1 && cum[seg + 1] < d) seg++
+    const a = v[seg]
+    const b = v[(seg + 1) % n]
+    const len = cum[seg + 1] - cum[seg] || 1
+    out.push(a.clone().lerp(b, (d - cum[seg]) / len))
+  }
+  return out
+}
+
+/**
  * The HALO: the Hark mark bent in neon — one glass tube along every contour of
  * each part (the two loops, the diamond) — in mark units (1u tall), drawn
  * `scale` x the mark and placed at depth `z`, for mounting just behind a glass
@@ -853,8 +906,9 @@ export function neonMark(o: {
     const tubes: NeonPath[] = []
     for (const shape of shapes) {
       for (const path of [shape, ...shape.holes]) {
-        const n = Math.max(24, Math.round(path.getLength() / 0.006))
-        const pts = path.getSpacedPoints(n).slice(0, -1).map(p => new THREE.Vector3(p.x * scale, p.y * scale, o.z))
+        const ring = closedOutline(path, 0.004)
+        const n = ring.length
+        const pts = ring.map(p => new THREE.Vector3(p.x * scale, p.y * scale, o.z))
         const t = neonPath({
           points: pts,
           closed: true,

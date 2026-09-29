@@ -7,7 +7,9 @@ import './service.css'
 
 import { installPrintPolyfills } from '../ui/polyfills'
 import { applyLightsCss } from '../kit/palette'
-import { BRAND, CONTACT, SERVICES, SITE } from '../content'
+import { BRAND, CONTACT, CONTACT_FORM, SERVICES, SITE } from '../content'
+import { createContactForm } from '../ui/contactForm'
+import { mountNeonFrame } from './neonFrame'
 import { CONCEPT_TAG, WORDMARK, markSvg } from '../ui/mark'
 import { SERVICE_PAGES } from './data/pages'
 import { SERVICE_CONTENT } from './data/content'
@@ -205,13 +207,18 @@ function render(i: number) {
     </section>
 
     <section class="svc-contact" id="svc-contact" aria-labelledby="svc-contact-h" tabindex="-1">
-      <div class="svc-contact-card hud-panel hud-panel--strong svc-rv">
-        <p class="hud-eyebrow">${esc(CONTACT.eyebrow)}</p>
-        <h2 class="hud-title svc-contact-t" id="svc-contact-h">Say <em>hello.</em></h2>
-        <p class="hud-body">${esc(CONTACT.body)}</p>
-        <div class="svc-ctas">
-          <a class="hud-btn" href="${esc(CONTACT.href)}">${esc(BRAND.email)} <span aria-hidden="true">→</span></a>
-          <button class="hud-btn hud-btn--ghost svc-copy" type="button">Copy email</button>
+      <div class="svc-contact-card hud-panel hud-panel--strong">
+        <div class="svc-contact-grid">
+          <div class="svc-contact-copy">
+            <p class="hud-eyebrow">${esc(CONTACT.eyebrow)}</p>
+            <h2 class="hud-title svc-contact-t" id="svc-contact-h">Say <em>hello.</em></h2>
+            <p class="hud-body">${esc(CONTACT.body)}</p>
+            <div class="svc-ctas">
+              <a class="hud-btn hud-btn--ghost" href="${esc(CONTACT.href)}">${esc(BRAND.email)} <span aria-hidden="true">→</span></a>
+              <button class="hud-btn hud-btn--ghost svc-copy" type="button">Copy email</button>
+            </div>
+          </div>
+          <div class="svc-contact-form"></div>
         </div>
       </div>
     </section>
@@ -226,6 +233,11 @@ function render(i: number) {
         <p class="hud-label">© ${year} ${esc(BRAND.name)} · ${BRAND.locale.split(' · ').map(esc).join(' · ')}</p>
       </div>
     </footer>`
+
+  // the contact card: the form (this service preselected) and a neon edge that draws in on scroll
+  const cardEl = document.querySelector<HTMLElement>('.svc-contact-card')!
+  document.querySelector('.svc-contact-form')!.append(createContactForm({ service: CONTACT_FORM.services.find(s => s === page.title) }))
+  mountNeonFrame(cardEl)
 
   // copy email
   const copy = document.querySelector<HTMLButtonElement>('.svc-copy')!
