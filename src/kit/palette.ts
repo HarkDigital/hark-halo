@@ -77,19 +77,67 @@ export function applyLightsCss(root: HTMLElement = document.documentElement) {
     root.style.setProperty(`--neon-${k}-rgb`, rgb(ACTIVE[k]))
   }
   root.dataset.lights = String(ACTIVE.id)
+  root.dataset.logo = LOGO.kind
 }
 
 /** switch to another option: remember it and reload, resuming at `progress` (0..1 through the story) */
 export function switchLights(id: number, progress?: number) {
+  reloadWith('lights', KEY, id, progress)
+}
+
+/** remember an option (and where the visitor is), then reload with it in the URL */
+function reloadWith(param: string, key: string, id: number, progress?: number) {
   try {
-    localStorage.setItem(KEY, String(id))
+    localStorage.setItem(key, String(id))
     if (progress !== undefined) sessionStorage.setItem(RESUME_KEY, String(progress))
   } catch {
     /* storage blocked: the URL still carries it */
   }
   const url = new URL(location.href)
-  url.searchParams.set('lights', String(id))
+  url.searchParams.set(param, String(id))
   location.replace(url.toString())
+}
+
+/*
+ * The HERO LOGO: how the mark in the hero is made. Chosen like the lights
+ * (?logo=N, remembered; switching reloads where the visitor was).
+ *
+ *   Option 1  Frosted: the mark in frosted glass, the neon mark behind it (the default)
+ *   Option 2  Tube: the mark IS the neon, a tube down the middle of each band,
+ *             encased in a clear glass tube as wide as the band
+ */
+export interface LogoStyle {
+  id: number
+  kind: 'frost' | 'tube'
+  name: string
+}
+export const LOGO_STYLES: LogoStyle[] = [
+  { id: 1, kind: 'frost', name: 'Frost' },
+  { id: 2, kind: 'tube', name: 'Tube' },
+]
+const LOGO_KEY = 'hark-halo:logo'
+
+function pickLogo(): LogoStyle {
+  const byId = (id: number) => LOGO_STYLES.find(l => l.id === id)
+  try {
+    const q = new URLSearchParams(location.search).get('logo')
+    if (q && byId(Number(q))) {
+      localStorage.setItem(LOGO_KEY, q)
+      return byId(Number(q))!
+    }
+    const saved = Number(localStorage.getItem(LOGO_KEY))
+    if (byId(saved)) return byId(saved)!
+  } catch {
+    /* storage blocked: the default */
+  }
+  return LOGO_STYLES[0]
+}
+
+/** the hero logo this page was built with */
+export const LOGO: LogoStyle = typeof window === 'undefined' ? LOGO_STYLES[0] : pickLogo()
+
+export function switchLogo(id: number, progress?: number) {
+  reloadWith('logo', LOGO_KEY, id, progress)
 }
 
 /** where to resume after a lights switch (read once) */

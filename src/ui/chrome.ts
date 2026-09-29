@@ -7,7 +7,7 @@ import { holdInert, releaseInert } from './inert'
 import { mountRotateGate } from './rotate'
 import { bindScene, holdScene, releaseScene } from './scene'
 import { noteChapter } from './fallback'
-import { ACTIVE, LIGHTS, switchLights } from '../kit/palette'
+import { ACTIVE, LIGHTS, LOGO, LOGO_STYLES, switchLights, switchLogo } from '../kit/palette'
 
 /*
  * Persistent chrome: black, and frosted glass. Minimal, cold, precise — the
@@ -95,6 +95,8 @@ const CLOSE_IC = `<svg class="ch-ic" viewBox="0 0 18 12" aria-hidden="true" focu
 const EQ = `<span class="ch-eq" aria-hidden="true"><i></i><i></i><i></i><b></b></span>`
 /** the lights: three dots in the active palette's colours */
 const LIGHT_DOTS = `<span class="ch-lights-dots" aria-hidden="true"><i></i><i></i><i></i></span>`
+/** the hero logo: a glass tube with a line of light down it */
+const TUBE_IC = `<svg class="ch-tube" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect class="ch-tube-g" x="1.6" y="4.6" width="12.8" height="6.8" rx="3.4"/><path class="ch-tube-n" d="M4.6 8h6.8"/></svg>`
 const ORBIT = `<svg class="ch-orbit" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle class="ch-orbit-r" cx="8" cy="8" r="5.6"/><g class="ch-orbit-g"><circle class="ch-orbit-b" cx="8" cy="2.4" r="1.7"/></g></svg>`
 
 export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
@@ -146,6 +148,10 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
   const nextLights = LIGHTS[ACTIVE.id % LIGHTS.length]
   const lightsBtn = (extra = '') =>
     `<button class="ch-tgl ch-lights ch-chip${extra}" type="button" data-lights-toggle aria-label="Lights: ${ACTIVE.name} of ${LIGHTS.length}. Switch to ${nextLights.name}">${LIGHT_DOTS}<span class="ch-tgl-k" aria-hidden="true">Lights</span><span class="ch-tgl-st" aria-hidden="true">${ACTIVE.id}</span></button>`
+  // the hero logo: Frost ↔ Tube (a reload: the hero is built once)
+  const nextLogo = LOGO_STYLES[LOGO.id % LOGO_STYLES.length]
+  const logoBtn = (extra = '') =>
+    `<button class="ch-tgl ch-logo ch-chip${extra}" type="button" data-logo-toggle aria-label="Logo: ${LOGO.name}. Switch to ${nextLogo.name}">${TUBE_IC}<span class="ch-tgl-k" aria-hidden="true">Logo</span><span class="ch-tgl-st" aria-hidden="true">${LOGO.name}</span></button>`
   const first = slots[0]?.def.id ?? 'hero'
 
   root.innerHTML = `
@@ -166,7 +172,7 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
     </header>
 
     <div class="ch-bottom">
-      <section class="ch-prefs" aria-label="Preferences">${soundBtn()}${motionBtn()}${lightsBtn()}</section>
+      <section class="ch-prefs" aria-label="Preferences">${soundBtn()}${motionBtn()}${lightsBtn()}${logoBtn()}</section>
       <div class="ch-prog">
         <p class="ch-read" aria-hidden="true"><span class="ch-read-n"></span><span class="ch-read-l"></span><span class="ch-read-b"></span></p>
         <nav class="ch-chapters" aria-label="Chapters"><ol class="ch-pips">${pips}</ol></nav>
@@ -189,7 +195,7 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
           <a class="hud-btn ch-menu-cta" href="#contact" data-go="contact">Start a project</a>
           <a class="hud-btn hud-btn--ghost ch-menu-read" href="${readHref(first)}" data-read>${READ_LABEL}</a>
         </div>
-        <div class="ch-menu-prefs" role="group" aria-label="Preferences">${soundBtn(' ch-menu-tgl')}${motionBtn(' ch-menu-tgl')}${lightsBtn(' ch-menu-tgl')}</div>
+        <div class="ch-menu-prefs" role="group" aria-label="Preferences">${soundBtn(' ch-menu-tgl')}${motionBtn(' ch-menu-tgl')}${lightsBtn(' ch-menu-tgl')}${logoBtn(' ch-menu-tgl')}</div>
         <p class="ch-menu-mail"><a href="mailto:${BRAND.email}">${BRAND.email}</a></p>
       </div>
     </div>
@@ -307,6 +313,11 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
     b.addEventListener('click', () => {
       sound.blip(3)
       switchLights(nextLights.id, progressNow)
+    })
+  for (const b of root.querySelectorAll<HTMLButtonElement>('[data-logo-toggle]'))
+    b.addEventListener('click', () => {
+      sound.blip(3)
+      switchLogo(nextLogo.id, progressNow)
     })
 
   // --------------------------------------------------------------- menu sheet

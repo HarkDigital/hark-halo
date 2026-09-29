@@ -4,7 +4,9 @@ import { el, reveal, rise, setRise } from '../../core/dom'
 import { BRAND, MICROCOPY } from '../../content'
 import { clamp, lerp, segment, smoothstep } from '../../core/math'
 import { nextFrame } from '../../core/yield'
+import { LOGO } from '../../kit/palette'
 import { FLOOR_MIRROR, FLOOR_Y, FROST, MARK_S, THAW_A, THAW_B, buildCard, buildFloor, buildMark, buildNeonMark, buildReflection, refineMark, type HeroSet } from './scene'
+import { buildTubeMark, buildTubeNeon } from './tube'
 import './hero.css'
 
 /*
@@ -37,6 +39,9 @@ import './hero.css'
  * light sweep (none under reduced motion; frozen with Motion off); the reveal
  * runs on its own clock.
  */
+
+/** the hero logo option (kit/palette): the frosted mark, or the neon in glass tubes (./tube) */
+const TUBE = LOGO.kind === 'tube'
 
 /** smootherstep on a segment */
 const sm = (x: number, a: number, b: number) => {
@@ -229,21 +234,34 @@ export default function create(): Chapter {
       mobile = ctx.mobile
       initAt = now()
 
-      const mark = buildMark(mobile, ctx.world.envMap)
-      await nextFrame()
-      refineMark(mark.logo.mark.geometry)
-      await nextFrame()
       // the frame renders into the post chain's own targets; three's glass buffer is anything else
-      const card = buildCard(rt => ctx.post.isFrameTarget(rt))
+      const isFT = (rt: THREE.WebGLRenderTarget | null) => ctx.post.isFrameTarget(rt)
+      let mark: Pick<HeroSet, 'pivot' | 'logo' | 'caps' | 'sides' | 'capsU' | 'rim' | 'markAspect'>
+      let walls: THREE.ShaderMaterial[] = []
+      if (TUBE) {
+        // the neon in clear glass tubes (no frost, so no thaw: its uniforms idle)
+        const tm = buildTubeMark(mobile, ctx.world.envMap, MARK_S)
+        walls = tm.walls
+        const capsU = { uThaw: { value: new THREE.Vector3() }, uThawR: { value: 0 }, uFront: { value: 0 } }
+        mark = { pivot: tm.pivot, logo: tm.logo, caps: tm.glass, sides: tm.glass, capsU, rim: tm.rim, markAspect: tm.markAspect }
+        await nextFrame()
+      } else {
+        mark = buildMark(mobile, ctx.world.envMap)
+        await nextFrame()
+        refineMark(mark.logo.mark.geometry)
+        await nextFrame()
+      }
+      const card = buildCard(isFT)
       const floor = buildFloor()
       const reflection = buildReflection(mark.logo.mark.geometry)
-      // the halo: the mark in neon, mounted behind the glass (it turns with it)
-      const halo = buildNeonMark(rt => ctx.post.isFrameTarget(rt))
+      // the halo: the mark in neon, mounted behind the glass (it turns with it); in the
+      // tube option, the neon inside the glass tubes
+      const halo = TUBE ? buildTubeNeon(isFT) : buildNeonMark(isFT)
       mark.logo.root.add(halo.root)
       // …and its reflection in the black mirror floor (placed each frame like the mark's)
-      const haloRefl = buildNeonMark(rt => ctx.post.isFrameTarget(rt), { floorY: FLOOR_Y, fade: 1.3 })
+      const haloRefl = TUBE ? buildTubeNeon(isFT, { floorY: FLOOR_Y, fade: 1.3 }) : buildNeonMark(isFT, { floorY: FLOOR_Y, fade: 1.3 })
       haloRefl.root.matrixAutoUpdate = false
-      set = { ...mark, ...card, floor, reflection, neon: halo.parts, neonRefl: haloRefl }
+      set = { ...mark, ...card, floor, reflection, neon: halo.parts, neonRefl: haloRefl, walls }
       group.add(set.card, set.floor, set.pivot, set.reflection, haloRefl.root)
 
       // ---- DOM
@@ -257,7 +275,7 @@ export default function create(): Chapter {
       // macro captions: a watch-film detail index (decorative)
       const capWrap = el('div', 'hf-caps', undefined, ctx.stage)
       capWrap.setAttribute('aria-hidden', 'true')
-      ;['Neon halo', 'Frosted face', 'Thaw'].forEach((txt, i) => {
+      ;(TUBE ? ['Neon core', 'Glass tube', 'Current'] : ['Neon halo', 'Frosted face', 'Thaw']).forEach((txt, i) => {
         const c = el('p', 'hud-label hf-cap', undefined, capWrap)
         el('span', 'hf-cap-n', `0${i + 1}`, c)
         el('span', 'hf-cap-line', undefined, c)
@@ -366,10 +384,16 @@ export default function create(): Chapter {
       s.sides.envMapRotation.set(0, turn, 0)
       // the FROST does the lighting: the sandblasted faces keep only a faint sheen of the
       // studio (strong strip reflections read as brushed metal); the polished bevels keep it all
-      s.caps.envMapIntensity = lerp(0.04, 0.16, rLight) * lerp(1, 0.6, macro)
-      s.sides.envMapIntensity = lerp(0.35, 1.6, rLight)
-      // a faint lift at the silhouette (light caught in the glass); the dark polished rims stay
-      s.rim.uniforms.uStrength.value = 0.08 * rLight * (1 - 0.5 * macro)
+      if (TUBE) {
+        // clear glass tubes: the studio's strips run along them (caps and sides are one glass)
+        s.caps.envMapIntensity = lerp(0.3, 1.15, rLight) * lerp(1, 0.8, macro)
+        s.rim.uniforms.uStrength.value = 0.14 * rLight
+      } else {
+        s.caps.envMapIntensity = lerp(0.04, 0.16, rLight) * lerp(1, 0.6, macro)
+        s.sides.envMapIntensity = lerp(0.35, 1.6, rLight)
+        // a faint lift at the silhouette (light caught in the glass); the dark polished rims stay
+        s.rim.uniforms.uStrength.value = 0.08 * rLight * (1 - 0.5 * macro)
+      }
 
       // ---- the thaw: a clear window glides across the face in beat 03
       // it runs down the centre of the lower diagonal band, from the right loop toward the bottom one
@@ -379,7 +403,7 @@ export default function create(): Chapter {
       s.capsU.uThaw.value.set(lerp(THAW_A.x, THAW_B.x, thawP), lerp(THAW_A.y, THAW_B.y, thawP), thawK)
       s.capsU.uThawR.value = 0.066
       s.capsU.uFront.value = 0.4
-      s.caps.roughness = FROST
+      if (!TUBE) s.caps.roughness = FROST
 
       // ---- the backlight card: camera-facing, behind the mark; it drifts in macro
       const camToMark = tmpC.copy(pos).negate().normalize() // the mark's centre is the origin
@@ -403,7 +427,7 @@ export default function create(): Chapter {
       // in the macro shots the light sits behind whatever the camera studies, drifting
       // across it (so the face in view glows through and its frost gradient shifts);
       // in the thaw it slides off, so the razor line reads through the clear window
-      const lineK = smoothstep(0.405, 0.44, local) * (1 - smoothstep(0.53, 0.56, local))
+      const lineK = TUBE ? 0 : smoothstep(0.405, 0.44, local) * (1 - smoothstep(0.53, 0.56, local))
       const focusK = macro * (1 - 0.75 * lineK)
       if (focusK > 0) onCardWorld(s, focusW.set(val[TX], val[TY], val[TZ]), focus)
       const sweepX = -0.35 + 0.7 * sm(local, 0.14, 0.43)
@@ -434,22 +458,56 @@ export default function create(): Chapter {
       s.cardK.trans.rings = 0
       s.cardK.main.glow = 0.035 * rLight * (1 - 0.5 * macro)
       s.cardK.main.slit = 0
+      if (TUBE) {
+        // clear glass shows what's behind it as it is: only a whisper of the card
+        s.cardK.trans.glow = 0.05 * rLight * lerp(1, 0.6, macro)
+        s.cardK.trans.wide = 0.012 * rLight
+        s.cardK.main.glow = 0.025 * rLight * (1 - 0.5 * macro)
+      }
 
       // ---- the halo: the neon mark — tubes + halo sleeves in the room, a stronger halo in the
       // glass buffer (the frost turns it into the mark's shape in coloured light)
+      // (tube option: the neon inside the glass reaches the eye only through it, so the glass
+      // buffer carries the tube and its glow; the room sees the halo spilling past the glass.
+      // A spark runs down each tube: through beat 03, and every few seconds at rest)
+      const curP = segment(local, 0.445, 0.55)
+      const current = TUBE ? Math.sin(Math.PI * curP) : 0
       for (let i = 0; i < s.neon.length; i++) {
         for (const n of s.neon[i]) {
           n.on.value = rNeon[i] * (1 - 0.5 * outW)
-          n.k.main.tube = 3.0
-          n.k.main.glow = 0.55
-          n.k.trans.tube = 3.0
-          n.k.trans.glow = 0.78 * lerp(1, 0.6, macro)
+          if (TUBE) {
+            n.k.main.tube = 3.2
+            n.k.main.glow = 0.2
+            n.k.trans.tube = 3.0
+            n.k.trans.glow = 0.34 * lerp(1, 0.8, macro)
+            let px = curP
+            let py = current > 0.001 ? 2.4 * current : 0
+            if (py === 0 && !reduced && revealAt >= 0 && since > 3) {
+              const ph = (t + i * 0.45) / 7
+              const f = (ph - Math.floor(ph)) * 7 / 1.9
+              if (f < 1) {
+                px = f
+                py = 1.5 * Math.sin(Math.PI * f)
+              }
+            }
+            n.pulse.value.set(px, py)
+          } else {
+            n.k.main.tube = 3.0
+            n.k.main.glow = 0.55
+            n.k.trans.tube = 3.0
+            n.k.trans.glow = 0.78 * lerp(1, 0.6, macro)
+          }
+        }
+        const w = s.walls[i]
+        if (w) {
+          w.uniforms.uOn.value = rNeon[i] * (1 - 0.5 * outW)
+          w.uniforms.uK.value = 0.42 * lerp(1, 0.8, macro)
         }
       }
       // the reflection: the room's view only (the glass never sees it), dimmer
       for (let i = 0; i < s.neonRefl.parts.length; i++) {
         for (const n of s.neonRefl.parts[i]) {
-          n.on.value = rNeon[i] * (1 - 0.5 * outW) * (portrait ? 0.12 : 1)
+          n.on.value = rNeon[i] * (1 - 0.5 * outW) * (portrait ? (TUBE ? 0.05 : 0.12) : 1)
           n.k.main.tube = 0.9
           n.k.main.glow = 0.3
           n.k.trans.tube = 0
@@ -462,7 +520,7 @@ export default function create(): Chapter {
       fu.uK.value = 0.045 * rHalo * (1 - 0.4 * macro)
       // portrait: the copy sits under the mark, so the reflection is only a faint top sliver
       const ru = s.reflection.material.uniforms
-      ru.uStrength.value = 0.2 * rLight * (portrait ? 0.3 : 1)
+      ru.uStrength.value = (TUBE ? 0.1 : 0.2) * rLight * (portrait ? 0.3 : 1)
       ru.uFade.value = portrait ? 6 : 1.6
 
       // ---- world: black, the halo behind the mark, two hairline slits

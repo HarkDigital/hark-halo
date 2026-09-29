@@ -2,7 +2,7 @@
 //
 //   node scripts/shot.mjs --frames=hero:0,hero:0.5,work:0.3 [--port=5173] [--out=shots]
 //                         [--w=1440] [--h=900] [--mobile] [--wait=1800] [--only=hero]
-//                         [--tag=name] [--mouse=0.3,-0.2] [--rm]
+//                         [--tag=name] [--mouse=0.3,-0.2] [--rm] [--q=logo=2&lights=5]
 //
 // Each frame is "<chapter>:<local 0..1>" or "p:<global 0..1>". Images land in
 // <out>/<tag?>-<chapter>-<local>.png. Console errors from the page are printed,
@@ -63,6 +63,8 @@ try {
   const q = new URLSearchParams({ nointro: '1' })
   if (args.only) q.set('only', args.only)
   if (args.debug) q.set('debug', '1')
+  // --q: extra query parameters (options: logo, lights)
+  if (typeof args.q === 'string') for (const [k, v] of new URLSearchParams(args.q)) q.set(k, v)
   await page.goto(`http://localhost:${port}/?${q}`, { waitUntil: 'load', timeout: 90000 })
   await page.waitForFunction('window.__hark && window.__hark.ready', { timeout: 90000 })
   await new Promise(r => setTimeout(r, 800))

@@ -87,6 +87,8 @@ export interface HeroSet {
   neonRefl: { root: THREE.Group; parts: NeonPath[][] }
   /** the mark's width / height */
   markAspect: number
+  /** the tube option's light in the glass walls, per part (empty for the frosted mark) */
+  walls: THREE.ShaderMaterial[]
 }
 
 export interface CapsUniforms {

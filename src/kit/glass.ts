@@ -707,7 +707,7 @@ const NEON_PATH_VERT = /* glsl */ `
 /** a mirrored copy (a black mirror floor) draws only below the floor, fading with depth;
  * uDraw clips the tube to its first part (drawing it in), uPulse runs a spark along it */
 const NEON_PATH_FADE = /* glsl */ `
-  uniform float uMirror, uFloorY, uFade, uDraw;
+  uniform float uMirror, uFloorY, uFade, uDraw, uEnd;
   uniform vec2 uPulse;
   varying float vWY;
   varying float vU;
@@ -718,7 +718,9 @@ const NEON_PATH_FADE = /* glsl */ `
     float head = uDraw < 0.999 ? exp(-pow2((vU - uDraw) * 90.0)) * 1.6 : 0.0;
     float d = abs(vU - uPulse.x);
     d = min(d, 1.0 - d);
-    return 1.0 + head + uPulse.y * exp(-pow2(d * 40.0));
+    // an open tube's ends (the electrodes) fade out, so its halo has no cut ends
+    float ends = uEnd > 0.0 ? smoothstep(0.0, uEnd, vU) * smoothstep(0.0, uEnd, 1.0 - vU) : 1.0;
+    return (1.0 + head + uPulse.y * exp(-pow2(d * 40.0))) * ends;
   }
   float mirrorFade() {
     float below = max(uFloorY - vWY, 0.0);
@@ -808,6 +810,8 @@ export function neonPath(o: {
   glowRadius?: number
   /** tubular segments (default: 3 per point) */
   segments?: number
+  /** an open tube: fade its light out over this length at each end (path units) */
+  endFade?: number
   /** a reflection in a black mirror floor: draw only below floorY, fading with depth (place it with a mirror matrix) */
   mirror?: { floorY: number; fade?: number }
   /**
@@ -839,6 +843,7 @@ export function neonPath(o: {
     uSeed: { value: (seedN++ * 1.618) % 6.283 },
     uDraw: draw,
     uPulse: pulse,
+    uEnd: { value: o.endFade && !o.closed ? Math.min(0.5, o.endFade / Math.max(1e-6, len)) : 0 },
     uMirror: { value: o.mirror ? 1 : 0 },
     uFloorY: { value: o.mirror?.floorY ?? 0 },
     uFade: { value: o.mirror?.fade ?? 1.5 },
