@@ -662,3 +662,123 @@ export function neonTube(o: {
     },
   }
 }
+
+/** What a bent neon tube draws in one pass. */
+export interface NeonPathPass {
+  /** the glass tube and the gas inside it */
+  tube: number
+  /** the soft halo around the tube */
+  glow: number
+}
+
+export interface NeonPath {
+  /** holds the tube + its halo; position / rotate / scale it freely */
+  root: THREE.Group
+  tube: THREE.Mesh<THREE.TubeGeometry, THREE.ShaderMaterial>
+  glow: THREE.Mesh<THREE.TubeGeometry, THREE.ShaderMaterial>
+  /** per-pass strengths; `main` = the frame, `trans` = the glass buffer frosted glass reads */
+  k: { main: NeonPathPass; trans: NeonPathPass }
+  /** 0..1 ignition (multiplies every pass) */
+  on: { value: number }
+  color: { value: THREE.Color }
+}
+
+const NEON_PATH_VERT = /* glsl */ `
+  varying vec3 vN;
+  varying vec3 vV;
+  varying float vU;
+  void main() {
+    vec4 mv = modelViewMatrix * vec4(position, 1.0);
+    vN = normalize(normalMatrix * normal);
+    vV = normalize(-mv.xyz);
+    vU = uv.x;
+    gl_Position = projectionMatrix * mv;
+  }
+`
+const NEON_PATH_TUBE = /* glsl */ `
+  uniform vec3 uColor;
+  uniform float uK, uOn;
+  varying vec3 vN;
+  varying vec3 vV;
+  void main() {
+    // a round glass tube full of glowing gas: white-hot where it faces you,
+    // saturated toward its silhouette
+    float f = abs(dot(normalize(vN), normalize(vV)));
+    vec3 gas = mix(uColor, vec3(1.0), smoothstep(0.5, 0.98, f));
+    gl_FragColor = vec4(gas * (0.45 + 0.55 * f) * uK * uOn, 1.0);
+  }
+`
+const NEON_PATH_GLOW = /* glsl */ `
+  uniform vec3 uColor;
+  uniform float uK, uOn;
+  varying vec3 vN;
+  varying vec3 vV;
+  void main() {
+    // a fat, invisible sleeve around the tube: bright along the middle, gone at its edge
+    float f = abs(dot(normalize(vN), normalize(vV)));
+    float g = f * f * f;
+    gl_FragColor = vec4(uColor * g * g * uK * uOn, 1.0);
+  }
+`
+
+/**
+ * A BENT neon tube along any path (the kit's straight `neonTube` is a
+ * ribbon): a real tube mesh (white-hot core, saturated flanks) plus a fat
+ * additive sleeve for its halo. Both sit in the opaque list, so three's glass
+ * buffer sees them and frosted glass in front diffuses them; `k.trans` sets
+ * how much light the glass gets, `k.main` what the room shows (tell the two
+ * apart with `isFrameTarget`). HDR: above the bloom threshold the tube blooms.
+ * `points` are in the root's local space; closed paths loop.
+ */
+export function neonPath(o: {
+  points: THREE.Vector3[]
+  closed?: boolean
+  color: THREE.ColorRepresentation
+  radius?: number
+  glowRadius?: number
+  /** tubular segments (default: 3 per point) */
+  segments?: number
+  isFrameTarget: (rt: THREE.WebGLRenderTarget | null) => boolean
+}): NeonPath {
+  const curve = new THREE.CatmullRomCurve3(o.points, o.closed ?? false, 'centripetal', 0.5)
+  const seg = o.segments ?? Math.max(24, o.points.length * 3)
+  const radial = mobile ? 6 : 8
+  const tubeGeo = new THREE.TubeGeometry(curve, seg, o.radius ?? 0.012, radial, o.closed ?? false)
+  const glowGeo = new THREE.TubeGeometry(curve, seg, o.glowRadius ?? 0.07, radial, o.closed ?? false)
+  const color = { value: new THREE.Color(o.color) }
+  const on = { value: 1 }
+  const k = { main: { tube: 3.2, glow: 0.35 } as NeonPathPass, trans: { tube: 3.2, glow: 0.8 } as NeonPathPass }
+  const tubeMat = new THREE.ShaderMaterial({
+    uniforms: { uColor: color, uK: { value: 0 }, uOn: on },
+    vertexShader: NEON_PATH_VERT,
+    fragmentShader: NEON_PATH_TUBE,
+    toneMapped: false,
+  })
+  const glowMat = new THREE.ShaderMaterial({
+    uniforms: { uColor: color, uK: { value: 0 }, uOn: on },
+    vertexShader: NEON_PATH_VERT,
+    fragmentShader: NEON_PATH_GLOW,
+    transparent: false,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    side: THREE.FrontSide,
+    toneMapped: false,
+  })
+  const tube = new THREE.Mesh(tubeGeo, tubeMat)
+  const glow = new THREE.Mesh(glowGeo, glowMat)
+  tube.renderOrder = -5
+  glow.renderOrder = -4
+  const bind = (m: THREE.Mesh<THREE.TubeGeometry, THREE.ShaderMaterial>, key: keyof NeonPathPass) => {
+    m.onBeforeRender = renderer => {
+      const rt = renderer.getRenderTarget()
+      const p = rt === null || o.isFrameTarget(rt as THREE.WebGLRenderTarget) ? k.main : k.trans
+      m.material.uniforms.uK.value = p[key]
+      m.material.uniformsNeedUpdate = true
+    }
+  }
+  bind(tube, 'tube')
+  bind(glow, 'glow')
+  const root = new THREE.Group()
+  root.add(tube, glow)
+  return { root, tube, glow, k, on, color }
+}
