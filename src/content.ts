@@ -414,9 +414,14 @@ export const SECURITY = {
  * /api/contact takes exactly this payload, as do form services such as
  * Formspree. With no endpoint (a static host), the form composes the message
  * in the visitor's email app instead, addressed to BRAND.email.
+ *
+ * endpoint          the hark-contact Worker (worker/: Turnstile + SendGrid)
+ * turnstileSiteKey  Cloudflare Turnstile's PUBLIC site key; the form shows the
+ *                   check and sends its token (the Worker verifies it)
  */
 export const CONTACT_FORM = {
   endpoint: '',
+  turnstileSiteKey: '',
   services: [
     'Web Design',
     'Software Development',
@@ -437,6 +442,7 @@ export const CONTACT_FORM = {
   sentBody: 'Thanks for reaching out. We will get back to you shortly, usually within a business day.',
   missing: 'Please fill in your name, email, and message',
   badEmail: 'That email address looks off',
+  unverified: 'Please complete the verification',
 }
 
 export const CONTACT = {

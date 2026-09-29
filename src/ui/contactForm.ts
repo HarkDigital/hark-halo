@@ -17,6 +17,32 @@ import './contactForm.css'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+/* Cloudflare Turnstile (only with a site key): loaded once, rendered per form */
+interface Turnstile {
+  render(el: HTMLElement, o: Record<string, unknown>): string
+  getResponse(id: string): string | undefined
+  reset(id: string): void
+}
+declare global {
+  interface Window {
+    turnstile?: Turnstile
+  }
+}
+let turnstileLoad: Promise<Turnstile | null> | null = null
+function loadTurnstile(): Promise<Turnstile | null> {
+  if (turnstileLoad) return turnstileLoad
+  turnstileLoad = new Promise(resolve => {
+    if (window.turnstile) return resolve(window.turnstile)
+    const s = document.createElement('script')
+    s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
+    s.async = true
+    s.onload = () => resolve(window.turnstile ?? null)
+    s.onerror = () => resolve(null)
+    document.head.append(s)
+  })
+  return turnstileLoad
+}
+
 let uid = 0
 
 export interface ContactFormOpts {
@@ -62,6 +88,7 @@ export function createContactForm(o: ContactFormOpts = {}): HTMLElement {
         <label class="cf-label" for="${id}-message">Message *</label>
         <textarea class="cf-input cf-text" id="${id}-message" name="message" required rows="5" placeholder="Tell us about your project, timeline, and anything else that helps."></textarea>
       </p>
+      ${CONTACT_FORM.turnstileSiteKey ? '<div class="cf-turnstile"></div>' : ''}
       <p class="cf-error" id="${id}-error" role="alert"></p>
       <button class="hud-btn cf-submit" type="submit"><span class="cf-submit-t">${CONTACT_FORM.submit}</span> <span aria-hidden="true">→</span></button>
       <p class="cf-note">${CONTACT_FORM.note}</p>
@@ -78,6 +105,22 @@ export function createContactForm(o: ContactFormOpts = {}): HTMLElement {
   const submit = root.querySelector<HTMLButtonElement>('.cf-submit')!
   const submitT = root.querySelector<HTMLElement>('.cf-submit-t')!
   const field = (n: string) => form.elements.namedItem(n) as HTMLInputElement | HTMLTextAreaElement
+
+  // Turnstile: rendered once the form is in the page (the dialog builds it detached)
+  let ts: Turnstile | null = null
+  let tsId = ''
+  const tsSlot = root.querySelector<HTMLElement>('.cf-turnstile')
+  if (tsSlot) {
+    void loadTurnstile().then(t => {
+      if (!t) return
+      const mount = () => {
+        if (!tsSlot.isConnected) return requestAnimationFrame(mount)
+        ts = t
+        tsId = t.render(tsSlot, { sitekey: CONTACT_FORM.turnstileSiteKey, theme: 'dark', size: 'flexible', appearance: 'interaction-only' })
+      }
+      mount()
+    })
+  }
 
   const mark = (els: (HTMLInputElement | HTMLTextAreaElement)[]) => {
     for (const n of ['name', 'email', 'message']) {
@@ -124,13 +167,15 @@ export function createContactForm(o: ContactFormOpts = {}): HTMLElement {
       return finish()
     }
 
+    const turnstileToken = ts && tsId ? (ts.getResponse(tsId) ?? '') : ''
+    if (tsSlot && !turnstileToken) return fail(CONTACT_FORM.unverified)
     submit.disabled = true
     submitT.textContent = CONTACT_FORM.sending
     try {
       const res = await fetch(CONTACT_FORM.endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ name, email, company: data.company ?? '', service: data.service ?? '', message, website: '' }),
+        body: JSON.stringify({ name, email, company: data.company ?? '', service: data.service ?? '', message, website: '', turnstileToken }),
       })
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string }
@@ -139,6 +184,8 @@ export function createContactForm(o: ContactFormOpts = {}): HTMLElement {
       finish()
     } catch (x) {
       fail(x instanceof Error ? x.message : 'Something went wrong')
+      // a token is single-use: get a fresh one for the next try
+      if (ts && tsId) ts.reset(tsId)
     } finally {
       submit.disabled = false
       submitT.textContent = CONTACT_FORM.submit

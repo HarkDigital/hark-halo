@@ -3,3 +3,7 @@ dist
 .DS_Store
 shots
 *.log
+
+# worker: local secrets and wrangler state
+worker/.dev.vars
+worker/.wrangler

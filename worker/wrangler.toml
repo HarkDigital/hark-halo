@@ -1,0 +1,16 @@
+# The contact form's backend: a Cloudflare Worker that checks the visitor's
+# Turnstile token and sends the message through SendGrid.
+#
+# Secrets (never in this file or the site): set them once with
+#   npx wrangler secret put SENDGRID_API_KEY
+#   npx wrangler secret put TURNSTILE_SECRET
+name = "hark-contact"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+
+[vars]
+# where inquiries go, and the verified SendGrid sender they come from
+CONTACT_TO_EMAIL = "mike@hark.digital"
+CONTACT_FROM_EMAIL = "noreply@hark.digital"
+# sites allowed to post the form (comma separated)
+ALLOWED_ORIGINS = "https://harkdigital.github.io,https://hark.digital,https://www.hark.digital,http://localhost:6380,http://localhost:6390"
