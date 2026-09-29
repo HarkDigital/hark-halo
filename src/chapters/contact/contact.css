@@ -52,7 +52,22 @@
   margin-bottom: clamp(22px, 2.2vw, 32px);
 }
 
-/* ---- the address: the primary action */
+/* ---- the form: the primary action (opens the dialog) */
+.stage-contact .ct-form {
+  position: relative;
+  z-index: 1;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 10px;
+  font-size: clamp(15px, 1.2vw, 18px);
+  padding: 17px 24px;
+}
+.stage-contact .ct-form:hover .ct-go,
+.stage-contact .ct-form:focus-visible .ct-go {
+  transform: translateX(4px);
+}
+
+/* ---- the address beside Copy */
 .stage-contact .ct-cta {
   position: relative;
   z-index: 1;

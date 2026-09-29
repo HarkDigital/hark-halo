@@ -119,8 +119,14 @@ export function buildHud(stage: HTMLElement): Hud {
   const title = rise(el('h2', 'hud-title ct-title', undefined, panel), `${words.join(' ')} <em>${last}</em>`)
   el('p', 'hud-body ct-body', CONTACT.body, panel)
 
+  // the form (ui/formDialog): the primary action; the address and Copy beside it
+  const formBtn = el('button', 'hud-btn ct-form', undefined, panel)
+  formBtn.type = 'button'
+  formBtn.setAttribute('data-contact-form', '')
+  formBtn.innerHTML = 'Send a message <span class="ct-go" aria-hidden="true">→</span>'
+
   const cta = el('div', 'ct-cta', undefined, panel)
-  const mail = el('a', 'hud-btn ct-mail', undefined, cta)
+  const mail = el('a', 'hud-btn hud-btn--ghost ct-mail', undefined, cta)
   mail.href = CONTACT.href
   mail.innerHTML = `${ICON_MAIL}<span class="ct-mail-addr"></span><span class="ct-go" aria-hidden="true">→</span>`
   mail.querySelector('.ct-mail-addr')!.textContent = BRAND.email

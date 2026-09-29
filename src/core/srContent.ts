@@ -71,6 +71,7 @@ const COPY: Record<string, () => string> = {
   contact: () => `
     <h2 tabindex="0">${esc(CONTACT.title)}</h2>
     <p>${esc(CONTACT.body)}</p>
+    <p><button type="button" data-contact-form>Send a message</button></p>
     <p>Write to: <a href="${esc(CONTACT.href)}">${esc(BRAND.email)}</a> <button type="button" data-copy-email>Copy email address</button> <span data-copy-status aria-live="polite"></span></p>
     <p>Other concepts: ${OTHER_CONCEPTS.map(c => ext(c.url, c.name)).join(' · ')}</p>
     <p>© ${new Date().getFullYear()} ${esc(BRAND.name)} · ${esc(BRAND.locale)}</p>

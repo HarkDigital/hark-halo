@@ -268,6 +268,37 @@ function render(i: number) {
     rv.forEach(n => io.observe(n))
   }
 
+  // hover: frosted panels carry a soft light in the neon that follows the cursor
+  const spots = [...document.querySelectorAll<HTMLElement>('.svc-feature, .svc-quote, .svc-step, .svc-block, .svc-q')]
+  spots.forEach((n, k) => {
+    n.classList.add('svc-spot')
+    n.style.setProperty('--spot-rgb', `var(--neon-${'abc'[k % 3]}-rgb)`)
+    const glow = document.createElement('span')
+    glow.className = 'svc-glow'
+    glow.setAttribute('aria-hidden', 'true')
+    n.prepend(glow)
+  })
+  if (!reduced && matchMedia('(hover: hover)').matches) {
+    let raf = 0
+    let ev: PointerEvent | null = null
+    document.addEventListener(
+      'pointermove',
+      e => {
+        ev = e
+        if (raf) return
+        raf = requestAnimationFrame(() => {
+          raf = 0
+          const t = ev && (ev.target as HTMLElement | null)?.closest?.<HTMLElement>('.svc-spot')
+          if (!t || !ev) return
+          const r = t.getBoundingClientRect()
+          t.style.setProperty('--mx', `${ev.clientX - r.left}px`)
+          t.style.setProperty('--my', `${ev.clientY - r.top}px`)
+        })
+      },
+      { passive: true },
+    )
+  }
+
   // the hero art (WebGL), after the copy is up; without it the CSS neon stands in
   const canvas = document.querySelector<HTMLCanvasElement>('.svc-gl')!
   const hero = document.querySelector<HTMLElement>('.svc-hero')!

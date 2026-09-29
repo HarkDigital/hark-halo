@@ -538,7 +538,7 @@ body.svc {
   outline: none;
 }
 .svc-contact-card.hud-panel {
-  max-width: 1240px;
+  max-width: none;
   padding: clamp(28px, 4.5vw, 56px);
   overflow: visible;
 }
@@ -708,5 +708,134 @@ body.svc {
   .svc-step::after,
   .svc-q summary i {
     transition: none;
+  }
+}
+
+/* ---------------- hover: light that follows the cursor, lifts, neon accents ---------------- */
+.svc-spot {
+  position: relative;
+  --spot-rgb: var(--neon-a-rgb, 255, 255, 255);
+}
+.svc-glow {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(380px circle at var(--mx, 50%) var(--my, 50%), rgba(var(--spot-rgb), 0.17), rgba(var(--spot-rgb), 0) 62%);
+  transition: opacity 0.35s ease;
+}
+.svc-spot > :not(.svc-glow) {
+  position: relative;
+  z-index: 1;
+}
+@media (hover: hover) {
+  .svc-spot:hover .svc-glow {
+    opacity: 1;
+  }
+  /* features: lift, a neon edge, the number lights */
+  .svc-feature.hud-panel {
+    transition:
+      transform 0.5s var(--svc-ease),
+      box-shadow 0.4s ease;
+  }
+  .svc-feature.hud-panel:hover {
+    transform: translate3d(0, -4px, 0);
+    box-shadow:
+      inset 0 1px 0 var(--glass-hi),
+      inset 0 0 0 1px rgba(var(--spot-rgb), 0.45),
+      0 18px 50px rgba(0, 0, 0, 0.55),
+      0 0 40px rgba(var(--spot-rgb), 0.12);
+  }
+  .svc-feature:hover::after {
+    background: rgb(var(--spot-rgb));
+    box-shadow: 0 0 12px rgb(var(--spot-rgb));
+  }
+  .svc-feature:hover .svc-n,
+  .svc-step:hover .svc-n {
+    color: rgb(var(--spot-rgb));
+    text-shadow: 0 0 12px rgba(var(--spot-rgb), 0.8);
+  }
+  /* steps: lift, the title glows, the line fills in the step's own light */
+  .svc-step {
+    border-radius: 14px;
+    transition: transform 0.5s var(--svc-ease);
+  }
+  .svc-step:hover {
+    transform: translate3d(0, -4px, 0);
+  }
+  .svc-step:hover .svc-step-t {
+    text-shadow: 0 0 18px rgba(var(--spot-rgb), 0.55);
+  }
+  .svc-step:hover::after {
+    background: rgb(var(--spot-rgb));
+    box-shadow: 0 0 10px rgb(var(--spot-rgb));
+  }
+  /* article blocks: a neon bar grows beside the heading */
+  .svc-block {
+    border-radius: 16px;
+    padding: 18px 20px;
+    margin: -18px -20px;
+  }
+  .svc-block-t {
+    transition: text-shadow 0.35s ease;
+  }
+  .svc-block:hover .svc-block-t {
+    text-shadow: 0 0 20px rgba(var(--spot-rgb), 0.45);
+  }
+  /* FAQ: the row lights, the plus turns toward the pointer's light */
+  .svc-q {
+    border-radius: 10px;
+  }
+  .svc-q summary {
+    transition:
+      padding-left 0.35s var(--svc-ease),
+      color 0.3s ease;
+  }
+  .svc-q:hover summary {
+    padding-left: 10px;
+  }
+  .svc-q:hover summary i {
+    color: rgb(var(--spot-rgb));
+    filter: drop-shadow(0 0 6px rgb(var(--spot-rgb)));
+  }
+  /* the stat: its glow swells */
+  .svc-stat-v {
+    transition: text-shadow 0.5s ease;
+  }
+  .svc-stat:hover .svc-stat-v {
+    text-shadow:
+      0 0 40px rgba(var(--neon-a-rgb), 0.55),
+      0 0 110px rgba(var(--neon-b-rgb), 0.4);
+  }
+  /* prev / next: the arrow leans in, a neon underline draws */
+  .svc-pn-t {
+    position: relative;
+    padding-bottom: 4px;
+  }
+  .svc-pn-t::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(90deg, var(--neon-a), var(--neon-b));
+    box-shadow: 0 0 8px var(--neon-a);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    transition: transform 0.5s var(--svc-ease);
+  }
+  .svc-pn-a--next .svc-pn-t::after {
+    transform-origin: 100% 50%;
+  }
+  .svc-pn-a:hover .svc-pn-t::after {
+    transform: none;
+  }
+  /* the services index: the number lights in the neon */
+  .svc-idx a:hover .svc-idx-n {
+    color: var(--neon-a);
+    text-shadow: 0 0 10px var(--neon-a);
   }
 }

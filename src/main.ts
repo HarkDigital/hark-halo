@@ -6,6 +6,7 @@ import './ui/ui.css'
 
 import { installPrintPolyfills } from './ui/polyfills'
 import { applyLightsCss, takeResume } from './kit/palette'
+import { openContactDialog } from './ui/formDialog'
 import { Engine } from './core/Engine'
 import { CHAPTERS } from './chapters/index'
 import { SERVICES } from './content'
@@ -41,6 +42,13 @@ declare global {
 
 installPrintPolyfills()
 applyLightsCss()
+// "Send a message" anywhere (the contact card, the copy layer, the static page) opens the form
+document.addEventListener('click', e => {
+  const b = (e.target as HTMLElement | null)?.closest?.<HTMLElement>('[data-contact-form]')
+  if (!b) return
+  e.preventDefault()
+  openContactDialog(b)
+})
 // back from a lights switch: resume where the visitor was, without the intro again
 const resume = takeResume()
 
