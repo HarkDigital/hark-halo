@@ -9,8 +9,11 @@
 :root {
   --svc-max: 1560px;
   --svc-ease: cubic-bezier(0.16, 1, 0.3, 1);
-  --neon-a: #00e1ff;
-  --neon-b: #a32cff;
+  /* the active lights (kit/palette.ts sets these on <html>; Option 2 as a fallback) */
+  --neon-a: #ffa51f;
+  --neon-b: #ff3326;
+  --neon-a-rgb: 255, 165, 31;
+  --neon-b-rgb: 255, 51, 38;
   --neon-line: linear-gradient(90deg, var(--neon-a), var(--neon-b));
 }
 
@@ -178,15 +181,15 @@ body.svc {
   left: 66%;
   box-shadow:
     0 0 6px 1px var(--neon-a),
-    0 0 26px 6px rgba(0, 225, 255, 0.45),
-    0 0 90px 30px rgba(0, 225, 255, 0.14);
+    0 0 26px 6px rgba(var(--neon-a-rgb), 0.45),
+    0 0 90px 30px rgba(var(--neon-a-rgb), 0.14);
 }
 .svc-neon-css i:last-child {
   left: 84%;
   box-shadow:
     0 0 6px 1px var(--neon-b),
-    0 0 26px 6px rgba(163, 44, 255, 0.45),
-    0 0 90px 30px rgba(163, 44, 255, 0.14);
+    0 0 26px 6px rgba(var(--neon-b-rgb), 0.45),
+    0 0 90px 30px rgba(var(--neon-b-rgb), 0.14);
 }
 
 @media (orientation: portrait), (max-width: 820px) {
@@ -260,7 +263,7 @@ body.svc {
   top: 0;
   height: 1px;
   background: var(--neon-line);
-  box-shadow: 0 0 12px rgba(0, 225, 255, 0.55);
+  box-shadow: 0 0 12px rgba(var(--neon-a-rgb), 0.55);
   opacity: 0;
   transform: scaleX(0.3);
   transition:
@@ -293,8 +296,8 @@ body.svc {
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
   background:
-    radial-gradient(60% 140% at 12% 50%, rgba(0, 225, 255, 0.07), rgba(0, 0, 0, 0) 70%),
-    radial-gradient(50% 140% at 40% 50%, rgba(163, 44, 255, 0.06), rgba(0, 0, 0, 0) 70%),
+    radial-gradient(60% 140% at 12% 50%, rgba(var(--neon-a-rgb), 0.07), rgba(0, 0, 0, 0) 70%),
+    radial-gradient(50% 140% at 40% 50%, rgba(var(--neon-b-rgb), 0.06), rgba(0, 0, 0, 0) 70%),
     #030304;
 }
 .svc-stat-in {
@@ -314,8 +317,8 @@ body.svc {
   letter-spacing: -0.055em;
   color: var(--fg);
   text-shadow:
-    0 0 30px rgba(0, 225, 255, 0.28),
-    0 0 80px rgba(163, 44, 255, 0.22);
+    0 0 30px rgba(var(--neon-a-rgb), 0.28),
+    0 0 80px rgba(var(--neon-b-rgb), 0.22);
 }
 .svc-stat-l {
   max-width: 38ch;
@@ -351,7 +354,7 @@ body.svc {
 }
 .svc-step::after {
   background: var(--neon-line);
-  box-shadow: 0 0 10px rgba(0, 225, 255, 0.6);
+  box-shadow: 0 0 10px rgba(var(--neon-a-rgb), 0.6);
   transform: scaleX(0);
   transform-origin: 0 50%;
   transition: transform 0.7s var(--svc-ease);
@@ -476,7 +479,7 @@ body.svc {
   line-height: 0.7;
   height: 0.5em;
   color: var(--fg);
-  text-shadow: 0 0 28px rgba(0, 225, 255, 0.4);
+  text-shadow: 0 0 28px rgba(var(--neon-a-rgb), 0.4);
 }
 .svc-quote blockquote {
   max-width: 34ch;
@@ -582,7 +585,7 @@ body.svc {
 }
 .svc-idx a[aria-current='page'] .svc-idx-n {
   color: var(--neon-a);
-  text-shadow: 0 0 10px rgba(0, 225, 255, 0.7);
+  text-shadow: 0 0 10px rgba(var(--neon-a-rgb), 0.7);
 }
 .svc-idx-n {
   color: var(--fg-faint);

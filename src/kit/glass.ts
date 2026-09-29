@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js'
 import { extrudeInset, logoParts, logoShapes } from '../logo/logo'
+import { ACTIVE } from './palette'
 
 /*
  * Hark Glass kit — one visual language for every chapter.
@@ -50,10 +51,10 @@ export const G = {
    * frosted glass (the frost diffuses them into soft colour); never text,
    * never UI fills
    */
-  neonA: '#00e1ff',
-  neonB: '#a32cff',
-  /** a third, hot magenta (the neon mark's diamond) */
-  neonC: '#ff2bd1',
+  neonA: ACTIVE.a,
+  neonB: ACTIVE.b,
+  /** a third accent (the neon mark's diamond) */
+  neonC: ACTIVE.c,
   /** hostile tint, shield chapter only */
   ember: '#ff4d4d',
 } as const
@@ -830,8 +831,8 @@ export function neonPath(o: {
  * The HALO: the Hark mark bent in neon — one glass tube along every contour of
  * each part (the two loops, the diamond) — in mark units (1u tall), drawn
  * `scale` x the mark and placed at depth `z`, for mounting just behind a glass
- * mark like a halo-lit sign. Loop A electric cyan, loop B electric violet,
- * the diamond hot magenta. `parts[i]` holds part i's tubes (strike them separately).
+ * mark like a halo-lit sign. Loop A, loop B and the diamond take the active
+ * palette's three lights (kit/palette.ts). `parts[i]` holds part i's tubes (strike them separately).
  */
 export function neonMark(o: {
   z: number

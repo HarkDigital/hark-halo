@@ -396,6 +396,31 @@
 .ch-tgl[aria-pressed='true'] .ch-tgl-st {
   color: #ffffff;
 }
+/* lights: three dots in the active palette (kit/palette.ts sets --neon-a/b/c) */
+.ch-lights-dots {
+  display: inline-flex;
+  gap: 3px;
+}
+.ch-lights-dots i {
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--neon-a, #ffffff);
+  box-shadow: 0 0 6px var(--neon-a, #ffffff);
+}
+.ch-lights-dots i:nth-child(2) {
+  background: var(--neon-b, #ffffff);
+  box-shadow: 0 0 6px var(--neon-b, #ffffff);
+}
+.ch-lights-dots i:nth-child(3) {
+  background: var(--neon-c, #ffffff);
+  box-shadow: 0 0 6px var(--neon-c, #ffffff);
+}
+.ch-lights .ch-tgl-st {
+  min-width: 1em;
+  color: #ffffff;
+}
 /* sound: three hairline bars (flat dots while off) */
 .ch-eq {
   display: inline-flex;

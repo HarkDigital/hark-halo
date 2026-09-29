@@ -6,6 +6,7 @@ import '../ui/ui.css'
 import './service.css'
 
 import { installPrintPolyfills } from '../ui/polyfills'
+import { applyLightsCss } from '../kit/palette'
 import { BRAND, CONTACT, SERVICES, SITE } from '../content'
 import { CONCEPT_TAG, WORDMARK, markSvg } from '../ui/mark'
 import { SERVICE_PAGES } from './data/pages'
@@ -36,6 +37,7 @@ import { SERVICE_CONTENT } from './data/content'
  */
 
 installPrintPolyfills()
+applyLightsCss()
 
 const BASE = import.meta.env.BASE_URL
 const esc = (s: string) => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
