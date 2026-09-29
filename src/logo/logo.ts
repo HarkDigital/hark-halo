@@ -1,0 +1,574 @@
+import * as THREE from 'three'
+import { SVGLoader } from 'three/addons/loaders/SVGLoader.js'
+import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js'
+import { MARK_SVG, MARK_VIEW, WORDMARK_SVG } from './svgSource'
+import { rng } from '../core/math'
+
+/*
+ * The Hark mark as geometry. Everything is normalized so the mark is
+ * centered on the origin, 1 unit tall, y-up, lying in the XY plane.
+ *
+ *   logoShapes()          -> THREE.Shape[]  (two interlocking loops + center diamond)
+ *   logoGeometry(opts)    -> extruded, beveled solid (centered in z)
+ *   logoPoints(n, opts)   -> Float32Array xyz, area-uniform samples on the face
+ *   logoOutlinePoints(n)  -> Float32Array xyz, evenly spaced along every contour
+ *   logoOutlines()        -> THREE.Vector2[][] closed polylines (outer + holes)
+ *   wordmarkShapes()      -> the full "HARK / DIGITAL DESIGN" lockup, same space (mark 1u tall)
+ *
+ * The three pieces of the mark are also exposed separately via
+ * logoParts() -> { loopA, loopB, diamond } so chapters can animate them
+ * independently (e.g. loops spinning apart to become a portal ring).
+ */
+
+let _mark: THREE.Shape[] | null = null
+let _parts: { loopA: THREE.Shape[]; loopB: THREE.Shape[]; diamond: THREE.Shape[] } | null = null
+let _word: THREE.Shape[] | null = null
+
+function parse(svg: string, minSize: number) {
+  const data = new SVGLoader().parse(svg)
+  const groups: THREE.Shape[][] = []
+  for (const path of data.paths) {
+    const shapes = path.toShapes().filter(s => {
+      const b = new THREE.Box2().setFromPoints(s.getPoints(8))
+      const size = b.getSize(new THREE.Vector2())
+      return Math.max(size.x, size.y) > minSize
+    })
+    if (shapes.length) groups.push(shapes)
+  }
+  return groups
+}
+
+/**
+ * Ramer–Douglas–Peucker on a closed polyline: drops points that sit within
+ * `eps` of the simplified outline. The SVG outlines arrive as ~5,200 tiny
+ * line segments; at 1u tall, eps 0.0012 is far below one game pixel, keeps
+ * every corner, and cuts the extrusion from ~104k to a few thousand triangles.
+ */
+function simplify(pts: THREE.Vector2[], eps: number): THREE.Vector2[] {
+  if (pts.length > 1 && pts[0].distanceTo(pts[pts.length - 1]) < 1e-9) pts = pts.slice(0, -1)
+  if (pts.length < 8) return pts
+  // split the ring at its two most distant points so both halves are open runs
+  let far = 0
+  let best = -1
+  for (let i = 1; i < pts.length; i++) {
+    const d = pts[i].distanceToSquared(pts[0])
+    if (d > best) {
+      best = d
+      far = i
+    }
+  }
+  const keep = new Uint8Array(pts.length)
+  keep[0] = keep[far] = 1
+  const stack: [number, number][] = [
+    [0, far],
+    [far, pts.length],
+  ]
+  const eps2 = eps * eps
+  while (stack.length) {
+    const [a, b] = stack.pop()!
+    const pa = pts[a]
+    const pb = pts[b % pts.length]
+    const dx = pb.x - pa.x
+    const dy = pb.y - pa.y
+    const len2 = dx * dx + dy * dy || 1e-12
+    let idx = -1
+    let dmax = eps2
+    for (let i = a + 1; i < b; i++) {
+      const t = Math.max(0, Math.min(1, ((pts[i].x - pa.x) * dx + (pts[i].y - pa.y) * dy) / len2))
+      const ex = pa.x + dx * t - pts[i].x
+      const ey = pa.y + dy * t - pts[i].y
+      const d = ex * ex + ey * ey
+      if (d > dmax) {
+        dmax = d
+        idx = i
+      }
+    }
+    if (idx >= 0) {
+      keep[idx] = 1
+      stack.push([a, idx], [idx, b])
+    }
+  }
+  return pts.filter((_, i) => keep[i])
+}
+
+// Frost renders the mark very large and razor sharp: a tighter tolerance (≈0.1 px at 1000 px tall)
+const SIMPLIFY_EPS = 0.0003
+
+/**
+ * Drop outline cusps the source path leaves at each curl hole's outermost
+ * point: near-reversing vertices (turn > 150°) and sharp turns on
+ * micro-edges (turn > 60° with an edge shorter than `micro`). A deep bevel
+ * run over them folds into notches and spikes in close-up.
+ */
+function despike(pts: THREE.Vector2[], micro: number) {
+  const p = pts.slice()
+  if (p.length > 3 && p[0].distanceTo(p[p.length - 1]) < 1e-7) p.pop()
+  const a = new THREE.Vector2()
+  const b = new THREE.Vector2()
+  const REVERSE = Math.cos((150 * Math.PI) / 180)
+  const SHARP = Math.cos(Math.PI / 3)
+  for (let pass = 0, changed = true; changed && pass < 16; pass++) {
+    changed = false
+    for (let i = 0; i < p.length && p.length > 8; i++) {
+      const prev = p[(i - 1 + p.length) % p.length]
+      const next = p[(i + 1) % p.length]
+      a.subVectors(p[i], prev)
+      b.subVectors(next, p[i])
+      const la = a.length()
+      const lb = b.length()
+      const cos = la < 1e-7 || lb < 1e-7 ? -1 : a.dot(b) / (la * lb)
+      if (cos < REVERSE || (cos < SHARP && Math.min(la, lb) < micro)) {
+        p.splice(i, 1)
+        i--
+        changed = true
+      }
+    }
+  }
+  return p
+}
+
+/** Normalize shape groups in-place: center on (cx, cy), scale, flip y. */
+function normalize(groups: THREE.Shape[][], cx: number, cy: number, scale: number, micro = 0) {
+  const clean = (pts: THREE.Vector2[]) => (micro > 0 ? despike(pts, micro) : pts)
+  const tx = (v: THREE.Vector2) => v.set((v.x - cx) * scale, -(v.y - cy) * scale)
+  const out: THREE.Shape[][] = []
+  for (const g of groups) {
+    const gOut: THREE.Shape[] = []
+    for (const s of g) {
+      // rebuild from discretized points so the flip doesn't break winding logic
+      const pts = clean(
+        simplify(
+          s.getPoints(48).map(p => tx(p.clone())),
+          SIMPLIFY_EPS,
+        ),
+      )
+      if (THREE.ShapeUtils.isClockWise(pts)) pts.reverse()
+      const shape = new THREE.Shape(pts)
+      for (const h of s.holes) {
+        const hp = clean(
+          simplify(
+            h.getPoints(48).map(p => tx(p.clone())),
+            SIMPLIFY_EPS,
+          ),
+        )
+        if (!THREE.ShapeUtils.isClockWise(hp)) hp.reverse()
+        shape.holes.push(new THREE.Path(hp))
+      }
+      gOut.push(shape)
+    }
+    out.push(gOut)
+  }
+  return out
+}
+
+function ensureMark() {
+  if (_mark) return
+  // the Illustrator master's artboard (svgSource: two loops + the diamond, no slivers)
+  const groups = parse(MARK_SVG, 40)
+  // (the mark only: micro-edges under 0.4% of its height at sharp turns are cusps)
+  const norm = normalize(groups, MARK_VIEW.w / 2, MARK_VIEW.h / 2, 1 / MARK_VIEW.h, 0.004)
+  // order in the file: loop (top-right), loop (bottom-left), diamond
+  _parts = { loopA: norm[0] ?? [], loopB: norm[1] ?? [], diamond: norm[2] ?? [] }
+  _mark = norm.flat()
+}
+
+export function logoShapes(): THREE.Shape[] {
+  ensureMark()
+  return _mark!
+}
+
+export function logoParts() {
+  ensureMark()
+  return _parts!
+}
+
+export function wordmarkShapes(): THREE.Shape[] {
+  if (_word) return _word
+  // viewBox 0 0 5784 1664; the mark occupies roughly x 125..1598, y 97..1583.
+  const groups = parse(WORDMARK_SVG, 8)
+  const markH = 1583 - 97
+  _word = normalize(groups, 5784 / 2, 1664 / 2, 1 / markH).flat()
+  return _word
+}
+
+export interface LogoGeometryOptions {
+  /** extrusion depth in units (mark is 1u tall). default 0.14 */
+  depth?: number
+  bevel?: boolean
+  bevelSize?: number
+  bevelThickness?: number
+  curveSegments?: number
+  shapes?: THREE.Shape[]
+}
+
+/** Extruded solid, centered in z, with smooth normals where possible. */
+export function logoGeometry(opts: LogoGeometryOptions = {}): THREE.BufferGeometry {
+  const {
+    depth = 0.14,
+    bevel = true,
+    bevelSize = 0.008,
+    bevelThickness = 0.012,
+    curveSegments = 24,
+    shapes = logoShapes(),
+  } = opts
+  const geo = new THREE.ExtrudeGeometry(shapes, {
+    depth,
+    bevelEnabled: bevel,
+    bevelSize,
+    bevelThickness,
+    // 2 bevel steps: toon shading + 3–4 px pixelation can't show more
+    bevelSegments: bevel ? 2 : 0,
+    curveSegments,
+    steps: 1,
+  })
+  geo.translate(0, 0, -depth / 2)
+  geo.computeVertexNormals()
+  geo.computeBoundingBox()
+  geo.computeBoundingSphere()
+  return geo
+}
+
+export interface InsetExtrudeOptions {
+  /** straight-wall depth between the two bevels (centred in z) */
+  depth: number
+  /** bevel depth in z, on each face */
+  bevelThickness: number
+  /** how far the bevel rolls in from the outline (the caps are inset by this) */
+  bevelSize: number
+  bevelSegments: number
+}
+
+/**
+ * Offset a closed ring (solid on its LEFT) into the solid by `d`, with the
+ * same vertex count. Each vertex moves to the meeting point of its two offset
+ * edges; where that overshoots a neighbour (a sharp corner beside short edges,
+ * e.g. the curl tips) the offset edges run backwards and cross in a little
+ * loop (a "swallowtail" spike). Those runs collapse to the crossing point of
+ * the good edges on either side, so the inset outline stays clean.
+ */
+export function offsetRing(ring: THREE.Vector2[], d: number, out: THREE.Vector2[]) {
+  const n = ring.length
+  for (let i = 0; i < n; i++) {
+    const p = ring[(i - 1 + n) % n]
+    const c = ring[i]
+    const q = ring[(i + 1) % n]
+    let ax = c.x - p.x
+    let ay = c.y - p.y
+    let bx = q.x - c.x
+    let by = q.y - c.y
+    const la = Math.hypot(ax, ay) || 1
+    const lb = Math.hypot(bx, by) || 1
+    ax /= la
+    ay /= la
+    bx /= lb
+    by /= lb
+    // left normals of both edges, and the miter that offsets both by exactly d
+    const k = 1 + (-ay * -by + ax * bx)
+    let mx = (-ay + -by) / Math.max(k, 0.05)
+    let my = (ax + bx) / Math.max(k, 0.05)
+    const ml = Math.hypot(mx, my)
+    if (ml > 6) {
+      mx *= 6 / ml
+      my *= 6 / ml
+    }
+    out[i].set(c.x + mx * d, c.y + my * d)
+  }
+  if (d === 0) return
+  // collapse runs of reversed offset edges (swallowtails)
+  const ex = (a: THREE.Vector2, b: THREE.Vector2, i: number) => {
+    const o0 = ring[i]
+    const o1 = ring[(i + 1) % n]
+    return (b.x - a.x) * (o1.x - o0.x) + (b.y - a.y) * (o1.y - o0.y)
+  }
+  for (let pass = 0; pass < 6; pass++) {
+    const rev = new Uint8Array(n)
+    let any = false
+    for (let i = 0; i < n; i++) {
+      const a = out[i]
+      const b = out[(i + 1) % n]
+      const len2 = (b.x - a.x) ** 2 + (b.y - a.y) ** 2
+      if (len2 > 1e-14 && ex(a, b, i) < 0) {
+        rev[i] = 1
+        any = true
+      }
+    }
+    if (!any) break
+    // start scanning just after a good edge so no run wraps the seam
+    let s0 = 0
+    while (s0 < n && rev[s0]) s0++
+    if (s0 === n) break
+    for (let s = 1; s <= n; s++) {
+      const a0 = (s0 + s) % n
+      if (!rev[a0]) continue
+      let b0 = a0
+      let len = 1
+      while (rev[(b0 + 1) % n] && len < n - 2) {
+        b0 = (b0 + 1) % n
+        len++
+      }
+      // good edges: (a0-1 → a0) before the run, (b0+1 → b0+2) after it
+      const p0 = out[(a0 - 1 + n) % n]
+      const p1 = out[a0]
+      const q0 = out[(b0 + 1) % n]
+      const q1 = out[(b0 + 2) % n]
+      const rx = p1.x - p0.x
+      const ry = p1.y - p0.y
+      const sx = q1.x - q0.x
+      const sy = q1.y - q0.y
+      const den = rx * sy - ry * sx
+      let X: THREE.Vector2
+      if (Math.abs(den) > 1e-12) {
+        const t = ((q0.x - p0.x) * sy - (q0.y - p0.y) * sx) / den
+        X = new THREE.Vector2(p0.x + rx * t, p0.y + ry * t)
+        // a near-parallel pair can meet far away: fall back to the run's middle
+        if (X.distanceTo(p1) > 4 * Math.abs(d) + 1e-3) X = p1.clone().add(q0).multiplyScalar(0.5)
+      } else X = p1.clone().add(q0).multiplyScalar(0.5)
+      for (let j = 0; j <= len; j++) out[(a0 + j) % n].copy(X)
+      s += len
+    }
+  }
+}
+
+/**
+ * The mark (or any shapes) extruded with a rounded bevel that rolls INWARD
+ * from the outline (or none: bevelThickness / bevelSize 0 gives straight
+ * walls and sharp edges), like ExtrudeGeometry with bevelOffset = -bevelSize but
+ * free of the spikes three's bevel leaves at sharp corners. The widest point
+ * of the solid is exactly the artwork's outline. Non-indexed, centred in z,
+ * with ExtrudeGeometry's material groups (0 = front/back caps, 1 = bevels +
+ * walls) and UVs (caps: x, y; walls: arc length, z). No normals: the caller
+ * computes them (creased / refined).
+ */
+export function extrudeInset(shapes: THREE.Shape[], o: InsetExtrudeOptions): THREE.BufferGeometry {
+  const { depth, bevelThickness: bt, bevelSize: bs, bevelSegments: S } = o
+  // the profile, back cap → back edge → front edge → front cap: (inset, z)
+  const prof: [number, number][] = []
+  if (bt <= 0 || bs <= 0 || S < 1) {
+    // no bevel: a straight wall, razor-sharp edges on both faces
+    prof.push([0, -depth / 2], [0, depth / 2])
+  } else {
+    for (let b = 0; b <= S; b++) {
+      const t = b / S
+      prof.push([bs * (1 - Math.sin((t * Math.PI) / 2)), -depth / 2 - bt * Math.cos((t * Math.PI) / 2)])
+    }
+    for (let b = S; b >= 0; b--) {
+      const t = b / S
+      prof.push([bs * (1 - Math.sin((t * Math.PI) / 2)), depth / 2 + bt * Math.cos((t * Math.PI) / 2)])
+    }
+  }
+  const pos: number[] = []
+  const uv: number[] = []
+  const geo = new THREE.BufferGeometry()
+  let start = 0
+  for (const shape of shapes) {
+    const pts = shape.extractPoints(1)
+    // rings with the solid on the LEFT: outer counter-clockwise, holes clockwise
+    const ringOf = (v: THREE.Vector2[], hole: boolean) => {
+      const r = v.slice()
+      if (r.length > 2 && r[0].distanceTo(r[r.length - 1]) < 1e-9) r.pop()
+      if (THREE.ShapeUtils.isClockWise(r) !== hole) r.reverse()
+      return r
+    }
+    const outer = ringOf(pts.shape, false)
+    const holes = pts.holes.map(h => ringOf(h, true))
+    const rings = [outer, ...holes]
+    // each ring offset at every profile step
+    const layers = rings.map(r => prof.map(([d]) => {
+      const out = r.map(() => new THREE.Vector2())
+      offsetRing(r, d, out)
+      return out
+    }))
+    // caps: triangulate the INSET outline itself (the true outline's triangles,
+    // moved in, fold over beside the curl holes)
+    const capAt = rings.flatMap((_, ri) => layers[ri][0])
+    const tris = THREE.ShapeUtils.triangulateShape(layers[0][0].slice(), layers.slice(1).map(L => L[0].slice()))
+    const zB = prof[0][1]
+    const zF = prof[prof.length - 1][1]
+    for (let [a, b, c] of tris) {
+      // front faces wind counter-clockwise seen from +z
+      const A = capAt[a]
+      const B = capAt[b]
+      const C = capAt[c]
+      if ((B.x - A.x) * (C.y - A.y) - (B.y - A.y) * (C.x - A.x) < 0) [b, c] = [c, b]
+      for (const i of [a, b, c]) {
+        pos.push(capAt[i].x, capAt[i].y, zF)
+        uv.push(capAt[i].x, capAt[i].y)
+      }
+      for (const i of [a, c, b]) {
+        pos.push(capAt[i].x, capAt[i].y, zB)
+        uv.push(capAt[i].x, capAt[i].y)
+      }
+    }
+    const capCount = pos.length / 3 - start
+    geo.addGroup(start, capCount, 0)
+    start += capCount
+    // walls + bevels: quads between consecutive profile layers along every ring
+    for (let ri = 0; ri < rings.length; ri++) {
+      const L = layers[ri]
+      const n = rings[ri].length
+      const arc = new Float32Array(n + 1)
+      for (let i = 0; i < n; i++) arc[i + 1] = arc[i] + rings[ri][i].distanceTo(rings[ri][(i + 1) % n])
+      for (let l = 0; l < prof.length - 1; l++) {
+        const z0 = prof[l][1]
+        const z1 = prof[l + 1][1]
+        for (let i = 0; i < n; i++) {
+          const j = (i + 1) % n
+          const a0 = L[l][i]
+          const b0 = L[l][j]
+          const a1 = L[l + 1][i]
+          const b1 = L[l + 1][j]
+          // outward-facing with the solid on the left of travel (and +z toward the front)
+          pos.push(a0.x, a0.y, z0, b0.x, b0.y, z0, a1.x, a1.y, z1)
+          pos.push(b0.x, b0.y, z0, b1.x, b1.y, z1, a1.x, a1.y, z1)
+          uv.push(arc[i], z0, arc[i + 1], z0, arc[i], z1, arc[i + 1], z0, arc[i + 1], z1, arc[i], z1)
+        }
+      }
+    }
+    const sideCount = pos.length / 3 - start
+    geo.addGroup(start, sideCount, 1)
+    start += sideCount
+  }
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2))
+  return geo
+}
+
+/** Flat face geometry (ShapeGeometry) of the mark. */
+export function logoFaceGeometry(shapes = logoShapes()): THREE.BufferGeometry {
+  return mergeVertices(new THREE.ShapeGeometry(shapes, 24))
+}
+
+/**
+ * Area-uniform random points on the face of the mark.
+ * `depth` spreads points through z in [-depth/2, depth/2].
+ */
+export function logoPoints(count: number, { depth = 0, seed = 7, shapes = logoShapes() } = {}): Float32Array {
+  const rand = rng(seed)
+  const geo = new THREE.ShapeGeometry(shapes, 24)
+  const pos = geo.attributes.position
+  const index = geo.index!
+  const tris: number[] = []
+  const areas: number[] = []
+  let total = 0
+  const a = new THREE.Vector3(),
+    b = new THREE.Vector3(),
+    c = new THREE.Vector3()
+  for (let i = 0; i < index.count; i += 3) {
+    a.fromBufferAttribute(pos, index.getX(i))
+    b.fromBufferAttribute(pos, index.getX(i + 1))
+    c.fromBufferAttribute(pos, index.getX(i + 2))
+    const area = new THREE.Triangle(a, b, c).getArea()
+    total += area
+    tris.push(index.getX(i), index.getX(i + 1), index.getX(i + 2))
+    areas.push(total)
+  }
+  const out = new Float32Array(count * 3)
+  for (let i = 0; i < count; i++) {
+    const r = rand() * total
+    // binary search the cumulative areas
+    let lo = 0,
+      hi = areas.length - 1
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1
+      if (areas[mid] < r) lo = mid + 1
+      else hi = mid
+    }
+    a.fromBufferAttribute(pos, tris[lo * 3])
+    b.fromBufferAttribute(pos, tris[lo * 3 + 1])
+    c.fromBufferAttribute(pos, tris[lo * 3 + 2])
+    let u = rand(),
+      v = rand()
+    if (u + v > 1) {
+      u = 1 - u
+      v = 1 - v
+    }
+    out[i * 3] = a.x + (b.x - a.x) * u + (c.x - a.x) * v
+    out[i * 3 + 1] = a.y + (b.y - a.y) * u + (c.y - a.y) * v
+    out[i * 3 + 2] = (rand() - 0.5) * depth
+  }
+  geo.dispose()
+  return out
+}
+
+/** Closed outline polylines of every contour (outer boundaries and holes). */
+export function logoOutlines(shapes = logoShapes(), divisions = 160): THREE.Vector2[][] {
+  const out: THREE.Vector2[][] = []
+  for (const s of shapes) {
+    out.push(s.getSpacedPoints(divisions))
+    for (const h of s.holes) out.push(h.getSpacedPoints(Math.max(24, divisions / 3)))
+  }
+  return out
+}
+
+/** Points evenly spaced along all outlines (by arc length), xyz with z = 0. */
+export function logoOutlinePoints(count: number, shapes = logoShapes()): Float32Array {
+  const lines = logoOutlines(shapes, 400)
+  const segs: { a: THREE.Vector2; b: THREE.Vector2; len: number }[] = []
+  let total = 0
+  for (const line of lines) {
+    for (let i = 0; i < line.length - 1; i++) {
+      const len = line[i].distanceTo(line[i + 1])
+      segs.push({ a: line[i], b: line[i + 1], len })
+      total += len
+    }
+  }
+  const out = new Float32Array(count * 3)
+  const step = total / count
+  let si = 0,
+    acc = 0
+  for (let i = 0; i < count; i++) {
+    const target = i * step
+    while (si < segs.length - 1 && acc + segs[si].len < target) {
+      acc += segs[si].len
+      si++
+    }
+    const s = segs[si]
+    const t = s.len > 0 ? (target - acc) / s.len : 0
+    out[i * 3] = s.a.x + (s.b.x - s.a.x) * t
+    out[i * 3 + 1] = s.a.y + (s.b.y - s.a.y) * t
+    out[i * 3 + 2] = 0
+  }
+  return out
+}
+
+/** Signed-distance-ish inside test in normalized mark space (for voxelizing). */
+export function isInsideLogo(x: number, y: number, shapes = logoShapes()): boolean {
+  const p = _p.set(x, y)
+  for (const s of polysFor(shapes)) {
+    if (x < s.box.min.x || x > s.box.max.x || y < s.box.min.y || y > s.box.max.y) continue
+    if (pointInPoly(p, s.outer)) {
+      let inHole = false
+      for (const h of s.holes) if (pointInPoly(p, h)) inHole = true
+      if (!inHole) return true
+    }
+  }
+  return false
+}
+
+const _p = new THREE.Vector2()
+type Poly = { outer: THREE.Vector2[]; holes: THREE.Vector2[][]; box: THREE.Box2 }
+const _polys = new WeakMap<THREE.Shape[], Poly[]>()
+/** outline polygons per shapes array, built once (callers test thousands of points) */
+function polysFor(shapes: THREE.Shape[]): Poly[] {
+  let out = _polys.get(shapes)
+  if (!out) {
+    out = shapes.map(s => {
+      const outer = s.getPoints(32)
+      return { outer, holes: s.holes.map(h => h.getPoints(32)), box: new THREE.Box2().setFromPoints(outer) }
+    })
+    _polys.set(shapes, out)
+  }
+  return out
+}
+
+function pointInPoly(p: THREE.Vector2, poly: THREE.Vector2[]) {
+  let inside = false
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const xi = poly[i].x,
+      yi = poly[i].y,
+      xj = poly[j].x,
+      yj = poly[j].y
+    if (yi > p.y !== yj > p.y && p.x < ((xj - xi) * (p.y - yi)) / (yj - yi) + xi) inside = !inside
+  }
+  return inside
+}
