@@ -1,83 +1,78 @@
 import * as THREE from 'three'
-import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js'
-import { G, flattenCaps, frosted, polished, smoothSides } from '../../kit/glass'
+import { G, neonPath, type NeonPath } from '../../kit/glass'
 import { placeholderTexture } from '../../kit/images'
 import type { WorkItem } from '../../content'
-import { LABEL, SANS, spaced, textPlate, type TextPlate } from './text'
+import { LABEL_PX, lotLabel } from './text'
 
 /*
- * The Collection set: a black gallery. Six tall sandblasted glass panels
- * stand in a slow arc (a circle of radius R around C = (0, 0, R), each panel
- * facing C), bottoms just off an unseen black floor. Behind each panel hangs
- * its project's screenshot, and behind that a soft backlight card: through
- * the frost the site reads as a diffuse glow of its own colours. Every
- * panel's faces are frosted (roughness animates: frost ↔ thaw) and its edges
- * are polished (crisp studio highlights). An etched label runs along each
- * panel's foot. Past the last panel, a directory: nine slim frosted bars
- * stacked like a lobby board, each with its name etched at the left and a
- * band of its site hung behind its right half (a glow of colour through the
- * frost) — the selected bar thaws to show that band sharp.
+ * The Carousel set: a revolving glass showroom on the black mirror floor.
  *
- * Draw order: backlight cards and floor pools are ADDITIVE but OPAQUE (in
- * three's opaque list), so the transmission buffer — which only sees opaque
- * objects — carries them into the frost. Screenshots are opaque too. The
- * crisp "thawed" overlays and etched text are transparent, drawn after glass.
+ *  THE DRUM   six tall leaves of CURVED glass stand in a circle (radius R,
+ *             centred on the origin) like the drum of a revolving door, each
+ *             facing out, each carrying one site. A leaf is a bent grid (front
+ *             and back faces) inside a polished round rim. Its face shader
+ *             draws the screenshot as a backlit print behind the glass: sharp
+ *             when the leaf is clear (roughness ~0, crisp studio strips),
+ *             diffused into soft colour when it is frosted (mip blur + a
+ *             jittered sandblast), bleeding into the frosted glass around it.
+ *             The lower glass is etched with the leaf's lot number and name.
+ *             Transmission-free: the faces are premultiplied-alpha surfaces
+ *             (reflections are added at full strength, the print covers, the
+ *             margins let the drum's interior through), so the glass buffer
+ *             pass never runs in this chapter.
+ *  THE RING   six neon arcs on the floor INSIDE the drum (cyan, violet,
+ *             magenta, twice round), one behind each leaf: the frost glows
+ *             in its arc's colour from the floor up. The front leaf's bottom
+ *             edge lights with a thin tube of the same colour.
+ *  THE HALO   for the other nine: the floor ring lifts through the drum and
+ *             opens above it into a halo of nine arcs; nine smaller curved
+ *             tiles hang on it, turning like a carousel's crown.
+ *  THE FLOOR  additive: the ring's light pooled on the black floor, the lit
+ *             screen's colour pooled in front of it, and mirrored copies of
+ *             the leaves and their neon below it (a black mirror).
  */
 
-export const R = 11
-export const DELTA = 0.215
-/** arc angle of featured panel k: panel 0 at the +x end, the row runs toward -x */
-export const theta = (k: number) => (2.5 - k) * DELTA
-/** arc angle of the directory, past the last panel */
-export const STACK_THETA = theta(5) - DELTA * 1.75
+const DEG = Math.PI / 180
 
-export function onArc(th: number, r = R, out = new THREE.Vector3()) {
-  return out.set(r * Math.sin(th), 0, R - r * Math.cos(th))
-}
-/** unit normal toward the arc centre (the way a panel faces) */
-export function arcNormal(th: number, out = new THREE.Vector3()) {
-  return out.set(-Math.sin(th), 0, Math.cos(th))
-}
+/** the neon trio, in order round the rings */
+export const NEON = [G.neonA, G.neonB, G.neonC] as const
+export const NEON_C = NEON.map(c => new THREE.Color(c))
 
-/* panel (outer, incl. bevel) */
-export const PW = 1.52
-export const PH = 2.34
-const PD = 0.046
-const PB = 0.044
-export const FRONT = PD / 2 + PB
-/** panel centre height (its foot floats just off the floor) */
-export const PANEL_Y = 0.1 + PH / 2
-/** the screenshot behind the panel (1280x800), set high like a hung print */
-export const SW = 1.2
-export const SH = SW * 0.625
-export const SHOT_Y = 0.38
-const SHOT_Z = -FRONT - 0.075
+/* ---------------------------------------------------------------- drum */
 
-/* directory bars */
-export const BAR_W = 2.06
-export const BAR_H = 0.17
-/*
- * A thin bar seen nearly edge-on turns any flat side wall into a sub-pixel
- * sliver that catches the studio at grazing and breaks into dashes. So the
- * bar's edge is one continuous round (two quarter bevels meeting over a
- * vanishing wall): only a single silhouette edge, which MSAA resolves.
- */
-const BAR_D = 0.004
-const BAR_B = 0.026
-/** bevel reach in the face plane, as a fraction of its depth */
-const BAR_BS = 0.72
-const BAR_GAP = 0.036
-export const BAR_PITCH = BAR_H + BAR_GAP
-const BAR_FRONT = BAR_D / 2 + BAR_B
-export const STACK_Y = 0.1 + (9 * BAR_PITCH) / 2 + 0.12
-export const STACK_H = 9 * BAR_PITCH - BAR_GAP
-/** each bar's site band: right half of the bar, inset so it never shows through the gaps */
-const BAND_W = 0.84
-const BAND_H = 0.102
-const BAND_X = BAR_W / 2 - BAND_W / 2 - 0.07
-const BAND_Z = -BAR_FRONT - 0.05
-/** which horizontal slice of the screenshot the band shows (v from the bottom) */
-const BAND_V0 = 0.5
+export const R = 2.0
+export const STEP = (Math.PI * 2) / 6
+const GAP = 5.5 * DEG
+export const LEAF_W = R * (STEP - GAP)
+export const LEAF_H = 2.2
+/** bottom edge height: the leaves stand just off the floor, so the ring shows beneath */
+export const LEAF_Y0 = 0.3
+export const LEAF_CY = LEAF_Y0 + LEAF_H / 2
+const LEAF_T = 0.05
+const CORNER = 0.05
+/** the print: full width inside a slim margin, hung high */
+const MARGIN = 0.065
+export const SHOT_W = LEAF_W - 2 * MARGIN
+export const SHOT_H = SHOT_W * 0.625
+/** the print's centre height (world) */
+export const SHOT_CY = LEAF_Y0 + LEAF_H - MARGIN - SHOT_H / 2
+/** the ring on the floor, inside the drum */
+export const RING_R = R - 0.36
+export const RING_Y = 0.022
+
+/* ---------------------------------------------------------------- halo */
+
+export const HALO_N = 9
+export const HALO_STEP = (Math.PI * 2) / HALO_N
+export const HALO_R = 3.0
+const TILE_GAP = 6 * DEG
+export const TILE_W = HALO_R * (HALO_STEP - TILE_GAP)
+const TILE_M = 0.035
+export const TILE_H = (TILE_W - 2 * TILE_M) * 0.625 + 2 * TILE_M
+const TILE_T = 0.034
+/** tile centre height; the halo ring runs just under the tiles */
+export const HALO_Y = 3.45
+export const HALO_RING_Y = HALO_Y - TILE_H / 2 - 0.075
 
 /** City Line Capital (harktest.com) is a pre-launch build: never signal it as live. */
 export const isPreview = (url: string) => {
@@ -90,373 +85,379 @@ export const isPreview = (url: string) => {
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
-/* ---------------------------------------------------------------- glass */
-
-const LOD_RE = /float lod = log2\( transmissionSamplerSize\.x \) \* applyIorToRoughness\( roughness, ior \);\s*return textureBicubic\( transmissionSamplerMap, fragCoord\.xy, lod \);/
-let thawChunk: string | null | undefined
+/* ---------------------------------------------------------------- geometry */
 
 /**
- * Transmission that goes fully crisp as the glass thaws: three blurs the
- * transmission sample (bicubic, mip by roughness) even at roughness ~0; this
- * blends to the buffer's mip 0 as the blur level approaches zero, so a thawed
- * pane shows its screenshot sharp while a frosted one still diffuses it.
+ * Bend a flat geometry (x along the arc, y up, z out of the glass) round a
+ * vertical axis at (0, 0, -r): x becomes arc length, so the piece's centre
+ * stays at the origin facing +z.
  */
-function thawChunkSource(): string | null {
-  if (thawChunk === undefined) {
-    const chunk = THREE.ShaderChunk.transmission_pars_fragment
-    thawChunk = LOD_RE.test(chunk)
-      ? chunk.replace(
-          LOD_RE,
-          `float lod = log2( transmissionSamplerSize.x ) * applyIorToRoughness( roughness, ior );
-		vec4 crispT = textureLod( transmissionSamplerMap, fragCoord.xy, 0.0 );
-		vec4 softT = textureBicubic( transmissionSamplerMap, fragCoord.xy, lod );
-		return mix( crispT, softT, smoothstep( 0.12, 1.3, lod ) );`,
-        )
-      : null
-    if (!thawChunk && import.meta.env.DEV) console.warn('[work] three transmission chunk changed; thawed glass will blur')
+function bend(geo: THREE.BufferGeometry, r: number) {
+  const pos = geo.getAttribute('position') as THREE.BufferAttribute
+  const nrm = geo.getAttribute('normal') as THREE.BufferAttribute | undefined
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i)
+    const z = pos.getZ(i)
+    const phi = x / r
+    const s = Math.sin(phi)
+    const c = Math.cos(phi)
+    pos.setXYZ(i, (r + z) * s, pos.getY(i), (r + z) * c - r)
+    if (nrm) {
+      const nx = nrm.getX(i)
+      const nz = nrm.getZ(i)
+      nrm.setXYZ(i, nx * c + nz * s, nrm.getY(i), -nx * s + nz * c)
+    }
   }
-  return thawChunk
+  pos.needsUpdate = true
+  if (nrm) nrm.needsUpdate = true
+  geo.computeBoundingBox()
+  geo.computeBoundingSphere()
+  return geo
 }
 
-/** Polished glass: crisp transmission at its low roughness. */
-function thawTransmission(m: THREE.MeshPhysicalMaterial) {
-  const patched = thawChunkSource()
-  if (!patched) return
-  m.onBeforeCompile = shader => {
-    shader.fragmentShader = shader.fragmentShader.replace('#include <transmission_pars_fragment>', patched)
+/** One face of a curved leaf: a w×h grid at depth z, bent round r. `back` faces inward (its print reads mirrored, as through glass). */
+function faceGeometry(w: number, h: number, z: number, r: number, back: boolean, seg: number) {
+  const g = new THREE.PlaneGeometry(w, h, seg, 1)
+  if (back) {
+    g.rotateY(Math.PI)
+    // the same print and etching, seen from behind through the glass: mirrored
+    const uv = g.getAttribute('uv') as THREE.BufferAttribute
+    for (let i = 0; i < uv.count; i++) uv.setX(i, 1 - uv.getX(i))
+    uv.needsUpdate = true
   }
-  m.customProgramCacheKey = () => 'frost-thaw-transmission'
+  g.translate(0, 0, back ? -z : z)
+  const n = g.getAttribute('position').count
+  g.setAttribute('aBack', new THREE.BufferAttribute(new Float32Array(n).fill(back ? 1 : 0), 1))
+  return bend(g, r)
 }
 
-/** Per-material uniforms of a thawing frosted face (see frostWindow). */
-export interface ThawUniforms {
-  /** 0 = sandblasted all over, 1 = the window fully clear */
-  uThaw: { value: number }
-  /** noise on the thaw front (breath-like when opening, clean when open) */
-  uEdge: { value: number }
-  /** window centre (xy) and half size (zw), in the slab's local units */
-  uWin: { value: THREE.Vector4 }
-  uWinR: { value: number }
-  uClear: { value: number }
+/** The rounded rim of a w×h leaf: a round tube along its outline, bent round r. */
+function rimGeometry(w: number, h: number, corner: number, radius: number, r: number, seg: number, radial: number) {
+  const x0 = -w / 2
+  const x1 = w / 2
+  const y0 = -h / 2
+  const y1 = h / 2
+  const c = corner
+  const V = (x: number, y: number) => new THREE.Vector3(x, y, 0)
+  const path = new THREE.CurvePath<THREE.Vector3>()
+  path.add(new THREE.LineCurve3(V(x0 + c, y0), V(x1 - c, y0)))
+  path.add(new THREE.QuadraticBezierCurve3(V(x1 - c, y0), V(x1, y0), V(x1, y0 + c)))
+  path.add(new THREE.LineCurve3(V(x1, y0 + c), V(x1, y1 - c)))
+  path.add(new THREE.QuadraticBezierCurve3(V(x1, y1 - c), V(x1, y1), V(x1 - c, y1)))
+  path.add(new THREE.LineCurve3(V(x1 - c, y1), V(x0 + c, y1)))
+  path.add(new THREE.QuadraticBezierCurve3(V(x0 + c, y1), V(x0, y1), V(x0, y1 - c)))
+  path.add(new THREE.LineCurve3(V(x0, y1 - c), V(x0, y0 + c)))
+  path.add(new THREE.QuadraticBezierCurve3(V(x0, y0 + c), V(x0, y0), V(x0 + c, y0)))
+  const g = new THREE.TubeGeometry(path, seg, radius, radial, true)
+  return bend(g, r)
 }
+
+/** Points along an arc of radius r at height y, from angle a0 to a1 (angle from +z toward +x). */
+function arcPoints(r: number, y: number, a0: number, a1: number, n: number) {
+  const pts: THREE.Vector3[] = []
+  for (let i = 0; i <= n; i++) {
+    const a = a0 + ((a1 - a0) * i) / n
+    pts.push(new THREE.Vector3(r * Math.sin(a), y, r * Math.cos(a)))
+  }
+  return pts
+}
+
+/* ---------------------------------------------------------------- the face */
+
+/** Uniforms of one leaf / tile face (shared by its front and back faces). */
+export interface FaceUniforms {
+  uShot: { value: THREE.Texture }
+  uLabel: { value: THREE.Texture }
+  /** 0 = clear glass (the print razor sharp) … 1 = sandblasted */
+  uFrost: { value: number }
+  /** the print's backlight */
+  uLit: { value: number }
+  /** print rect in face uv (x0, y0, x1, y1) */
+  uRect: { value: THREE.Vector4 }
+  uLabelRect: { value: THREE.Vector4 }
+  /** face size in world units */
+  uSize: { value: THREE.Vector2 }
+  uCorner: { value: number }
+  /** the neon behind the glass (colour × strength) and its height (world y) */
+  uSpill: { value: THREE.Color }
+  uRingY: { value: number }
+  /** overall presence 0..1 */
+  uFade: { value: number }
+  /** how milky the frosted margins are (0..1 opacity) */
+  uMilk: { value: number }
+  /** reflection strength over a clear print (keeps a lit site legible) */
+  uSpecIn: { value: number }
+  /** the etched label's brightness */
+  uEtch: { value: number }
+}
+
+const FACE_VERT_HEAD = /* glsl */ `
+attribute float aBack;
+varying vec2 vFaceUv;
+varying float vFaceY;
+varying float vBack;
+`
+const FACE_FRAG_HEAD = /* glsl */ `
+varying vec2 vFaceUv;
+varying float vFaceY;
+varying float vBack;
+uniform sampler2D uShot, uLabel;
+uniform float uFrost, uLit, uCorner, uRingY, uFade, uMilk, uSpecIn, uEtch;
+uniform vec4 uRect, uLabelRect;
+uniform vec2 uSize;
+uniform vec3 uSpill;
+float faceHash( vec2 p ) { vec3 p3 = fract( vec3( p.xyx ) * 0.1031 ); p3 += dot( p3, p3.yzx + 33.33 ); return fract( ( p3.x + p3.y ) * p3.z ); }
+// sandblasted glass over a backlit print: a mip-blurred hexagonal gather
+// (smooth, so a frosted site reads as soft colour, never as static)
+vec3 faceFrost( vec2 suv, float f ) {
+	float lod = 0.5 + f * 4.3;
+	vec2 ts = exp2( lod ) / vec2( textureSize( uShot, 0 ) );
+	vec3 acc = textureLod( uShot, suv, lod ).rgb * 0.28;
+	for ( int i = 0; i < 6; i ++ ) {
+		float a = float( i ) * 1.0471976 + 0.26;
+		acc += textureLod( uShot, clamp( suv + vec2( cos( a ), sin( a ) ) * ts * 1.3, 0.0, 1.0 ), lod ).rgb * 0.12;
+	}
+	return acc;
+}
+`
+const FACE_FRAG_BODY = /* glsl */ `
+	vec2 fp = vFaceUv * uSize;
+	vec2 fh = uSize * 0.5;
+	// the leaf's rounded outline (the rim tube covers the seam)
+	vec2 fq = abs( fp - fh ) - ( fh - uCorner );
+	float fOut = length( max( fq, 0.0 ) ) + min( max( fq.x, fq.y ), 0.0 ) - uCorner;
+	float faa = max( fwidth( fOut ), 1e-4 );
+	float fMask = 1.0 - smoothstep( -faa, faa, fOut );
+	// the print
+	vec2 rMin = uRect.xy * uSize;
+	vec2 rMax = uRect.zw * uSize;
+	vec2 rq = abs( fp - ( rMin + rMax ) * 0.5 ) - ( rMax - rMin ) * 0.5;
+	float rOut = length( max( rq, 0.0 ) ) + min( max( rq.x, rq.y ), 0.0 );
+	float raa = max( fwidth( rOut ), 1e-4 );
+	float fr = clamp( uFrost, 0.0, 1.0 );
+	// frosted, the print's edge softens into the glass
+	float rIn = 1.0 - smoothstep( -raa - fr * 0.02, raa + fr * 0.02, rOut );
+	vec2 suv = ( vFaceUv - uRect.xy ) / ( uRect.zw - uRect.xy );
+	vec3 sharpC = texture2D( uShot, suv ).rgb;
+	vec3 softC = fr > 0.01 ? faceFrost( clamp( suv, 0.0, 1.0 ), fr ) : sharpC;
+	// the sandblast's fine, fixed tooth
+	softC *= 1.0 + ( faceHash( floor( gl_FragCoord.xy * 0.5 ) ) - 0.5 ) * 0.07 * fr;
+	// frosted, a print takes on the neon behind it (never a white wash):
+	// its light keeps its luminance but leans to the arc's colour
+	float spillMax = max( uSpill.r, max( uSpill.g, uSpill.b ) );
+	vec3 tintC = mix( vec3( 1.0 ), uSpill / max( spillMax, 1e-3 ), step( 1e-3, spillMax ) );
+	float softL = dot( softC, vec3( 0.2126, 0.7152, 0.0722 ) );
+	softC = mix( vec3( softL ), softC, 1.2 );
+	softC = mix( softC, softL * tintC * 1.35, 0.38 * fr );
+	vec3 shotC = mix( sharpC, softC, smoothstep( 0.0, 0.3, fr ) );
+	// light diffusing out of the print into the frosted glass around it
+	vec3 edgeC = textureLod( uShot, clamp( suv, 0.0, 1.0 ), 6.0 ).rgb;
+	float bleed = exp( -max( rOut, 0.0 ) / 0.13 ) * fr;
+	// the neon behind the glass: brightest at the ring's height
+	float ringL = exp( -abs( vFaceY - uRingY ) * 2.1 );
+	// the etched lot label
+	vec2 luv = ( vFaceUv - uLabelRect.xy ) / ( uLabelRect.zw - uLabelRect.xy );
+	float lIn = step( 0.0, luv.x ) * step( luv.x, 1.0 ) * step( 0.0, luv.y ) * step( luv.y, 1.0 );
+	// (frosted, the etching softens with the glass; from behind it is faint)
+	float lab = textureLod( uLabel, clamp( luv, 0.0, 1.0 ), fr * 2.2 ).a * lIn * ( 1.0 - rIn ) * mix( 1.0, 0.1, vBack );
+	float glass = 1.0 - rIn;
+	// seen from inside the drum a leaf is quieter, so the lit leaf in front leads
+	float backK = mix( 1.0, 0.55, vBack );
+	vec3 faceEm = shotC * rIn * uLit * backK;
+	faceEm += edgeC * bleed * glass * 0.5 * uLit * backK;
+	faceEm += uSpill * ringL * glass * mix( 0.4, 1.0, fr ) * backK;
+	faceEm += vec3( 0.03, 0.032, 0.036 ) * fr * glass;
+	// etched glyphs: frosted white on clear glass, and they catch the neon
+	faceEm += ( vec3( 0.58, 0.6, 0.66 ) * mix( 0.75, 0.32, fr ) + uSpill * ringL * 1.8 ) * lab * uEtch;
+	float faceA = max( rIn, mix( 0.16, uMilk, fr ) + lab * mix( 0.85, 0.3, fr ) );
+	faceA = clamp( faceA, 0.0, 1.0 ) * fMask * uFade;
+	float faceSpecK = fMask * uFade * mix( 1.0, uSpecIn, rIn * ( 1.0 - fr ) );
+`
+
+let faceSeq = 0
 
 /**
- * FROSTED faces that THAW through a window: the material's roughness stays
- * sandblasted (a constant), and a rounded-rect window around the print clears
- * to `uClear` from its centre outward as uThaw runs 0 → 1, with a slightly
- * ragged front like breath evaporating off cold glass. Roughness drives both
- * the transmission blur and the reflections, so the window turns to polished
- * clear glass (sharp site, crisp studio strips) inside a frame that stays
- * frosted and lit. Uniforms only — nothing recompiles as it thaws.
+ * A curved leaf / tile face: a PBR glass surface (black, so only its
+ * reflections light it; roughness follows the frost) whose emissive is the
+ * print behind it. Premultiplied alpha: the print covers, the glass around it
+ * is milky when frosted and nearly invisible when clear, and reflections add
+ * at full strength either way.
  */
-function frostWindow(m: THREE.MeshPhysicalMaterial, win: THREE.Vector4, radius: number): ThawUniforms {
-  const u: ThawUniforms = {
-    uThaw: { value: 0 },
-    uEdge: { value: 1 },
-    uWin: { value: win },
-    uWinR: { value: radius },
-    uClear: { value: 0.025 },
-  }
-  const patched = thawChunkSource()
+export function faceMaterial(u: FaceUniforms): THREE.MeshStandardMaterial {
+  const m = new THREE.MeshStandardMaterial({
+    color: 0x000000,
+    roughness: 0.4,
+    metalness: 0,
+    transparent: true,
+    depthWrite: false,
+    side: THREE.FrontSide,
+    envMapIntensity: 1,
+  })
+  m.blending = THREE.CustomBlending
+  m.blendSrc = THREE.OneFactor
+  m.blendDst = THREE.OneMinusSrcAlphaFactor
+  m.blendSrcAlpha = THREE.OneFactor
+  m.blendDstAlpha = THREE.OneMinusSrcAlphaFactor
   m.onBeforeCompile = shader => {
     Object.assign(shader.uniforms, u)
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nvarying vec2 vFrostPos;')
-      .replace('#include <begin_vertex>', '#include <begin_vertex>\n\tvFrostPos = position.xy;')
-    let f = shader.fragmentShader
-    if (patched) f = f.replace('#include <transmission_pars_fragment>', patched)
-    f = f
-      .replace(
-        '#include <common>',
-        `#include <common>
-varying vec2 vFrostPos;
-uniform float uThaw, uEdge, uWinR, uClear;
-uniform vec4 uWin;
-float frostHash( vec2 p ) { vec3 p3 = fract( vec3( p.xyx ) * 0.1031 ); p3 += dot( p3, p3.yzx + 33.33 ); return fract( ( p3.x + p3.y ) * p3.z ); }
-float frostNoise( vec2 p ) {
-	vec2 i = floor( p ), f = fract( p );
-	vec2 w = f * f * ( 3.0 - 2.0 * f );
-	return mix( mix( frostHash( i ), frostHash( i + vec2( 1.0, 0.0 ) ), w.x ), mix( frostHash( i + vec2( 0.0, 1.0 ) ), frostHash( i + vec2( 1.0, 1.0 ) ), w.x ), w.y ) - 0.5;
-}`,
-      )
-      .replace(
-        '#include <roughnessmap_fragment>',
-        `float roughnessFactor = roughness;
-	float frostFront = 0.0;
-	{
-		float openK = uThaw * ( 2.0 - uThaw );
-		vec2 q = abs( vFrostPos - uWin.xy ) - uWin.zw * openK;
-		float d = length( max( q, 0.0 ) ) + min( max( q.x, q.y ), 0.0 ) - uWinR * openK - 0.04 * ( 1.0 - openK );
-		// a fine, shallow front: crystalline, never a torn smoky rim
-		float n = frostNoise( vFrostPos * 22.0 ) * 0.026 + frostNoise( vFrostPos * 70.0 ) * 0.008;
-		float e = d + n * uEdge;
-		float on = smoothstep( 0.0, 0.06, uThaw );
-		float clearM = 1.0 - smoothstep( -0.012, 0.012, e );
-		roughnessFactor = mix( roughness, uClear, clearM * on );
-		// the melting front: a pale rim of frost crystals catching the light
-		frostFront = ( smoothstep( -0.014, 0.0, e ) - smoothstep( 0.0, 0.018, e ) ) * on * uEdge;
-	}`,
-      )
-      .replace('#include <opaque_fragment>', 'outgoingLight += vec3( 0.055, 0.057, 0.062 ) * frostFront;\n\t#include <opaque_fragment>')
-    shader.fragmentShader = f
+      .replace('#include <common>', `#include <common>\n${FACE_VERT_HEAD}`)
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\n\tvFaceUv = uv;\n\tvBack = aBack;\n\tvFaceY = ( modelMatrix * vec4( transformed, 1.0 ) ).y;')
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', `#include <common>\n${FACE_FRAG_HEAD}`)
+      .replace('#include <alphamap_fragment>', `#include <alphamap_fragment>\n${FACE_FRAG_BODY}`)
+      .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = mix( 0.03, 0.42, fr );')
+      .replace('#include <emissivemap_fragment>', 'totalEmissiveRadiance = faceEm;')
+      .replace('#include <opaque_fragment>', 'gl_FragColor = vec4( faceEm * faceA + totalSpecular * faceSpecK, faceA );')
   }
-  m.customProgramCacheKey = () => 'frost-window-thaw'
-  return u
+  m.customProgramCacheKey = () => 'halo-carousel-face'
+  m.name = `carousel-face-${faceSeq++}`
+  return m
 }
 
-/** A rounded rectangle, w x h, centred. */
-function roundedRect(w: number, h: number, r: number): THREE.Shape {
-  const s = new THREE.Shape()
-  const x = -w / 2
-  const y = -h / 2
-  s.moveTo(x + r, y)
-  s.lineTo(x + w - r, y)
-  s.quadraticCurveTo(x + w, y, x + w, y + r)
-  s.lineTo(x + w, y + h - r)
-  s.quadraticCurveTo(x + w, y + h, x + w - r, y + h)
-  s.lineTo(x + r, y + h)
-  s.quadraticCurveTo(x, y + h, x, y + h - r)
-  s.lineTo(x, y + r)
-  s.quadraticCurveTo(x, y, x + r, y)
-  return s
-}
+/* ---------------------------------------------------------------- the mirror */
 
-/**
- * A glass slab w x h (outer, incl. bevel), centred, facing +z, with material
- * groups kept: 0 = front/back caps (frosted), 1 = sides + bevel (polished).
- */
-function slabGeometry(w: number, h: number, depth: number, bevel: number, radius: number, segs: number, reach = 0.85): THREE.BufferGeometry {
-  const bs = bevel * reach
-  const g = new THREE.ExtrudeGeometry(roundedRect(w - 2 * bs, h - 2 * bs, radius), {
-    depth,
-    bevelEnabled: true,
-    bevelThickness: bevel,
-    bevelSize: bs,
-    bevelSegments: segs,
-    curveSegments: 8,
-    steps: 1,
-  })
-  g.translate(0, 0, -depth / 2)
-  // non-indexed: creased normals come back on the same geometry, groups intact
-  const out = toCreasedNormals(g, Math.PI / 5)
-  // clean normals: one consistent, area-weighted normal per bevel corner (the
-  // two triangles of a long bevel quad agree, so a strip highlight runs as an
-  // unbroken line instead of dashes and specks) and exactly flat caps
-  smoothSides(out)
-  flattenCaps(out)
-  out.computeBoundingBox()
-  out.computeBoundingSphere()
-  return out
-}
-
-/* ---------------------------------------------------------------- light */
-
-/**
- * Soft additive backlight card (opaque, so the transmission buffer carries it
- * into the frost). Sized to sit hidden behind its glass: the frost glows
- * brightest behind the print and falls away to black at the panel's rim.
- */
-function glowMaterial(
-  color: THREE.ColorRepresentation,
-  strength: number,
-  falloff: [number, number],
-  center: [number, number] = [0.5, 0.5],
-  hole = new THREE.Vector4(0.5, 0.5, 0, 0),
-): THREE.ShaderMaterial {
-  return new THREE.ShaderMaterial({
-    transparent: false,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-    toneMapped: false,
-    uniforms: {
-      uColor: { value: new THREE.Color(color) },
-      uStrength: { value: strength },
-      uFall: { value: new THREE.Vector2(...falloff) },
-      uCenter: { value: new THREE.Vector2(...center) },
-      /** a dark window (uv centre, half size) behind a thawed pane: 0..1 */
-      uHoleRect: { value: hole },
-      uHole: { value: 0 },
-    },
-    vertexShader: /* glsl */ `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-    fragmentShader: /* glsl */ `
-      uniform vec3 uColor; uniform float uStrength, uHole; uniform vec2 uFall, uCenter; uniform vec4 uHoleRect; varying vec2 vUv;
-      void main() {
-        vec2 p = (vUv - 0.5) * 2.0;
-        vec2 q = (vUv - uCenter) * 2.0 * uFall;
-        float r2 = dot(q, q);
-        float g = exp(-r2 * 2.4) * 0.75 + exp(-r2 * 9.0) * 0.4;
-        g *= 1.0 - smoothstep(0.78, 1.0, max(abs(p.x), abs(p.y)));
-        vec2 h = abs(vUv - uHoleRect.xy) - uHoleRect.zw;
-        g *= 1.0 - uHole * (1.0 - smoothstep(-0.03, 0.03, max(h.x, h.y)));
-        gl_FragColor = vec4(uColor * g * uStrength, 1.0);
-      }
-    `,
-  })
-}
-
-const STUDIO_W = 1024
-const STUDIO_H = 512
-
-/*
- * The studio, per texel, on the GPU: one fullscreen pass into a HalfFloat
- * target (~7 ms with the PMREM prefilter; the same maths per texel in JS cost
- * ~125 ms, ~510 ms at 4x CPU). Row 0 is the bottom (lat -90°), exactly as the
- * DataTexture it replaced was laid out; the output matches it to within one
- * half-float step, so PMREM sees the same equirect.
- */
-const STUDIO_FRAG = /* glsl */ `
-varying vec2 vUv;
-const float PI = 3.141592653589793;
-const float D = PI / 180.0;
-float wrapA( float a ) { return atan( sin( a ), cos( a ) ); }
-float band( float x, float s ) { return exp( -x * x / ( 2.0 * s * s ) ); }
-float win( float x, float a, float b, float soft ) {
-  float t0 = clamp( ( x - a ) / soft + 0.5, 0.0, 1.0 );
-  float t1 = clamp( ( b - x ) / soft + 0.5, 0.0, 1.0 );
-  return t0 * t0 * ( 3.0 - 2.0 * t0 ) * ( t1 * t1 * ( 3.0 - 2.0 * t1 ) );
-}
-void main() {
-  float lat = ( vUv.y - 0.5 ) * PI;
-  float a = ( vUv.x - 0.5 ) * 2.0 * PI;
-  float cl = cos( lat );
-  float v = 0.0;
-  // key softbox, front-left (reads on the left bevels)
-  v += 7.0 * band( wrapA( a - 150.0 * D ) * cl, 1.1 * D ) * win( lat, -42.0 * D, 58.0 * D, 6.0 * D );
-  // fill softbox, front-right (right bevels)
-  v += 3.2 * band( wrapA( a - 28.0 * D ) * cl, 0.9 * D ) * win( lat, -38.0 * D, 52.0 * D, 6.0 * D );
-  // hairline overhead strip (top edges)
-  v += 5.0 * band( lat - 61.0 * D, 0.7 * D ) * win( a, 25.0 * D, 155.0 * D, 10.0 * D );
-  // a horizon ring and a low ring, open toward the viewer so a clear face
-  // never mirrors them: every vertical / bottom bevel always holds a line
-  float away = 1.0 - band( wrapA( a - 90.0 * D ), 30.0 * D );
-  v += 2.4 * band( lat - 2.0 * D, 0.8 * D ) * away;
-  v += 1.2 * band( lat + 48.0 * D, 1.2 * D ) * away;
-  // a broad soft sky for the top bevels
-  v += 0.5 * win( lat, 44.0 * D, 80.0 * D, 12.0 * D ) * away;
-  // the slash: a line in (a, lat) from (128°, -26°) to (158°, 34°)
-  vec2 s0 = vec2( 128.0, -26.0 ) * D;
-  vec2 sd = vec2( 30.0, 60.0 ) * D;
-  float px = wrapA( a - s0.x );
-  float py = lat - s0.y;
-  float t = clamp( ( px * sd.x + py * sd.y ) / dot( sd, sd ), 0.0, 1.0 );
-  float ex = ( px - t * sd.x ) * cl;
-  float ey = py - t * sd.y;
-  v += 6.0 * band( sqrt( ex * ex + ey * ey ), 0.6 * D ) * win( t, 0.02, 0.98, 0.08 );
-  // a faint broad glow toward the viewer: satin sheen on sandblasted faces
-  float da = wrapA( a - 90.0 * D ) * cl;
-  float dl = lat - 12.0 * D;
-  float sg = 34.0 * D;
-  v += 0.09 * exp( -( da * da + dl * dl ) / ( 2.0 * sg * sg ) );
-  gl_FragColor = vec4( v, v, v * 1.02, 1.0 );
-}
+const MIRROR_VERT = /* glsl */ `
+  varying vec2 vUv;
+  varying float vWY;
+  void main() {
+    vUv = uv;
+    vec4 w = modelMatrix * vec4(position, 1.0);
+    vWY = w.y;
+    gl_Position = projectionMatrix * viewMatrix * w;
+  }
+`
+const MIRROR_FRAG = /* glsl */ `
+  uniform sampler2D uShot;
+  uniform vec4 uRect;
+  uniform vec2 uSize;
+  uniform vec3 uSpill;
+  uniform float uK, uFrost, uLit, uRingY, uCorner;
+  varying vec2 vUv;
+  varying float vWY;
+  void main() {
+    float below = max(-vWY, 0.0);
+    float fade = exp(-below * 1.35) * step(vWY, 0.001);
+    vec2 fp = vUv * uSize;
+    vec2 fh = uSize * 0.5;
+    vec2 fq = abs(fp - fh) - (fh - uCorner);
+    float fOut = length(max(fq, 0.0)) + min(max(fq.x, fq.y), 0.0) - uCorner;
+    float fMask = 1.0 - smoothstep(-0.01, 0.01, fOut);
+    vec2 rMin = uRect.xy * uSize;
+    vec2 rMax = uRect.zw * uSize;
+    vec2 rq = abs(fp - (rMin + rMax) * 0.5) - (rMax - rMin) * 0.5;
+    float rOut = length(max(rq, 0.0)) + min(max(rq.x, rq.y), 0.0);
+    float rIn = 1.0 - smoothstep(-0.02, 0.03, rOut);
+    vec2 suv = clamp((vUv - uRect.xy) / (uRect.zw - uRect.xy), 0.0, 1.0);
+    // a black mirror is glossy, not perfect: the print a touch soft
+    vec3 c = textureLod(uShot, suv, mix(2.2, 5.0, uFrost)).rgb * rIn * uLit;
+    float ringL = exp(-abs(-vWY - uRingY) * 2.1);
+    c += uSpill * ringL * (1.0 - rIn) * mix(0.3, 0.7, uFrost);
+    gl_FragColor = vec4(c * fade * fMask * uK, 1.0);
+  }
 `
 
-/** Render the studio equirect (linear HDR) into a HalfFloat target. The caller disposes it. */
-export function studioEquirect(renderer: THREE.WebGLRenderer): THREE.WebGLRenderTarget {
-  const rt = new THREE.WebGLRenderTarget(STUDIO_W, STUDIO_H, {
-    type: THREE.HalfFloatType,
-    format: THREE.RGBAFormat,
-    magFilter: THREE.LinearFilter,
-    minFilter: THREE.LinearFilter,
-    generateMipmaps: false,
-    depthBuffer: false,
-    stencilBuffer: false,
-  })
-  rt.texture.mapping = THREE.EquirectangularReflectionMapping
-  rt.texture.colorSpace = THREE.LinearSRGBColorSpace
-  const geo = new THREE.PlaneGeometry(2, 2)
-  const mat = new THREE.ShaderMaterial({
-    vertexShader: /* glsl */ `varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4( position.xy, 0.0, 1.0 ); }`,
-    fragmentShader: STUDIO_FRAG,
-    depthTest: false,
-    depthWrite: false,
-    toneMapped: false,
-  })
-  const quad = new THREE.Mesh(geo, mat)
-  quad.frustumCulled = false
-  const scene = new THREE.Scene()
-  scene.add(quad)
-  const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1)
-  const prevTarget = renderer.getRenderTarget()
-  renderer.setRenderTarget(rt)
-  renderer.render(scene, cam)
-  renderer.setRenderTarget(prevTarget)
-  geo.dispose()
-  mat.dispose()
-  return rt
+/** Mirror uniforms of one leaf (the print shares the face's texture uniform). */
+export interface MirrorUniforms {
+  uShot: { value: THREE.Texture }
+  uRect: { value: THREE.Vector4 }
+  uSize: { value: THREE.Vector2 }
+  uSpill: { value: THREE.Color }
+  uK: { value: number }
+  uFrost: { value: number }
+  uLit: { value: number }
+  uRingY: { value: number }
+  uCorner: { value: number }
 }
 
-/**
- * The Collection's own studio reflections (an HDR equirect built in code,
- * prefiltered once): black, with two tall softboxes, a hairline overhead
- * strip, horizon / low rings that give every bevel a standing line (open
- * toward the viewer, so clear faces stay clean), and a thin diagonal slash that — as world.params.envTurn turns the
- * room — rides up and down the panels' vertical bevels. Every strip has a
- * soft (gaussian) cross-profile a few texels wide, so a highlight on a
- * polished bevel is a clean continuous line, never a dashed one; a very
- * faint broad glow toward the viewer gives the sandblasted faces their satin
- * sheen. Azimuth a = atan2(z, x) (three's equirect convention): +z is 90°.
- */
-export async function studioEnv(renderer: THREE.WebGLRenderer, pause?: () => Promise<void>): Promise<THREE.Texture> {
-  const src = studioEquirect(renderer)
-  // the studio shader compiles on its own frame; PMREM's blur on the next
-  if (pause) await pause()
-  const pmrem = new THREE.PMREMGenerator(renderer)
-  const rt = pmrem.fromEquirectangular(src.texture)
-  pmrem.dispose()
-  src.dispose()
-  return rt.texture
+/* ---------------------------------------------------------------- the floor */
+
+const FLOOR_FRAG = /* glsl */ `
+  uniform vec3 uC0, uC1, uC2, uPoolC;
+  uniform float uRingR, uRingRot, uRingK, uArcs, uPoolK, uPoolZ, uInner;
+  varying vec3 vW;
+  void main() {
+    vec2 p = vW.xz;
+    float r = length(p);
+    // which arc of the ring lies at this azimuth (arc k centred on k * 2pi / n)
+    float ang = atan(p.x, p.y);
+    float t = (ang - uRingRot) / (6.2831853 / uArcs);
+    float k = floor(t + 0.5);
+    float fr = t - k;
+    float idx = mod(k, 3.0);
+    vec3 c = idx < 0.5 ? uC0 : (idx < 1.5 ? uC1 : uC2);
+    // the wide spill mixes with the neighbouring arc toward the gap (no hard wedges on the floor)
+    float idx2 = mod(k + (fr > 0.0 ? 1.0 : -1.0), 3.0);
+    vec3 c2 = idx2 < 0.5 ? uC0 : (idx2 < 1.5 ? uC1 : uC2);
+    vec3 cw = mix(c, c2, smoothstep(0.05, 0.5, abs(fr)) * 0.5);
+    float lit = 1.0 - smoothstep(0.34, 0.5, abs(fr));
+    float d = r - uRingR;
+    vec3 col = (c * exp(-d * d / 0.012) * 0.8 * mix(0.3, 1.0, lit) + cw * (exp(-d * d / 0.16) * 0.34 + exp(-d * d / 1.1) * 0.08) * mix(0.7, 1.0, lit)) * uRingK;
+    // the drum's interior: a faint pool
+    col += (uC0 + uC1 + uC2) * 0.33 * exp(-r * r / 1.4) * uInner;
+    // the lit screen's colour pooled on the floor in front of it
+    vec2 q = (p - vec2(0.0, uPoolZ)) / vec2(1.25, 0.55);
+    col += uPoolC * exp(-dot(q, q)) * uPoolK;
+    col *= 1.0 - smoothstep(5.5, 9.0, r);
+    gl_FragColor = vec4(col, 1.0);
+  }
+`
+
+export interface FloorUniforms {
+  uC0: { value: THREE.Color }
+  uC1: { value: THREE.Color }
+  uC2: { value: THREE.Color }
+  uPoolC: { value: THREE.Color }
+  uRingR: { value: number }
+  uRingRot: { value: number }
+  uRingK: { value: number }
+  uArcs: { value: number }
+  uPoolK: { value: number }
+  uPoolZ: { value: number }
+  uInner: { value: number }
 }
 
-export interface Panel {
-  /** on the arc, facing C */
+/* ---------------------------------------------------------------- set */
+
+export interface Leaf {
+  /** on the drum, facing out */
   station: THREE.Group
-  /** the panel's own pose (yaw / push toward the viewer) */
-  pivot: THREE.Group
-  mesh: THREE.Mesh
-  caps: THREE.MeshPhysicalMaterial
-  /** the window thaw (uniforms on caps) */
-  thaw: ThawUniforms
-  sides: THREE.MeshPhysicalMaterial
-  shot: THREE.Mesh
-  shotMat: THREE.MeshBasicMaterial
-  /** the crisp thawed copy of the screenshot (drawn over the glass) */
-  crisp: THREE.Mesh
-  crispMat: THREE.MeshBasicMaterial
+  front: THREE.Mesh
   back: THREE.Mesh
-  backMat: THREE.ShaderMaterial
-  pool: THREE.Mesh
-  poolMat: THREE.ShaderMaterial
-  label: TextPlate
-  /** the screenshot's average colour (the glow it throws on the floor) */
+  u: FaceUniforms
+  mirror: MirrorUniforms
+  /** the thin neon tube along its bottom edge, and its reflection */
+  edge: NeonPath
+  edgeRefl: NeonPath
+  color: THREE.Color
+  /** the print's average colour (the light it pools on the floor) */
   tint: THREE.Color
 }
 
-export interface Bar {
-  root: THREE.Group
-  mesh: THREE.Mesh
-  caps: THREE.MeshPhysicalMaterial
-  thaw: ThawUniforms
-  label: TextPlate
-  /** its site's band behind the right half (opaque: diffused by the frost) */
-  bandMat: THREE.MeshBasicMaterial
-  /** the crisp copy of the band, drawn over the glass as it thaws */
-  crispMat: THREE.MeshBasicMaterial
+export interface Tile {
+  station: THREE.Group
+  u: FaceUniforms
+  color: THREE.Color
 }
 
-export interface Gallery {
+export interface CarouselSet {
   root: THREE.Group
-  panels: Panel[]
-  stack: THREE.Group
-  bars: Bar[]
-  sides: THREE.MeshPhysicalMaterial
-  stackBackMat: THREE.ShaderMaterial
-  stackPoolMat: THREE.ShaderMaterial
-  /** every glass material (for envMap / rotation sync) */
-  glass: THREE.MeshPhysicalMaterial[]
+  drum: THREE.Group
+  leaves: Leaf[]
+  /** the floor ring: six arcs inside the drum (rides with it; lifts into the halo) */
+  ring: THREE.Group
+  ringArcs: NeonPath[]
+  halo: THREE.Group
+  haloArcs: NeonPath[]
+  tiles: Tile[]
+  floor: FloorUniforms
+  rim: THREE.MeshPhysicalMaterial
+  /** the tiles' rims (fade in with the halo) */
+  tileRim: THREE.MeshPhysicalMaterial
+  faces: THREE.MeshStandardMaterial[]
 }
 
-/** Average colour of a canvas texture (the glow a screenshot throws through frost). */
+/** Average colour of a canvas texture (the glow a screenshot throws). */
 export function averageColor(tex: THREE.Texture, out: THREE.Color): THREE.Color {
   const img = tex.image as CanvasImageSource | undefined
   if (!img) return out
@@ -482,203 +483,250 @@ export function averageColor(tex: THREE.Texture, out: THREE.Color): THREE.Color 
   return out
 }
 
-export function buildGallery(featured: WorkItem[], rest: WorkItem[], mobile: boolean, frost: number): Gallery {
+export function buildCarousel(featured: WorkItem[], rest: WorkItem[], mobile: boolean, isFrameTarget: (rt: THREE.WebGLRenderTarget | null) => boolean): CarouselSet {
   const root = new THREE.Group()
-  root.name = 'collection'
-  const glassMats: THREE.MeshPhysicalMaterial[] = []
+  root.name = 'carousel'
+  const faces: THREE.MeshStandardMaterial[] = []
 
-  // thin panes: a small optical thickness keeps the thawed print aligned with its crisp copy
-  const capsBase = frosted({ frost, thickness: 0.05, env: 0.4 })
-  const sidesBase = polished({ thickness: 0.05 })
-
-  // ---------------------------------------------------------------- panels
-  const panelGeo = slabGeometry(PW, PH, PD, PB, 0.03, mobile ? 5 : 8)
-  const shotGeo = new THREE.PlaneGeometry(SW, SH)
-  const backGeo = new THREE.PlaneGeometry(PW * 0.96, PH * 0.96)
-  const poolGeo = new THREE.PlaneGeometry(1, 1)
-  // the backlight's hot spot sits behind the print
-  const backCenter: [number, number] = [0.5, 0.5 + (SHOT_Y - 0.12) / (PH * 0.96)]
-  // the thaw window: the print plus a narrow clear mat
-  const WIN_PAD = 0.055
-  const win = new THREE.Vector4(0, SHOT_Y, SW / 2 + WIN_PAD, SH / 2 + WIN_PAD)
-  const hole = new THREE.Vector4(0.5, 0.5 + SHOT_Y / (PH * 0.96), (SW / 2 + WIN_PAD * 0.6) / (PW * 0.96), (SH / 2 + WIN_PAD * 0.6) / (PH * 0.96))
-
-  const panels: Panel[] = featured.map((w, k) => {
-    const th = theta(k)
-    const station = new THREE.Group()
-    onArc(th, R, station.position)
-    station.rotation.y = -th
-    root.add(station)
-    const pivot = new THREE.Group()
-    pivot.position.y = PANEL_Y
-    station.add(pivot)
-
-    const caps = capsBase.clone()
-    const sides = sidesBase.clone()
-    const thaw = frostWindow(caps, win, 0.03)
-    thawTransmission(sides)
-    glassMats.push(caps, sides)
-    const mesh = new THREE.Mesh(panelGeo, [caps, sides])
-    pivot.add(mesh)
-
-    const placeholder = placeholderTexture('#15171c')
-    const shotMat = new THREE.MeshBasicMaterial({ map: placeholder, toneMapped: true })
-    shotMat.color.setScalar(0.5)
-    const shot = new THREE.Mesh(shotGeo, shotMat)
-    shot.position.set(0, SHOT_Y, SHOT_Z)
-    pivot.add(shot)
-
-    const crispMat = new THREE.MeshBasicMaterial({
-      map: placeholder,
-      transparent: true,
-      opacity: 0,
-      depthTest: false,
-      depthWrite: false,
-      toneMapped: true,
-    })
-    crispMat.color.setScalar(0.88)
-    const crisp = new THREE.Mesh(shotGeo, crispMat)
-    crisp.position.copy(shot.position)
-    crisp.scale.setScalar(1.004)
-    crisp.renderOrder = 6
-    pivot.add(crisp)
-
-    const backMat = glowMaterial(G.ice, 0.2, [1.05, 1.25], backCenter, hole)
-    const back = new THREE.Mesh(backGeo, backMat)
-    back.position.set(0, 0, SHOT_Z - 0.05)
-    back.renderOrder = -5
-    pivot.add(back)
-
-    // light spilling through the frost onto the black floor
-    const poolMat = glowMaterial(G.ice, 0.1, [1, 1])
-    const pool = new THREE.Mesh(poolGeo, poolMat)
-    pool.rotation.x = -Math.PI / 2
-    pool.scale.set(PW * 1.7, 1.1, 1)
-    pool.position.set(0, 0.001, 0.26)
-    pool.renderOrder = -5
-    station.add(pool)
-
-    // the etched label along the foot: number + name (+ PREVIEW for a pre-launch build)
-    const pre = isPreview(w.url)
-    const label = textPlate(1600, 72, PW - 0.26, (g, pw, ph) => {
-      g.font = `700 30px ${LABEL}`
-      g.globalAlpha = 0.55
-      const nw = spaced(g, `${pad(k + 1)}`, 2, ph / 2, 4)
-      g.globalAlpha = 0.95
-      const x = nw + 34
-      const tw = spaced(g, w.name.toUpperCase(), x, ph / 2, 3.5)
-      if (pre) {
-        g.globalAlpha = 0.55
-        spaced(g, '· PREVIEW', x + tw + 22, ph / 2, 3.5)
-      }
-      void pw
-    })
-    label.mesh.position.set(0, -PH / 2 + 0.17, FRONT + 0.0025)
-    pivot.add(label.mesh)
-
-    return { station, pivot, mesh, caps, thaw, sides, shot, shotMat, crisp, crispMat, back, backMat, pool, poolMat, label, tint: new THREE.Color(0.5, 0.5, 0.55) }
+  // polished rims: black glass that only its reflections light
+  const rim = new THREE.MeshPhysicalMaterial({
+    color: '#050608',
+    roughness: 0.07,
+    metalness: 0,
+    clearcoat: 1,
+    clearcoatRoughness: 0.03,
+    envMapIntensity: 1.6,
+    emissive: new THREE.Color('#0b0d12'),
   })
-
-  // ---------------------------------------------------------------- directory
-  const stack = new THREE.Group()
-  onArc(STACK_THETA, R, stack.position)
-  stack.rotation.y = -STACK_THETA
-  root.add(stack)
-
-  const barGeo = slabGeometry(BAR_W, BAR_H, BAR_D, BAR_B, 0.03, mobile ? 6 : 8, BAR_BS)
-  const sides = sidesBase.clone()
-  // a short optical path through the round rim: it shows the dark directly
-  // behind it, not a refracted sliver of the site band
-  sides.thickness = 0.012
-  thawTransmission(sides)
-  glassMats.push(sides)
-
-  // a horizontal band of the site (the hero, below the nav), full width
-  const bandGeo = new THREE.PlaneGeometry(BAND_W, BAND_H)
+  const blankLabel = placeholderTexture('#000000')
+  // (a fully transparent 1x1: tiles carry no label)
   {
-    const uv = bandGeo.attributes.uv
-    const vSpan = (BAND_H / BAND_W) * 1.6
-    for (let i = 0; i < uv.count; i++) uv.setY(i, BAND_V0 + uv.getY(i) * vSpan)
-    uv.needsUpdate = true
+    const c = blankLabel.image as HTMLCanvasElement
+    const g = c.getContext('2d')!
+    g.clearRect(0, 0, 1, 1)
+    blankLabel.needsUpdate = true
   }
 
-  const barWin = new THREE.Vector4(BAND_X, 0, BAND_W / 2 + 0.018, BAND_H / 2 + 0.012)
-  const stackBackMat = glowMaterial(G.ice, 0.16, [0.95, 1.0], [0.5, 0.5])
-  const stackBack = new THREE.Mesh(new THREE.PlaneGeometry(BAR_W * 0.98, STACK_H * 0.99), stackBackMat)
-  stackBack.position.set(0, STACK_Y, BAND_Z - 0.05)
-  stackBack.renderOrder = -5
-  stack.add(stackBack)
-  const stackPoolMat = glowMaterial(G.ice, 0.08, [1, 1])
-  const stackPool = new THREE.Mesh(poolGeo, stackPoolMat)
-  stackPool.rotation.x = -Math.PI / 2
-  stackPool.scale.set(BAR_W * 1.6, 1.0, 1)
-  stackPool.position.set(0, 0.001, 0.26)
-  stackPool.renderOrder = -5
-  stack.add(stackPool)
+  // ---------------------------------------------------------------- drum
+  const drum = new THREE.Group()
+  drum.name = 'drum'
+  root.add(drum)
+  const segX = mobile ? 28 : 48
+  const leafFront = faceGeometry(LEAF_W, LEAF_H, LEAF_T / 2, R, false, segX)
+  const leafBack = faceGeometry(LEAF_W, LEAF_H, LEAF_T / 2, R, true, segX)
+  const leafRim = rimGeometry(LEAF_W, LEAF_H, CORNER, LEAF_T / 2, R, mobile ? 150 : 240, mobile ? 6 : 10)
+  const rect = new THREE.Vector4(MARGIN / LEAF_W, 1 - (MARGIN + SHOT_H) / LEAF_H, 1 - MARGIN / LEAF_W, 1 - MARGIN / LEAF_H)
+  // the lot label on the lower glass
+  const labW = LEAF_W * 0.8
+  const labH = (labW * LABEL_PX.h) / LABEL_PX.w
+  const labX0 = MARGIN + 0.02
+  const labY0 = 0.3
+  const labelRect = new THREE.Vector4(labX0 / LEAF_W, labY0 / LEAF_H, (labX0 + labW) / LEAF_W, (labY0 + labH) / LEAF_H)
+  const size = new THREE.Vector2(LEAF_W, LEAF_H)
 
-  const bars: Bar[] = rest.map((w, j) => {
-    const root = new THREE.Group()
-    root.position.set(0, STACK_Y + (4 - j) * BAR_PITCH, 0)
-    stack.add(root)
-    const caps = capsBase.clone()
-    const thaw = frostWindow(caps, barWin, 0.012)
-    glassMats.push(caps)
-    const mesh = new THREE.Mesh(barGeo, [caps, sides])
-    root.add(mesh)
+  const leaves: Leaf[] = featured.map((w, k) => {
+    const th = k * STEP
+    const station = new THREE.Group()
+    station.position.set(R * Math.sin(th), 0, R * Math.cos(th))
+    station.rotation.y = th
+    drum.add(station)
+    const color = NEON_C[k % 3].clone()
+    const shot = placeholderTexture('#15171c')
+    const u: FaceUniforms = {
+      uShot: { value: shot },
+      uLabel: { value: lotLabel(pad(k + 1), w.name, w.industry, isPreview(w.url)) },
+      uFrost: { value: 1 },
+      uLit: { value: 0.5 },
+      uRect: { value: rect },
+      uLabelRect: { value: labelRect },
+      uSize: { value: size },
+      uCorner: { value: CORNER },
+      uSpill: { value: new THREE.Color() },
+      uRingY: { value: RING_Y },
+      uFade: { value: 1 },
+      uMilk: { value: 0.8 },
+      uSpecIn: { value: 0.14 },
+      uEtch: { value: 1 },
+    }
+    const mat = faceMaterial(u)
+    faces.push(mat)
+    const front = new THREE.Mesh(leafFront, mat)
+    front.position.y = LEAF_CY
+    const back = new THREE.Mesh(leafBack, mat)
+    back.position.y = LEAF_CY
+    // (sorted as transparent by their own origins: the drum's far side draws first)
+    back.position.z = -0.001
+    const rimMesh = new THREE.Mesh(leafRim, rim)
+    rimMesh.position.y = LEAF_CY
+    station.add(rimMesh, front, back)
 
-    const placeholder = placeholderTexture('#15171c')
-    const bandMat = new THREE.MeshBasicMaterial({ map: placeholder, toneMapped: true })
-    bandMat.color.setScalar(0.5)
-    const band = new THREE.Mesh(bandGeo, bandMat)
-    band.position.set(BAND_X, 0, BAND_Z)
-    root.add(band)
-    const crispMat = new THREE.MeshBasicMaterial({
-      map: placeholder,
-      transparent: true,
-      opacity: 0,
-      depthTest: false,
+    // the mirror: the leaf flipped under the floor
+    const mirror: MirrorUniforms = {
+      uShot: u.uShot,
+      uRect: u.uRect,
+      uSize: u.uSize,
+      uSpill: { value: new THREE.Color() },
+      uK: { value: 0.2 },
+      uFrost: u.uFrost,
+      uLit: u.uLit,
+      uRingY: u.uRingY,
+      uCorner: u.uCorner,
+    }
+    const mMat = new THREE.ShaderMaterial({
+      uniforms: mirror as unknown as Record<string, THREE.IUniform>,
+      vertexShader: MIRROR_VERT,
+      fragmentShader: MIRROR_FRAG,
+      transparent: false,
+      blending: THREE.AdditiveBlending,
       depthWrite: false,
-      toneMapped: true,
+      side: THREE.DoubleSide,
+      toneMapped: false,
     })
-    crispMat.color.setScalar(0.88)
-    const crisp = new THREE.Mesh(bandGeo, crispMat)
-    crisp.position.copy(band.position)
-    crisp.renderOrder = 6
-    root.add(crisp)
+    const refl = new THREE.Mesh(leafFront, mMat)
+    refl.position.y = -LEAF_CY
+    refl.scale.y = -1
+    refl.renderOrder = -6
+    station.add(refl)
 
-    const n = featured.length + j + 1
-    const plateW = BAR_W - BAND_W - 0.19
-    const label = textPlate(1280, 128, plateW, (g, pw, ph) => {
-      g.font = `700 40px ${LABEL}`
-      g.globalAlpha = 0.6
-      const nw = spaced(g, pad(n), 2, ph / 2 + 2, 3)
-      g.globalAlpha = 1
-      g.font = `520 60px ${SANS}`
-      const x = nw + 34
-      const full = g.measureText(w.name).width
-      const room = pw - x - 6
-      // squeeze a long name into the plate rather than clip it
-      if (full > room) {
-        g.save()
-        g.translate(x, 0)
-        g.scale(room / full, 1)
-        g.fillText(w.name, 0, ph / 2)
-        g.restore()
-      } else g.fillText(w.name, x, ph / 2)
-    })
-    label.mesh.position.set(-BAR_W / 2 + 0.075 + plateW / 2, 0, BAR_FRONT + 0.0022)
-    root.add(label.mesh)
-    return { root, mesh, caps, thaw, label, bandMat, crispMat }
+    // the neon edge along its bottom (lit when the leaf faces you) and its reflection
+    const ey = LEAF_Y0 - LEAF_T / 2 - 0.024
+    const half = LEAF_W / 2 - CORNER * 0.6
+    const pts: THREE.Vector3[] = []
+    for (let i = 0; i <= 18; i++) {
+      const x = -half + (2 * half * i) / 18
+      const phi = x / R
+      pts.push(new THREE.Vector3(R * Math.sin(phi), ey, R * Math.cos(phi) - R + 0.004))
+    }
+    const edge = neonPath({ points: pts, color, radius: 0.0085, glowRadius: 0.055, segments: 48, isFrameTarget })
+    const edgeRefl = neonPath({ points: pts, color, radius: 0.0085, glowRadius: 0.055, segments: 48, mirror: { floorY: 0, fade: 1.6 }, isFrameTarget })
+    edgeRefl.root.scale.y = -1
+    edgeRefl.k.main.tube = 1.1
+    edgeRefl.k.main.glow = 0.16
+    station.add(edge.root, edgeRefl.root)
+
+    return { station, front, back, u, mirror, edge, edgeRefl, color, tint: new THREE.Color(0.4, 0.42, 0.48) }
   })
 
-  return {
-    root,
-    panels,
-    stack,
-    bars,
-    sides,
-    stackBackMat,
-    stackPoolMat,
-    glass: glassMats,
+  // ---------------------------------------------------------------- floor ring (rides with the drum)
+  const ring = new THREE.Group()
+  ring.name = 'ring'
+  drum.add(ring)
+  const ringArcs: NeonPath[] = []
+  const arcHalf = STEP / 2 - 3.2 * DEG
+  for (let k = 0; k < 6; k++) {
+    const a = k * STEP
+    const arc = neonPath({
+      points: arcPoints(RING_R, 0, a - arcHalf, a + arcHalf, 20),
+      color: NEON[k % 3],
+      radius: 0.017,
+      glowRadius: 0.1,
+      segments: 64,
+      isFrameTarget,
+    })
+    arc.k.main.tube = 3.4
+    arc.k.main.glow = 0.5
+    ring.add(arc.root)
+    ringArcs.push(arc)
   }
+  ring.position.y = RING_Y
+
+  // ---------------------------------------------------------------- halo
+  const halo = new THREE.Group()
+  halo.name = 'halo'
+  root.add(halo)
+  const tileFront = faceGeometry(TILE_W, TILE_H, TILE_T / 2, HALO_R, false, mobile ? 18 : 28)
+  const tileBack = faceGeometry(TILE_W, TILE_H, TILE_T / 2, HALO_R, true, mobile ? 18 : 28)
+  const tileRim = rimGeometry(TILE_W, TILE_H, 0.035, TILE_T / 2, HALO_R, mobile ? 110 : 170, mobile ? 6 : 8)
+  const tileRect = new THREE.Vector4(TILE_M / TILE_W, TILE_M / TILE_H, 1 - TILE_M / TILE_W, 1 - TILE_M / TILE_H)
+  const tileSize = new THREE.Vector2(TILE_W, TILE_H)
+  const noLabel = new THREE.Vector4(-1, -1, -0.5, -0.5)
+  const tileRimMat = rim.clone()
+  tileRimMat.transparent = true
+  tileRimMat.opacity = 0
+  const tiles: Tile[] = rest.map((_, j) => {
+    const th = j * HALO_STEP
+    const station = new THREE.Group()
+    station.position.set(HALO_R * Math.sin(th), HALO_Y, HALO_R * Math.cos(th))
+    station.rotation.y = th
+    halo.add(station)
+    const u: FaceUniforms = {
+      uShot: { value: placeholderTexture('#15171c') },
+      uLabel: { value: blankLabel },
+      uFrost: { value: 1 },
+      uLit: { value: 0.5 },
+      uRect: { value: tileRect },
+      uLabelRect: { value: noLabel },
+      uSize: { value: tileSize },
+      uCorner: { value: 0.035 },
+      uSpill: { value: new THREE.Color() },
+      uRingY: { value: HALO_RING_Y },
+      uFade: { value: 0 },
+      uMilk: { value: 0.8 },
+      uSpecIn: { value: 0.14 },
+      uEtch: { value: 1 },
+    }
+    const mat = faceMaterial(u)
+    faces.push(mat)
+    const front = new THREE.Mesh(tileFront, mat)
+    const back = new THREE.Mesh(tileBack, mat)
+    back.position.z = -0.001
+    const rimMesh = new THREE.Mesh(tileRim, tileRimMat)
+    station.add(rimMesh, front, back)
+    return { station, u, color: NEON_C[j % 3].clone() }
+  })
+  const haloArcs: NeonPath[] = []
+  const hHalf = HALO_STEP / 2 - 2.6 * DEG
+  for (let j = 0; j < HALO_N; j++) {
+    const a = j * HALO_STEP
+    const arc = neonPath({
+      points: arcPoints(HALO_R - 0.02, HALO_RING_Y, a - hHalf, a + hHalf, 16),
+      color: NEON[j % 3],
+      radius: 0.016,
+      glowRadius: 0.09,
+      segments: 56,
+      isFrameTarget,
+    })
+    arc.k.main.tube = 3.4
+    arc.k.main.glow = 0.5
+    halo.add(arc.root)
+    haloArcs.push(arc)
+  }
+
+  // ---------------------------------------------------------------- floor
+  const floor: FloorUniforms = {
+    uC0: { value: NEON_C[0].clone() },
+    uC1: { value: NEON_C[1].clone() },
+    uC2: { value: NEON_C[2].clone() },
+    uPoolC: { value: new THREE.Color() },
+    uRingR: { value: RING_R },
+    uRingRot: { value: 0 },
+    uRingK: { value: 1 },
+    uArcs: { value: 6 },
+    uPoolK: { value: 0 },
+    uPoolZ: { value: R + 0.45 },
+    uInner: { value: 0.05 },
+  }
+  const floorMat = new THREE.ShaderMaterial({
+    uniforms: floor as unknown as Record<string, THREE.IUniform>,
+    transparent: false,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    toneMapped: false,
+    vertexShader: /* glsl */ `
+      varying vec3 vW;
+      void main() {
+        vec4 w = modelMatrix * vec4(position, 1.0);
+        vW = w.xyz;
+        gl_Position = projectionMatrix * viewMatrix * w;
+      }
+    `,
+    fragmentShader: FLOOR_FRAG,
+  })
+  const floorMesh = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), floorMat)
+  floorMesh.rotation.x = -Math.PI / 2
+  floorMesh.position.y = 0.001
+  floorMesh.renderOrder = -7
+  root.add(floorMesh)
+
+  return { root, drum, leaves, ring, ringArcs, halo, haloArcs, tiles, floor, rim, tileRim: tileRimMat, faces }
 }

@@ -449,7 +449,7 @@ export default function create(): Chapter {
       // the reflection: the room's view only (the glass never sees it), dimmer
       for (let i = 0; i < s.neonRefl.parts.length; i++) {
         for (const n of s.neonRefl.parts[i]) {
-          n.on.value = rNeon[i] * (1 - 0.5 * outW) * (portrait ? 0.4 : 1)
+          n.on.value = rNeon[i] * (1 - 0.5 * outW) * (portrait ? 0.12 : 1)
           n.k.main.tube = 0.9
           n.k.main.glow = 0.3
           n.k.trans.tube = 0

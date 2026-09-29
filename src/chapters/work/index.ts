@@ -7,50 +7,52 @@ import { SECTIONS, WORK, workImage, type WorkItem } from '../../content'
 import { G } from '../../kit/glass'
 import { loadScreenshot, whenRevealed } from '../../kit/images'
 import {
-  BAR_W,
-  PANEL_Y,
-  PH,
-  PW,
-  SH,
-  SHOT_Y,
-  STACK_H,
-  STACK_THETA,
-  STACK_Y,
-  arcNormal,
+  HALO_N,
+  HALO_R,
+  HALO_RING_Y,
+  HALO_STEP,
+  HALO_Y,
+  LEAF_H,
+  LEAF_W,
+  LEAF_Y0,
+  NEON_C,
+  R,
+  RING_R,
+  RING_Y,
+  STEP,
+  TILE_H,
   averageColor,
-  buildGallery,
+  buildCarousel,
   isPreview,
-  onArc,
-  studioEnv,
-  theta,
-  type Gallery,
+  type CarouselSet,
 } from './scene'
 import './work.css'
 
 /*
- * COLLECTION (Selected work) — a black gallery of frosted glass.
+ * CAROUSEL (Selected work) — a revolving glass showroom.
  *
- * Six tall sandblasted panels stand in a slow arc, each backlit, each with
- * its project's screenshot hung just behind it: through the frost every site
- * is a soft glow of its own colours. As the camera arrives at a panel it
- * THAWS — the faces' roughness runs 0.5 → 0.03 and the site comes sharp
- * through clear glass (a crisp copy fades in over the last of the thaw so it
- * stays legible at any resolution) — and a light sweep glides down its
- * polished edges. As the camera moves on, it frosts over again. A frosted
- * card names the thawed panel. Past the last panel, a directory of nine slim
- * frosted bars with the names etched; the selected (or hovered) row's bar
- * thaws to show its site glowing behind the board.
+ * Six tall leaves of curved glass stand in a circle on the black mirror
+ * floor like the drum of a revolving door, round a ring of neon arcs (cyan,
+ * violet, magenta). Scrolling turns the drum: the leaf that comes round to
+ * face you CLEARS (its site razor sharp and backlit, a thin neon line lit
+ * along its foot) while the leaves turned away stay frosted, their sites
+ * diffused into soft colour and their feet glowing with the neon behind
+ * them. A frosted card names the leaf in front. After the sixth, the ring
+ * lifts through the drum and opens above it into a HALO: nine smaller tiles
+ * hang on it and turn, one step per row of "Nine more, all live."
  *
- *   0.000–0.140  intro: "Built to be heard." — the arc at a 3/4 angle
- *                (headline settled from ~0.05; nav lands at 0.12)
- *   0.140–0.820  six items (~0.113 each): glide 0–30%, thaw 10–42%,
- *                light sweep 30–85%, card 20–99%
- *   0.820–0.850  glide to the directory (a breath of condensation)
- *   0.850–0.955  "Nine more, all live." list; rows thaw in turn
+ *   0.000–0.100  intro: "Built to be heard." — a high three-quarter view, the
+ *                drum turning (headline settled from ~0.035)
+ *   0.074–0.118  the camera comes down to eye level; leaf 01 arrives and clears
+ *   0.100–0.760  six items (0.11 each): turn 0–30% of an item, card 26–97%;
+ *                nav lands at 0.12 on leaf 01 with its card settled
+ *   0.758–0.800  the ring lifts and opens into the halo; the camera cranes up
+ *   0.800–0.955  "Nine more, all live." — the halo steps round with the rows
  *   0.955–1.000  out: pull back, everything frosts
  *
- * Everything derives from `local`; frame.time only drives the backlight's
- * slow breathing and the idle sway.
+ * Everything derives from `local`; frame.time only drives the neon's faint
+ * breathing and a slow sway of the halo (both off with reduced motion or
+ * Motion off).
  */
 
 const FEATURED = WORK.filter(w => w.featured)
@@ -58,38 +60,39 @@ const REST = WORK.filter(w => !w.featured)
 const NF = FEATURED.length
 const NR = REST.length
 
-const F0 = 0.14
-const F1 = 0.82
+/* ---- timeline */
+const INTRO_OUT = 0.097
+const DESC_A = 0.072
+const DESC_B = 0.118
+const F0 = 0.1
+const F1 = 0.76
 const SPAN = (F1 - F0) / NF
-const LIST_IN = 0.85
-const ROW0 = 0.858
-const ROW1 = 0.944
-const LIST_OUT = 0.955
-
-/* inside one item (phase p 0..1) */
 const TRAVEL = 0.3
-const THAW_A = 0.1
-const THAW_B = 0.42
-const SWEEP_A = 0.3
-const SWEEP_B = 0.85
+const RISE_A = 0.756
+const RISE_B = 0.8
+const ROW0 = 0.806
+const ROW1 = 0.946
+const LIST_OUT = 0.955
+const BAND = (ROW1 - ROW0) / NR
 
 const itemStart = (k: number) => F0 + SPAN * k
-/* the glide from the intro to the first panel starts under the fading headline */
-const T0A = F0 - 0.012
-const T0B = F0 + 0.28 * SPAN
-const rowAt = (j: number) => ROW0 + ((j + 0.5) * (ROW1 - ROW0)) / NR
+const rowAt = (j: number) => ROW0 + (j + 0.5) * BAND
 
-/** intro: how lit each panel is (the far end of the row fades into the dark behind the headline) */
-const INTRO_LIT = [1, 1, 0.85, 0.5, 0.28, 0.18]
+/* ---- drum */
+/** how far the drum drifts through one item's hold (radians, + → -) */
+const DRIFT = 0.07
+/** the drum's angle during the intro (leaf 01 still round to the right) */
+const A_INTRO0 = 1.5
+const A_INTRO1 = 0.5
+/** clarity: fully clear within ±CLEAR_A of the front, frosted beyond FROST_A */
+const CLEAR_A = 0.06
+const FROST_A = 0.4
+/** tiles are narrower: their window is tighter */
+const T_CLEAR_A = 0.045
+const T_FROST_A = 0.3
 
-/** roughness: sandblasted ↔ thawed */
-const FROST = 0.42
-const CLEAR = 0.025
-
-/* camera */
-const CAM_YAW = 0.1
-const CAM_PITCH = 0.035
-const FOV = 32
+/* ---- camera */
+const FOV = 30
 const DEG = Math.PI / 180
 const UP = new THREE.Vector3(0, 1, 0)
 
@@ -109,15 +112,44 @@ const hostOf = (url: string) => {
     return url
   }
 }
+/** wrap an angle to -π..π */
+const wrap = (a: number) => Math.atan2(Math.sin(a), Math.cos(a))
 
-/** 0..1: how thawed featured panel k is at local l */
-function thawOf(k: number, l: number) {
-  const s = itemStart(k)
-  const inn = smoothstep(s + THAW_A * SPAN, s + THAW_B * SPAN, l)
-  const next = k < NF - 1 ? itemStart(k + 1) : F1
-  const out = smoothstep(next - 0.02 * SPAN, next + 0.22 * SPAN, l)
-  return inn * (1 - out)
+/** The drum's turn at local l (leaf k faces you at -k·STEP). */
+function drumAngle(l: number): number {
+  const hold = (k: number, q: number) => -k * STEP + DRIFT * (0.5 - q)
+  if (l < DESC_A) return lerp(A_INTRO0, A_INTRO1, ease.outQuad(clamp(l / DESC_A)))
+  if (l < DESC_B) return lerp(A_INTRO1, hold(0, 0), ease.inOutCubic((l - DESC_A) / (DESC_B - DESC_A)))
+  if (l < F1) {
+    const k = Math.min(NF - 1, Math.floor((l - F0) / SPAN))
+    const p = clamp((l - itemStart(k)) / SPAN)
+    if (k === 0) return hold(0, clamp((l - DESC_B) / (itemStart(1) - DESC_B)))
+    if (p < TRAVEL) return lerp(hold(k - 1, 1), hold(k, 0), ease.inOutCubic(p / TRAVEL))
+    return hold(k, (p - TRAVEL) / (1 - TRAVEL))
+  }
+  // past the sixth the drum keeps turning, slowly, under the halo
+  return hold(NF - 1, 1) - (l - F1) * 1.6
 }
+
+/**
+ * The halo's turn: tile j faces you through row j's band, and it steps to
+ * the next between bands (a carousel indexing). Before the rows it eases in
+ * from further round as it rises; after them it drifts on.
+ */
+function haloAngle(l: number): number {
+  const u = (l - ROW0) / BAND - 0.5
+  let s: number
+  if (u < 0) s = -2.2 * smoothstep(0, 2.2, -u)
+  else if (u > NR - 1) s = NR - 1 + (u - (NR - 1)) * 0.25
+  else {
+    const f = Math.floor(u)
+    s = f + ease.inOutCubic(smoothstep(0.28, 0.72, u - f))
+  }
+  return -s * HALO_STEP
+}
+
+/** How far the ring has lifted into the halo (0 = on the floor, 1 = the halo). */
+const riseOf = (l: number) => smoothstep(RISE_A, RISE_B, l)
 
 type PhaseKind = 'intro' | 'item' | 'list' | 'out'
 interface Phase {
@@ -126,7 +158,7 @@ interface Phase {
   p: number
 }
 function phaseOf(l: number): Phase {
-  if (l < F0) return { kind: 'intro', k: -1, p: clamp(l / F0) }
+  if (l < F0) return { kind: 'intro', k: 0, p: clamp(l / F0) }
   if (l < F1) {
     const k = Math.min(NF - 1, Math.floor((l - F0) / SPAN))
     return { kind: 'item', k, p: clamp((l - itemStart(k)) / SPAN) }
@@ -148,7 +180,7 @@ interface Shot {
   /** subject centre in NDC */
   cx: number
   cy: number
-  /** subject half-height in halo units (screen half-height = 1) */
+  /** subject half-height in screen units (screen half-height = 1) */
   hh: number
 }
 const shot = (): Shot => ({ pos: new THREE.Vector3(), tgt: new THREE.Vector3(), fov: FOV, cx: 0, cy: 0, hh: 0.5 })
@@ -164,6 +196,7 @@ interface Layout {
   listR: number
   listTop: number
   introB: number
+  /** right edge of the headline's text (not its box) */
   introR: number
 }
 
@@ -176,7 +209,7 @@ const _d = new THREE.Vector3()
 const _r = new THREE.Vector3()
 const _u = new THREE.Vector3()
 const _c = new THREE.Vector3()
-const _n = new THREE.Vector3()
+const _col = new THREE.Color()
 
 /**
  * Aim a camera (yaw, pitch) so a w×h subject centred at C fills the screen
@@ -204,13 +237,23 @@ function frameTo(out: Shot, C: THREE.Vector3, w: number, h: number, yaw: number,
   return out
 }
 
+/** The neon colour behind a point at `angle` on a ring of n arcs turned by `rot` (arc k on k·2π/n, colours in thirds). */
+function arcColor(angle: number, rot: number, n: number, out: THREE.Color) {
+  const step = (Math.PI * 2) / n
+  const t = (angle - rot) / step
+  const k = Math.round(t)
+  const idx = (((k % 3) + 3) % 3) as 0 | 1 | 2
+  const gap = 1 - smoothstep(0.34, 0.5, Math.abs(t - k))
+  return out.copy(NEON_C[idx]).multiplyScalar(0.35 + 0.65 * gap)
+}
+
 class Work implements Chapter {
   id = 'work'
   group = new THREE.Group()
-  anchors = [...FEATURED.map((_, k) => itemStart(k) + SPAN * 0.56), ...REST.map((_, j) => rowAt(j))]
+  anchors = [...FEATURED.map((_, k) => (k === 0 ? 0.125 : itemStart(k) + SPAN * 0.62)), ...REST.map((_, j) => rowAt(j))]
 
   private ctx!: ChapterContext
-  private gal!: Gallery
+  private set!: CarouselSet
   private mobile = false
   private reduced = false
 
@@ -226,7 +269,6 @@ class Work implements Chapter {
   /** the rows' scroll box (landscape, when nine rows can't fit above 'Say hello') */
   private rowsEl!: HTMLElement
   private rows: HTMLAnchorElement[] = []
-  private hoverRow = -1
   private curRow = -2
 
   // layout / camera
@@ -236,10 +278,6 @@ class Work implements Chapter {
   private sa = shot()
   private sb = shot()
   private tmp = new THREE.Vector3()
-  /** per directory bar: 0 = frosted, 1 = thawed (damped) */
-  private sel: number[] = REST.map(() => 0)
-  /** per featured panel: how thawed (reused every frame) */
-  private thaw: number[] = FEATURED.map(() => 0)
 
   async init(ctx: ChapterContext) {
     this.ctx = ctx
@@ -247,18 +285,8 @@ class Work implements Chapter {
     this.reduced = ctx.reducedMotion
     this.buildDom(ctx.stage)
     await nextFrame()
-    this.gal = buildGallery(FEATURED, REST, this.mobile, FROST)
-    this.group.add(this.gal.root)
-    // the chapter's own studio (clean strips; envMapIntensity honoured per
-    // material; rotation follows world.params.envTurn each frame)
-    let env: THREE.Texture | null = null
-    try {
-      env = await studioEnv(ctx.renderer, nextFrame)
-    } catch (err) {
-      console.warn('[work] studio env failed; using the world env', err)
-      env = ctx.world.envMap
-    }
-    if (env) for (const m of this.gal.glass) m.envMap = env
+    this.set = buildCarousel(FEATURED, REST, this.mobile, rt => ctx.post.isFrameTarget(rt))
+    this.group.add(this.set.root)
     await nextFrame()
     window.addEventListener('resize', () => (this.layDirty = true))
     if (typeof ResizeObserver !== 'undefined') {
@@ -270,7 +298,7 @@ class Work implements Chapter {
     }
     document.fonts?.ready.then(() => (this.layDirty = true))
 
-    // screenshots: the first panel now, the rest once the site is revealed
+    // screenshots: leaf 01 now, the rest once the site is revealed
     const upload = (tex: THREE.Texture) => {
       tex.anisotropy = 8
       try {
@@ -279,27 +307,26 @@ class Work implements Chapter {
         /* uploads on first use instead */
       }
     }
+    const wide = this.mobile ? 800 : 1280
     const load = (k: number) =>
-      loadScreenshot(workImage(FEATURED[k].id), { width: 960 })
+      loadScreenshot(workImage(FEATURED[k].id), { width: wide })
         .then(tex => {
           upload(tex)
-          const p = this.gal.panels[k]
-          const old = p.shotMat.map
-          p.shotMat.map = tex
-          p.crispMat.map = tex
-          averageColor(tex, p.tint)
-          old?.dispose()
+          const leaf = this.set.leaves[k]
+          const old = leaf.u.uShot.value
+          leaf.u.uShot.value = tex
+          averageColor(tex, leaf.tint)
+          old.dispose()
         })
         .catch(err => console.warn(`[work] missing screenshot for ${FEATURED[k].id}`, err))
-    const loadRest = (j: number) =>
-      loadScreenshot(workImage(REST[j].id), { width: 960 })
+    const loadTile = (j: number) =>
+      loadScreenshot(workImage(REST[j].id), { width: this.mobile ? 480 : 720 })
         .then(tex => {
           upload(tex)
-          const b = this.gal.bars[j]
-          const old = b.bandMat.map
-          b.bandMat.map = tex
-          b.crispMat.map = tex
-          old?.dispose()
+          const tile = this.set.tiles[j]
+          const old = tile.u.uShot.value
+          tile.u.uShot.value = tex
+          old.dispose()
         })
         .catch(err => console.warn(`[work] missing screenshot for ${REST[j].id}`, err))
     load(0)
@@ -309,7 +336,7 @@ class Work implements Chapter {
         await nextFrame()
       }
       for (let j = 0; j < NR; j++) {
-        await loadRest(j)
+        await loadTile(j)
         await nextFrame()
       }
     })
@@ -332,7 +359,7 @@ class Work implements Chapter {
     const count = el('p', 'wk-count', undefined, this.intro)
     count.innerHTML = [`${WORK.length} sites`, `${NF} featured`, `${NR} more`].map(s => `<span>${esc(s)}</span>`).join('<i aria-hidden="true"></i>')
 
-    // one frosted card per panel, docked left (bottom on portrait)
+    // one frosted card per leaf, docked left (bottom on portrait)
     this.dock = el('div', 'wk-dock', undefined, stage)
     FEATURED.forEach((w, k) => this.cards.push(this.buildCard(this.dock, w, k)))
 
@@ -361,14 +388,6 @@ class Work implements Chapter {
       a.innerHTML = `<span class="wk-no">${pad(NF + j + 1)}</span><span class="wk-rname">${esc(w.name)}${
         pre ? ' <small class="wk-pre">Preview</small>' : ''
       }</span><span class="wk-rind">${esc(w.industry)}</span><span class="wk-arrow" aria-hidden="true">↗</span>`
-      const on = () => (this.hoverRow = j)
-      const off = () => {
-        if (this.hoverRow === j) this.hoverRow = -1
-      }
-      a.addEventListener('pointerenter', on)
-      a.addEventListener('pointerleave', off)
-      a.addEventListener('focus', on)
-      a.addEventListener('blur', off)
       this.rows.push(a)
     })
     const cta = el('div', 'wk-cta', undefined, this.list)
@@ -377,11 +396,24 @@ class Work implements Chapter {
     hello.addEventListener('click', () => window.__hark?.land('contact'))
   }
 
+  /** A tiny top-down map of the drum: the leaf in front sits at the bottom. */
+  private dial(k: number) {
+    const r = 6.2
+    const dots = FEATURED.map((_, i) => {
+      const a = (i - k) * STEP
+      const x = 9 + r * Math.sin(a)
+      const y = 9 + r * Math.cos(a)
+      return i === k ? `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="2.3" class="on"/>` : `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="1.5"/>`
+    }).join('')
+    return `<svg class="wk-dial" viewBox="0 0 18 18" width="18" height="18" aria-hidden="true"><circle cx="9" cy="9" r="${r}" class="ring"/>${dots}</svg>`
+  }
+
   private buildCard(parent: HTMLElement, w: WorkItem, k: number): CardEl {
     const root = el('article', 'wk-card hud-panel hud-panel--strong', undefined, parent)
     const pre = isPreview(w.url)
     const meta = el('div', 'wk-meta', undefined, root)
-    el('span', 'wk-num', `${pad(k + 1)} / ${pad(NF)}`, meta)
+    const num = el('span', 'wk-num', undefined, meta)
+    num.innerHTML = `${this.dial(k)}<span>${pad(k + 1)} / ${pad(NF)}</span>`
     el('span', 'hud-label wk-ind', w.industry, meta)
     if (pre) el('span', 'wk-badge', 'Preview', meta)
     const name = rise(el('h3', 'hud-h2 wk-name', undefined, root), emLast(w.name))
@@ -424,73 +456,86 @@ class Work implements Chapter {
       listR: list.offsetWidth > 0 ? ld.offsetLeft + list.offsetLeft + list.offsetWidth : W * 0.4,
       listTop: list.offsetHeight > 0 ? ld.offsetTop + list.offsetTop : H * 0.45,
       introB: this.intro.offsetHeight > 0 ? this.intro.offsetTop + this.intro.offsetHeight : H * 0.35,
-      introR: this.intro.offsetWidth > 0 ? this.intro.offsetLeft + this.intro.offsetWidth : W * 0.45,
+      introR: this.introTextRight(W),
     }
     this.rowsEdges()
     return this.lay
+  }
+
+  /** The headline's widest line (its words, not its box): the drum stands clear of it. */
+  private introTextRight(W: number) {
+    let r = 0
+    this.intro.querySelectorAll<HTMLElement>('.wk-title .rise-w, .wk-count').forEach(n => {
+      const b = n.getBoundingClientRect()
+      if (b.width > 0 && n.classList.contains('rise-w')) r = Math.max(r, b.right)
+      else if (b.width > 0) r = Math.max(r, b.left + Math.min(b.width, 320))
+    })
+    return r > 0 ? r : W * 0.45
   }
 
   private region(kind: 'item' | 'list' | 'intro', k: number): Region {
     const L = this.lay!
     const s = L.safe
     if (kind === 'intro') {
-      if (L.portrait) return { x0: 0, x1: L.W, y0: Math.min(L.introB + 12, L.H * 0.6), y1: s.y1 + L.H * 0.03 }
-      return { x0: L.W * 0.16, x1: L.W, y0: s.y0 + L.H * 0.02, y1: s.y1 + L.H * 0.06 }
+      if (L.portrait) return { x0: 0, x1: L.W, y0: Math.min(L.introB + 16, L.H * 0.6), y1: s.y1 + L.H * 0.02 }
+      // beside the headline when it is narrow; under it when it runs long
+      if (L.introR < L.W * 0.56) return { x0: Math.max(L.introR + L.W * 0.015, L.W * 0.36), x1: L.W + L.W * 0.02, y0: s.y0 + L.H * 0.02, y1: s.y1 + L.H * 0.05 }
+      return { x0: L.W * 0.3, x1: L.W + L.W * 0.02, y0: L.introB + 8, y1: s.y1 + L.H * 0.05 }
     }
     if (L.portrait) {
       const top = kind === 'item' ? L.cardTop[k] : L.listTop
-      return { x0: 6, x1: L.W - 6, y0: s.y0 - 6, y1: Math.max(s.y0 + 90, top - 12) }
+      return { x0: 4, x1: L.W - 4, y0: s.y0 - 10, y1: Math.max(s.y0 + 90, top - 10) }
     }
     const right = kind === 'item' ? L.dockR : L.listR
-    return { x0: right + L.W * 0.03, x1: s.x1 + L.W * 0.01, y0: s.y0 - L.H * 0.03, y1: s.y1 + L.H * 0.03 }
+    return { x0: right + L.W * 0.035, x1: s.x1 + L.W * 0.01, y0: s.y0 - L.H * 0.03, y1: s.y1 + L.H * 0.035 }
   }
 
   // ------------------------------------------------------------------ shots
 
-  /** the screenshot centre of panel k, a touch toward the viewer */
+  /** leaf k in front of the drum: its print high, its neon foot and the ring beneath in frame */
   private itemShot(k: number, drift: number, out: Shot) {
     const L = this.lay!
-    const th = theta(k)
-    arcNormal(th, _n)
-    onArc(th, undefined, _c).addScaledVector(_n, 0.1)
-    _c.y = PANEL_Y + SHOT_Y - 0.06
-    const yaw = -th + CAM_YAW - drift * 0.05
     const port = L.portrait
-    frameTo(out, _c, PW + (port ? 0.1 : 0.34), SH + (port ? 0.46 : 0.66), yaw, CAM_PITCH, FOV, this.region('item', k), L.W, L.H)
-    out.pos.lerp(out.tgt, drift * 0.04)
-    return out
-  }
-
-  private introShot(u: number, out: Shot) {
-    const L = this.lay!
-    const port = L.portrait
-    const at = port ? 1.0 : 1.1
-    onArc(theta(at), undefined, _c)
-    _c.y = PANEL_Y - 0.1
-    const yaw = -theta(at) + (port ? lerp(0.6, 0.56, u) : lerp(0.78, 0.72, u))
-    frameTo(out, _c, port ? 3.3 : 6.2, PH + (port ? 0.5 : 1.0), yaw, lerp(0.07, 0.06, u), FOV, this.region('intro', 0), L.W, L.H)
-    return out
-  }
-
-  /** the directory board; `row` (0..1) eases the aim down the board as the rows advance */
-  private stackShot(drift: number, row: number, out: Shot) {
-    const L = this.lay!
-    const port = L.portrait
-    arcNormal(STACK_THETA, _n)
-    onArc(STACK_THETA, undefined, _c).addScaledVector(_n, 0.06)
-    _c.y = STACK_Y + (port ? 0.1 - 0.2 * row : 0.04 - 0.08 * row)
-    const yaw = -STACK_THETA + 0.12 - drift * 0.05
-    frameTo(out, _c, BAR_W + (port ? 0.16 : 0.5), STACK_H + (port ? 0.28 : 0.5), yaw, 0.06, FOV, this.region('list', 0), L.W, L.H)
+    // the subject: the leaf from just under its foot to its top, a touch of drum either side
+    const y0 = LEAF_Y0 - (port ? 0.16 : 0.22)
+    const y1 = LEAF_Y0 + LEAF_H + 0.06
+    _c.set(0, (y0 + y1) / 2, R + 0.05)
+    const yaw = (port ? 0.05 : 0.09) - drift * 0.03
+    frameTo(out, _c, LEAF_W + (port ? 0.18 : 0.5), y1 - y0, yaw, port ? 0.07 : 0.06, FOV, this.region('item', k), L.W, L.H)
+    // a slow push in through the hold
     out.pos.lerp(out.tgt, drift * 0.035)
     return out
   }
 
+  /** high three-quarter view of the whole drum */
+  private introShot(u: number, out: Shot) {
+    const L = this.lay!
+    const port = L.portrait
+    _c.set(0, 1.05, 0.2)
+    const yaw = port ? lerp(-0.22, -0.18, u) : lerp(-0.34, -0.28, u)
+    const pitch = port ? lerp(0.36, 0.33, u) : lerp(0.4, 0.36, u)
+    frameTo(out, _c, 2 * R + (port ? 1.7 : 1.1), LEAF_H + (port ? 1.6 : 1.9), yaw, pitch, FOV, this.region('intro', 0), L.W, L.H)
+    return out
+  }
+
+  /** the halo from above: the front tile large, the ring round it, the drum beneath */
+  private listShot(drift: number, out: Shot) {
+    const L = this.lay!
+    const port = L.portrait
+    _c.set(0, HALO_Y - (port ? 0.3 : 0.45), HALO_R * (port ? 0.62 : 0.34))
+    const yaw = -0.06 + drift * 0.12
+    const pitch = lerp(0.3, 0.33, drift)
+    frameTo(out, _c, 2 * HALO_R * (port ? 0.64 : 0.8), TILE_H + (port ? 1.5 : 2.2), yaw, pitch, FOV, this.region('list', 0), L.W, L.H)
+    out.pos.lerp(out.tgt, drift * 0.03)
+    return out
+  }
+
   private outShot(out: Shot) {
-    this.stackShot(1, 1, out)
+    this.listShot(1, out)
     this.tmp.subVectors(out.pos, out.tgt)
-    out.pos.copy(out.tgt).addScaledVector(this.tmp, 1.35)
-    out.pos.y += 0.3
-    out.hh *= 0.75
+    out.pos.copy(out.tgt).addScaledVector(this.tmp, 1.3)
+    out.pos.y += 0.6
+    out.hh *= 0.77
     return out
   }
 
@@ -502,53 +547,28 @@ class Work implements Chapter {
     out.cx = lerp(a.cx, b.cx, e)
     out.cy = lerp(a.cy, b.cy, e)
     out.hh = lerp(a.hh, b.hh, e)
+    // a dolly out and back in as the drum turns
     const bump = Math.sin(Math.PI * clamp(t)) * pull
     this.tmp.subVectors(out.pos, out.tgt).normalize()
     out.pos.addScaledVector(this.tmp, bump)
-    out.pos.y += bump * 0.12
+    out.pos.y += bump * 0.1
     return out
   }
 
   private shotAt(l: number, out: Shot) {
-    if (l < T0A) return this.introShot(l / T0A, out)
-    if (l < T0B) return this.travel(this.introShot(1, this.sa), this.itemShot(0, 0, this.sb), (l - T0A) / (T0B - T0A), 0.2, out)
+    if (l < DESC_A) return this.introShot(l / DESC_A, out)
+    if (l < DESC_B) return this.travel(this.introShot(1, this.sa), this.itemShot(0, 0, this.sb), (l - DESC_A) / (DESC_B - DESC_A), 0, out)
     const ph = phaseOf(l)
     if (ph.kind === 'item') {
       const k = ph.k
-      if (k > 0 && ph.p < TRAVEL) return this.travel(this.itemShot(k - 1, 1, this.sa), this.itemShot(k, 0, this.sb), ph.p / TRAVEL, 0.6, out)
-      const tr = k === 0 ? (T0B - F0) / SPAN : TRAVEL
-      return this.itemShot(k, clamp((ph.p - tr) / (1 - tr)), out)
+      if (k > 0 && ph.p < TRAVEL) return this.travel(this.itemShot(k - 1, 1, this.sa), this.itemShot(k, 0, this.sb), ph.p / TRAVEL, 0.55, out)
+      const h0 = k === 0 ? (DESC_B - F0) / SPAN : TRAVEL
+      return this.itemShot(k, clamp((ph.p - h0) / (1 - h0)), out)
     }
-    const row = smoothstep(ROW0, ROW1, l)
-    if (l < LIST_IN) return this.travel(this.itemShot(NF - 1, 1, this.sa), this.stackShot(0, 0, this.sb), (l - F1) / (LIST_IN - F1), 0.8, out)
-    if (l < LIST_OUT) return this.stackShot((l - LIST_IN) / (LIST_OUT - LIST_IN), row, out)
-    return this.travel(this.stackShot(1, 1, this.sa), this.outShot(this.sb), (l - LIST_OUT) / (1 - LIST_OUT), 0, out)
-  }
-
-  // ------------------------------------------------------------------ light
-
-  /**
-   * The studio's rotation (world.params.envTurn): a slow pass in the intro,
-   * then one sweep down each panel's polished edges as it thaws (alternating
-   * direction so the value stays continuous), then a drift for the list.
-   */
-  private turnAt(l: number) {
-    const amp = this.reduced ? 0.16 : 0.36
-    const center = (k: number) => TURN_C + theta(k)
-    const startOf = (k: number) => center(k) - (k % 2 === 0 ? amp : -amp)
-    const endOf = (k: number) => center(k) + (k % 2 === 0 ? amp : -amp)
-    const I0 = startOf(0) - 0.9
-    const I1 = startOf(0)
-    if (l < F0) return lerp(I0, I1, smoothstep(0, F0, l))
-    if (l < F1) {
-      const k = Math.min(NF - 1, Math.floor((l - F0) / SPAN))
-      const p = clamp((l - itemStart(k)) / SPAN)
-      const prev = k === 0 ? I1 : endOf(k - 1)
-      if (p < SWEEP_A) return lerp(prev, startOf(k), smoothstep(0, SWEEP_A, p))
-      return lerp(startOf(k), endOf(k), ease.inOutCubic(clamp((p - SWEEP_A) / (SWEEP_B - SWEEP_A))))
-    }
-    const e5 = endOf(NF - 1)
-    return lerp(e5, e5 - 0.6, smoothstep(F1, 1, l))
+    const drift = smoothstep(ROW0, ROW1, l)
+    if (l < RISE_B) return this.travel(this.itemShot(NF - 1, 1, this.sa), this.listShot(0, this.sb), (l - F1) / (RISE_B - F1), 0.4, out)
+    if (l < LIST_OUT) return this.listShot(drift, out)
+    return this.travel(this.listShot(1, this.sa), this.outShot(this.sb), (l - LIST_OUT) / (1 - LIST_OUT), 0, out)
   }
 
   // ------------------------------------------------------------------ frame
@@ -556,145 +576,169 @@ class Work implements Chapter {
   update(local: number, frame: Frame, ctx: ChapterContext) {
     const l = clamp(local)
     const time = frame.time
-    // damping runs on frame.dt: frame.time holds still with Motion off, and a
-    // row's thaw must still settle there
-    const dt = Math.min(0.1, Math.max(0, frame.dt))
     const reduced = this.reduced || frame.reducedMotion
     const still = reduced || !!frame.still
     this.ensureLayout(frame)
     const ph = phaseOf(l)
-    const gal = this.gal
-    if (!gal) return
+    const set = this.set
+    if (!set) return
 
     // ---- camera shot (camera() copies it)
     this.shotAt(l, this.cur)
     const s = this.cur
 
-    // ---- thaw state
-    let thawMax = 0
-    const thaw = this.thaw
-    for (let k = 0; k < NF; k++) {
-      const t = thawOf(k, l)
-      thaw[k] = t
-      thawMax = Math.max(thawMax, t)
-    }
-    const inList = l > F1 + 0.35 * SPAN
+    // ---- the drum
+    const A = drumAngle(l)
+    set.drum.rotation.y = A
+    const rise = riseOf(l)
+    // eye level: leaves only clear once the camera is down with them, and not under the halo
+    const eye = smoothstep(DESC_A + 0.012, DESC_B - 0.004, l) * (1 - smoothstep(F1 - 0.004, RISE_A + 0.014, l))
+    const hum = still ? 1 : 1 + Math.sin(time * 1.3) * 0.025 + Math.sin(time * 3.1) * 0.012
+    // the ring: on the floor inside the drum, then up through it and open into the halo
+    const up = smoothstep(0, 0.62, rise)
+    const open = smoothstep(0.5, 1, rise)
+    const ringY = lerp(RING_Y, HALO_RING_Y, up * 0.93 + open * 0.07)
+    const ringR = lerp(RING_R, HALO_R, ease.inOutCubic(open))
+    set.ring.position.y = ringY
+    const rs = ringR / RING_R
+    set.ring.scale.set(rs, 1, rs)
+    // the six floor arcs hand over to the halo's nine as it opens
+    // (once the ring has reached the halo's radius, so the re-segmenting happens in place)
+    const handover = smoothstep(0.86, 0.99, rise)
+    for (const a of set.ringArcs) a.on.value = (1 - handover) * hum
+    set.ring.visible = handover < 0.998
 
-    // ---- world: black studio, the backlight halo right behind the subject
+    const H = haloAngle(l)
+    const sway = still ? 0 : Math.sin(time * 0.35) * 0.012
+    set.halo.rotation.y = H + sway
+
+    let frontK = -1
+    let frontC = 0
+    for (let k = 0; k < NF; k++) {
+      const leaf = set.leaves[k]
+      const phi = wrap(k * STEP + A)
+      const face = 1 - smoothstep(CLEAR_A, FROST_A, Math.abs(phi))
+      const c = face * eye
+      if (c > frontC) {
+        frontC = c
+        frontK = k
+      }
+      const e = c * c * (3 - 2 * c)
+      const u = leaf.u
+      u.uFrost.value = 1 - e
+      // the drum dims under the halo so the nine lead
+      const dim = lerp(1, 0.42, smoothstep(F1, RISE_B, l))
+      u.uLit.value = lerp(0.5, 0.95, e) * dim
+      u.uEtch.value = dim * dim
+      u.uMilk.value = 0.82
+      u.uRingY.value = ringY
+      // the neon behind this leaf: its own arc on the floor; the halo's once it has opened
+      if (handover < 0.5) arcColor(k * STEP, 0, 6, _col)
+      else arcColor(k * STEP + A, set.halo.rotation.y, HALO_N, _col)
+      const lift = 1 - 0.4 * up
+      u.uSpill.value.copy(_col).multiplyScalar(1.15 * lift * hum)
+      leaf.mirror.uSpill.value.copy(u.uSpill.value)
+      leaf.mirror.uK.value = lerp(0.16, 0.24, e) * (1 - 0.5 * up)
+      // the neon edge along the foot lights as the leaf faces you
+      const ign = smoothstep(0.55, 0.95, c)
+      leaf.edge.on.value = ign * hum
+      leaf.edgeRefl.on.value = ign * hum
+      // an unlit tube would draw as a dark line: only lit ones render
+      leaf.edge.root.visible = ign > 0.002
+      leaf.edgeRefl.root.visible = ign > 0.002
+    }
+
+    // ---- the halo and its nine tiles
+    const haloOn = rise > 0.001
+    set.halo.visible = haloOn
+    const tilesIn = smoothstep(0.62, 1, rise)
+    const listing = 1 - smoothstep(LIST_OUT, LIST_OUT + 0.02, l)
+    const haloArcOn = handover * hum
+    for (const a of set.haloArcs) {
+      a.on.value = haloArcOn
+      a.root.visible = haloArcOn > 0.002
+    }
+    set.tileRim.opacity = tilesIn
+    set.tileRim.depthWrite = tilesIn > 0.98
+    if (haloOn) {
+      set.halo.position.y = lerp(-0.25, 0, ease.outCubic(tilesIn))
+      for (let j = 0; j < NR; j++) {
+        const t = set.tiles[j]
+        const phi = wrap(j * HALO_STEP + H)
+        const face = 1 - smoothstep(T_CLEAR_A, T_FROST_A, Math.abs(phi))
+        const c = face * smoothstep(RISE_B - 0.01, ROW0, l) * listing
+        const e = c * c * (3 - 2 * c)
+        t.u.uFrost.value = 1 - e
+        t.u.uLit.value = lerp(0.46, 0.95, e)
+        t.u.uFade.value = tilesIn
+        t.u.uMilk.value = 0.84
+        t.u.uRingY.value = HALO_RING_Y + set.halo.position.y
+        t.u.uSpill.value.copy(t.color).multiplyScalar(1.1 * haloArcOn)
+      }
+    }
+
+    // ---- the floor: the ring's light (fading as it lifts), the lit screen's colour in front
+    const fl = set.floor
+    fl.uRingR.value = ringR
+    fl.uRingRot.value = A
+    fl.uRingK.value = (1 - up) * (1 - handover) * hum
+    fl.uArcs.value = 6
+    if (frontK >= 0) {
+      fl.uPoolC.value.copy(set.leaves[frontK].tint).lerp(set.leaves[frontK].color, 0.35)
+      fl.uPoolK.value = 0.16 * frontC
+    } else fl.uPoolK.value = 0
+    fl.uInner.value = 0.035 * (1 - up) + 0.02 * open
+
+    // ---- world: a black studio; a faint coloured backlight behind the subject
     const wp = ctx.world.params
     _d.subVectors(s.tgt, s.pos).normalize()
     const yawW = Math.atan2(_d.x, -_d.z)
     const pitchW = Math.asin(clamp(_d.y, -1, 1))
     const aspect = frame.width / Math.max(1, frame.height)
     wp.focus.set(s.cx * aspect + Math.sin(yawW) * 0.25, s.cy + pitchW * 0.2)
-    const breath = still ? 0 : Math.sin(time * 0.5) * 0.04
-    const introK = 1 - smoothstep(T0A, T0B, l)
-    const listK = smoothstep(F1, LIST_IN, l)
-    // the halo lights the frost from behind; once a pane is clear it drops
-    // back so the site floats on black
-    wp.halo = lerp(lerp(0.5, 0.55 - 0.25 * thawMax, 1 - introK), 0.5, listK) + breath
-    wp.haloSize = clamp(s.hh * lerp(1.3, 1.1, 1 - introK), 0.45, 1.6)
-    wp.slits = 0.3 * introK
-    wp.slitAngle = 0
+    wp.halo = 0.22
+    wp.haloColor = G.ice
+    wp.haloSize = clamp(s.hh * 1.2, 0.5, 1.6)
+    wp.slits = 0
     wp.top = '#020203'
     wp.bottom = '#000000'
     wp.env = 1
-    wp.envTurn = this.turnAt(l)
-    wp.key = 0.7
-    wp.keyDir.set(-0.45, 0.8, 0.4)
-    wp.fill = 0.06
+    wp.envTurn = 0
+    // (a hard key would lay a specular line down every curved leaf: the studio strips do the glints)
+    wp.key = 0.1
+    wp.keyDir.set(-0.4, 0.8, 0.45)
+    wp.fill = 0.05
 
-    const scene = this.group.parent as THREE.Scene | null
-    if (scene && (scene as THREE.Scene).isScene) for (const m of gal.glass) m.envMapRotation.copy(scene.environmentRotation)
-
-    // ---- post: deep vignette; a breath of condensation on the glide to the
-    // directory. Bloom only where a thawed pane's polished edges throw hard
-    // glints (the six items): measured, the intro and the directory are
-    // pixel-identical without it, so the pass is off there.
+    // ---- post: bloom on the neon only (threshold above any lit print)
     const pp = ctx.post.params
-    const fp = clamp((l - F1) / (LIST_IN - F1 + 0.01))
-    pp.frost = Math.sin(Math.PI * fp) * (reduced ? 0.08 : 0.2)
-    pp.vignette = 0.7
-    pp.bloomStrength = 0.32 * smoothstep(F0 - 0.02, F0 + 0.1 * SPAN, l) * (1 - smoothstep(F1, LIST_IN, l))
-    pp.bloomThreshold = 1.05
-
-    // ---- panels
-    for (let k = 0; k < NF; k++) {
-      const p = gal.panels[k]
-      const t = thaw[k]
-      const e = t * t * (3 - 2 * t)
-      // only the panels near the story's position (the rest are off frame anyway):
-      // keeps the transmissive count low, especially once the directory is up
-      p.station.visible = ph.kind === 'intro' ? true : inList ? k === NF - 1 && l < LIST_IN + 0.01 : Math.abs(k - Math.min(ph.k, NF - 1)) <= 2
-      p.thaw.uThaw.value = t
-      p.thaw.uEdge.value = 0.12 + 0.88 * Math.sin(Math.PI * t)
-      p.caps.envMapIntensity = lerp(0.4, 0.3, e)
-      p.sides.envMapIntensity = lerp(1.4, 2.4, e)
-      // frosted: the site is a soft glow of its colours; thawed: sharp and bright
-      // in the intro the far end of the row recedes into the dark (behind the headline)
-      const lit = lerp(1, INTRO_LIT[k], introK)
-      p.shotMat.color.setScalar(lerp(0.84, 0.86, e) * lit)
-      p.crispMat.opacity = smoothstep(0.7, 0.97, t)
-      p.backMat.uniforms.uStrength.value = lerp(0.4, 0.3, e) * (1 + breath) * lit
-      p.backMat.uniforms.uHole.value = 0.9 * e
-      p.poolMat.uniforms.uColor.value.copy(p.tint).lerp(_white, 0.35)
-      p.poolMat.uniforms.uStrength.value = lerp(0.07, 0.12, e)
-      p.label.material.opacity = lerp(0.62, 0.9, e)
-      const sway = still ? 0 : Math.sin(time * 0.3 + k * 1.7) * 0.012 * (1 - e)
-      p.pivot.rotation.y = lerp(-0.06, 0, e) + sway
-      p.pivot.position.z = 0.08 * e
-    }
-
-    // ---- the directory: the selected row's bar thaws
-    const stackOn = l > F1 - 0.12 * SPAN
-    gal.stack.visible = stackOn
-    if (stackOn) {
-      const inRows = l >= ROW0 - 0.004
-      const scrollRow = clamp(Math.floor(((l - ROW0) / (ROW1 - ROW0)) * NR), 0, NR - 1)
-      // the out beat: every bar frosts over again
-      const selIdx = l > LIST_OUT ? -1 : this.hoverRow >= 0 ? this.hoverRow : inRows ? scrollRow : -1
-      const kS = 1 - Math.exp(-7 * dt)
-      for (let j = 0; j < NR; j++) {
-        const b = gal.bars[j]
-        const target = j === selIdx ? 1 : 0
-        this.sel[j] += (target - this.sel[j]) * kS
-        if (Math.abs(target - this.sel[j]) < 1e-3) this.sel[j] = target
-        const sv = this.sel[j]
-        const e = sv * sv * (3 - 2 * sv)
-        b.thaw.uThaw.value = sv
-        b.thaw.uEdge.value = 0.12 + 0.88 * Math.sin(Math.PI * sv)
-        b.caps.envMapIntensity = lerp(0.4, 0.3, e)
-        b.root.position.z = 0.05 * e
-        b.label.material.opacity = lerp(0.62, 1, e)
-        b.bandMat.color.setScalar(lerp(0.55, 0.86, e))
-        b.crispMat.opacity = smoothstep(0.7, 0.97, sv)
-      }
-      gal.sides.envMapIntensity = 1.3
-      gal.stackBackMat.uniforms.uStrength.value = 0.17 * (1 + breath)
-      gal.stackPoolMat.uniforms.uStrength.value = 0.08
-      if (selIdx !== this.curRow) {
-        this.rows.forEach((r, j) => r.classList.toggle('is-cur', j === selIdx))
-        this.curRow = selIdx
-        // scrolled by the story (not hovered): keep that row in the rows' view
-        if (selIdx >= 0 && selIdx !== this.hoverRow) this.showRow(selIdx, still)
-      }
-    }
+    pp.bloomStrength = 0.62
+    pp.bloomRadius = 0.55
+    pp.bloomThreshold = 1.02
+    pp.vignette = 0.62
 
     // ---- DOM
-    const introV = 1 - smoothstep(F0 - 0.008, F0 + 0.008, l)
+    const introV = 1 - smoothstep(INTRO_OUT - 0.006, INTRO_OUT + 0.002, l)
     reveal(this.intro, introV, 0)
-    setRise(this.introTitle, l > 0.012 && l < F0 + 0.004)
+    setRise(this.introTitle, l > 0.012 && l < INTRO_OUT)
     for (let k = 0; k < NF; k++) {
       let v = 0
-      if (ph.kind === 'item' && ph.k === k) v = smoothstep(0.2, 0.3, ph.p) * (1 - smoothstep(0.94, 0.995, ph.p))
+      if (ph.kind === 'item' && ph.k === k) {
+        const a = k === 0 ? smoothstep(0.1, 0.108, l) : smoothstep(0.26, 0.34, ph.p)
+        v = a * (1 - smoothstep(0.93, 0.99, ph.p))
+      }
       reveal(this.cards[k].root, v, 10)
       setRise(this.cards[k].name, v > 0.3)
     }
-    const listV = smoothstep(F1 + 0.022, LIST_IN + 0.002, l) * (1 - smoothstep(LIST_OUT - 0.002, LIST_OUT + 0.008, l))
+    const listV = smoothstep(RISE_A + 0.03, RISE_B + 0.002, l) * (1 - smoothstep(LIST_OUT - 0.002, LIST_OUT + 0.008, l))
     reveal(this.listDock, listV, 10)
-    // a list that hides under a still cursor never gets its pointerleave
-    if (listV <= 0.01) this.hoverRow = -1
     setRise(this.listTitle, listV > 0.35)
+    const inRows = l >= ROW0 - 0.004 && l <= LIST_OUT
+    const selIdx = inRows ? clamp(Math.floor((l - ROW0) / BAND), 0, NR - 1) : -1
+    if (selIdx !== this.curRow) {
+      this.rows.forEach((r, j) => r.classList.toggle('is-cur', j === selIdx))
+      this.curRow = selIdx
+      if (selIdx >= 0) this.showRow(selIdx, still)
+    }
   }
 
   /** Mark whether the rows box overflows and which ends are scrolled away (CSS fades them). */
@@ -726,18 +770,9 @@ class Work implements Chapter {
     out.position.copy(this.cur.pos)
     out.target.copy(this.cur.tgt)
     out.fov = this.cur.fov
-    out.parallax = this.reduced ? 0 : 0.1
-  }
-
-  onLeave() {
-    this.hoverRow = -1
+    out.parallax = this.reduced ? 0 : 0.08
   }
 }
-
-const _white = new THREE.Color(G.white)
-
-/* studio turn: the value that lays the tall key strip along panel 0's right edge */
-const TURN_C = 0.35
 
 export default function create(): Chapter {
   return new Work()
