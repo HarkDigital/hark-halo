@@ -394,3 +394,69 @@ export function buildTubeNeon(
   const curves = parts.map(p => p[0].tube.geometry.parameters.path)
   return { root, parts, curves }
 }
+
+// ------------------------------------------------------------------ glass sleeves for any neon
+
+/**
+ * Clear glass tubes round any neon paths (the tube mark's language, for other
+ * signs): each curve gets a tube of radius `r`, rounded glass ends on open
+ * ones. One merged geometry (position + normal), in the curves' space.
+ */
+export function glassSleeve(paths: { curve: THREE.Curve<THREE.Vector3>; closed: boolean }[], r: number, mobile: boolean): THREE.BufferGeometry {
+  const radial = mobile ? 14 : 24
+  const Y = new THREE.Vector3(0, 1, 0)
+  const parts: THREE.BufferGeometry[] = []
+  for (const { curve, closed } of paths) {
+    const seg = Math.max(24, Math.ceil(curve.getLength() / 0.012))
+    parts.push(new THREE.TubeGeometry(curve, seg, r, radial, closed).toNonIndexed())
+    if (closed) continue
+    for (const [t, sgn] of [
+      [0, -1],
+      [1, 1],
+    ] as const) {
+      const cap = new THREE.SphereGeometry(r, radial, Math.ceil(radial / 4), 0, Math.PI * 2, 0, Math.PI / 2)
+      cap.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(Y, curve.getTangentAt(t).multiplyScalar(sgn).normalize()))
+      cap.translate(...curve.getPointAt(t).toArray())
+      parts.push(cap.toNonIndexed())
+    }
+  }
+  for (const g of parts) g.deleteAttribute('uv')
+  const out = mergeGeometries(parts)!
+  for (const g of parts) g.dispose()
+  out.computeBoundingSphere()
+  return out
+}
+
+/** the tube mark's clear, hollow glass (crisp through; thin wall `wall` in the mesh's units) */
+export function sleeveGlass(wall: number, mobile: boolean, envMap: THREE.Texture | null): THREE.MeshPhysicalMaterial {
+  const m = new THREE.MeshPhysicalMaterial({
+    color: 0xffffff,
+    metalness: 0,
+    roughness: 0,
+    transmission: 1,
+    thickness: wall,
+    ior: 1.5,
+    specularIntensity: 1,
+    specularColor: new THREE.Color(0xffffff),
+    clearcoat: 0.5,
+    clearcoatRoughness: 0.04,
+    envMapIntensity: 1,
+  })
+  m.dispersion = mobile ? 0 : 0.28
+  patchGlass(m)
+  if (envMap) m.envMap = envMap
+  return m
+}
+
+/** light piped along a glass sleeve's walls, in a colour (additive; uK strength, uOn ignition) */
+export function sleeveWalls(color: THREE.ColorRepresentation): THREE.ShaderMaterial {
+  return new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    toneMapped: false,
+    uniforms: { uColor: { value: new THREE.Color(color) }, uK: { value: 0 }, uOn: { value: 1 }, uPrint: { value: 1e3 } },
+    vertexShader: WALL_VERT,
+    fragmentShader: WALL_FRAG,
+  })
+}

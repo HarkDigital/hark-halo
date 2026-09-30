@@ -688,6 +688,12 @@ export interface NeonPath {
   draw: { value: number }
   /** a spark of light travelling along the tube: x = position 0..1 along it, y = strength */
   pulse: { value: THREE.Vector2 }
+  /**
+   * an infection spreading along the tube: x = where it entered (u 0..1), y = how far it
+   * has spread either way (u), z = how much of the hostile colour, w = a white-hot front
+   */
+  infect: { value: THREE.Vector4 }
+  infectColor: { value: THREE.Color }
 }
 
 const NEON_PATH_VERT = /* glsl */ `
@@ -742,6 +748,21 @@ const NEON_PATH_TONE = /* glsl */ `
     dim = mix(1.0 + 0.12 * uToneAmt, 0.72, t);
     return mix(light, uTone, t);
   }
+  // INFECTION: a hostile colour spread along the tube from u = uInfect.x, uInfect.y
+  // either way (u units; amount uInfect.z); uInfect.w lights its front white-hot
+  // (a purge pushing it back). A closed loop wraps round.
+  uniform vec4 uInfect;
+  uniform vec3 uInfectColor;
+  uniform float uClosed;
+  vec3 infect(vec3 c, out float edge) {
+    edge = 0.0;
+    if (uInfect.z <= 0.0 && uInfect.w <= 0.0) return c;
+    float d = abs(vU - uInfect.x);
+    if (uClosed > 0.5) d = min(d, 1.0 - d);
+    float k = 1.0 - smoothstep(uInfect.y - 0.012, uInfect.y + 0.002, d);
+    edge = uInfect.w * exp(-pow2((d - uInfect.y) * 60.0)) * step(0.0005, uInfect.y);
+    return mix(c, uInfectColor, k * uInfect.z);
+  }
 `
 const NEON_PATH_TUBE = /* glsl */ `
   uniform vec3 uColor;
@@ -756,8 +777,9 @@ const NEON_PATH_TUBE = /* glsl */ `
     float f = abs(dot(normalize(vN), normalize(vV)));
     // (only a thin white-hot line down the middle: the colour stays saturated)
     float dim;
-    vec3 base = toneColor(uColor, dim);
-    vec3 gas = mix(base, vec3(1.0), smoothstep(0.84, 1.0, f) * 0.85);
+    float edge;
+    vec3 base = infect(toneColor(uColor, dim), edge);
+    vec3 gas = mix(base, vec3(1.0), smoothstep(0.84, 1.0, f) * 0.85) + vec3(edge);
     gl_FragColor = vec4(gas * dim * (0.5 + 0.5 * f) * uK * uOn * mirrorFade() * drawn(), 1.0);
   }
 `
@@ -773,7 +795,8 @@ const NEON_PATH_GLOW = /* glsl */ `
     float f = abs(dot(normalize(vN), normalize(vV)));
     float g = f * f * f;
     float dim;
-    vec3 base = toneColor(uColor, dim);
+    float edge;
+    vec3 base = infect(toneColor(uColor, dim), edge) + vec3(edge * 0.6);
     gl_FragColor = vec4(base * dim * g * g * uK * uOn * mirrorFade() * drawn(), 1.0);
   }
 `
@@ -832,6 +855,8 @@ export function neonPath(o: {
   const k = { main: { tube: 3.2, glow: 0.35 } as NeonPathPass, trans: { tube: 3.2, glow: 0.8 } as NeonPathPass }
   const draw = { value: 1 }
   const pulse = { value: new THREE.Vector2(0, 0) }
+  const infect = { value: new THREE.Vector4(0, 0, 0, 0) }
+  const infectColor = { value: new THREE.Color(G.ember) }
   const tone = o.tone !== undefined ? { tone: o.tone, amt: o.toneAmt ?? 1 } : toneFor(o.color)
   // stretches of ~0.8 and ~0.3 world units, whole cycles round a closed loop
   const len = curve.getLength()
@@ -843,6 +868,9 @@ export function neonPath(o: {
     uSeed: { value: (seedN++ * 1.618) % 6.283 },
     uDraw: draw,
     uPulse: pulse,
+    uInfect: infect,
+    uInfectColor: infectColor,
+    uClosed: { value: o.closed ? 1 : 0 },
     uEnd: { value: o.endFade && !o.closed ? Math.min(0.5, o.endFade / Math.max(1e-6, len)) : 0 },
     uMirror: { value: o.mirror ? 1 : 0 },
     uFloorY: { value: o.mirror?.floorY ?? 0 },
@@ -880,7 +908,7 @@ export function neonPath(o: {
   bind(glow, 'glow')
   const root = new THREE.Group()
   root.add(tube, glow)
-  return { root, tube, glow, k, on, color, draw, pulse }
+  return { root, tube, glow, k, on, color, draw, pulse, infect, infectColor }
 }
 
 /**

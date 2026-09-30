@@ -53,6 +53,8 @@ const COPY: Record<string, () => string> = {
     <h2 tabindex="0">${esc(SECURITY.title)}</h2>
     <p>${esc(SECURITY.eyebrow)}.</p>
     <p>${esc(SECURITY.body)}</p>
+    <h3>${esc(SECURITY.fixEyebrow)}: ${esc(SECURITY.fixTitle.replace(/<[^>]+>/g, ''))}</h3>
+    <ol>${SECURITY.steps.map(s => `<li>${esc(s)}</li>`).join('')}</ol>
     <p><a href="${esc(SECURITY.href)}" data-anchor="0">${esc(SECURITY.cta.replace(/\s*→\s*$/, ''))}</a></p>`,
 
   voices: () => `

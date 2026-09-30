@@ -367,7 +367,6 @@ export const STATS = [
   { value: '10 years', label: 'Of custom software for real businesses. Portals, dashboards, and integrations since 2016.' },
   { value: '15', label: 'Live sites in the portfolio right now, from dentists to global manufacturers' },
   { value: '$1M+', label: 'Flows through client stores we built, every single year' },
-  { value: '24/7', label: 'Monitoring with a human who responds. Attackers don’t keep business hours.' },
 ]
 
 /** The original site's section headers — they carry "listen" through the story. */
@@ -405,6 +404,10 @@ export const SECURITY = {
   body: 'We find the breach, clean the infection, restore your site, and lock the door behind us. Then we keep watch, hardening, monitoring, and backups, so it never happens again.',
   cta: 'Emergency cleanup →',
   href: 'mailto:mike@hark.digital?subject=Emergency%3A%20my%20site%20was%20hacked',
+  /** the fix, step by step (the sign does each as it's ticked off) */
+  fixEyebrow: 'How we fix it',
+  fixTitle: 'Four steps. <em>No panic.</em>',
+  steps: ['Find the breach', 'Clean the infection', 'Restore the site', 'Lock the door behind us'],
 }
 
 /**

@@ -1,4 +1,4 @@
-/* Laminated — "Hacked? Breathe." Every selector scoped under .stage-shield. */
+/* Short circuit — "Hacked? Breathe." Every selector scoped under .stage-shield. */
 
 .stage-shield .sh-a,
 .stage-shield .sh-b {
@@ -28,23 +28,113 @@
   color: rgba(246, 247, 249, 0.86);
 }
 
-/* ---------- 24/7, its label, the emergency CTA ---------- */
+/* ---------- the fix: four steps ticked off as the sign does them, the emergency CTA ---------- */
 
 .stage-shield .sh-b {
   gap: clamp(12px, 2vh, 20px);
 }
-.stage-shield .sh-stat {
-  font-size: clamp(4rem, 11vw, 11rem);
-  letter-spacing: -0.06em;
-  font-variant-numeric: tabular-nums;
-  padding-bottom: 0.04em;
+.stage-shield .sh-fix-title {
+  margin: 0;
 }
-.stage-shield .sh-stat-label {
-  max-width: 30ch;
-  color: rgba(246, 247, 249, 0.84);
+.stage-shield .sh-steps {
+  display: grid;
+  gap: 2px;
+  width: min(430px, 36vw);
+  margin: 0;
+  padding: 10px 22px;
+  list-style: none;
+}
+.stage-shield .sh-step {
+  --p: 0;
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.4em 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 0;
+  color: rgba(246, 247, 249, 0.44);
+  transition: color 0.35s ease;
+}
+.stage-shield .sh-step + .sh-step {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+/* the step running: a line of light fills under it as the sign does it */
+.stage-shield .sh-step::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--neon-a), var(--neon-b));
+  box-shadow: 0 0 8px var(--neon-a);
+  transform: scaleX(var(--p));
+  transform-origin: left center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.stage-shield .sh-step.is-on::after {
+  opacity: 1;
+}
+.stage-shield .sh-step-n {
+  font-family: var(--font-label);
+  font-weight: var(--label-weight);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  font-variant-numeric: tabular-nums;
+}
+.stage-shield .sh-step-t {
+  font-family: var(--font-display);
+  font-size: clamp(1.05rem, 1.35vw, 1.3rem);
+  font-weight: 560;
+  letter-spacing: -0.015em;
+}
+.stage-shield .sh-step.is-on,
+.stage-shield .sh-step.is-done {
+  color: var(--fg);
+}
+/* the mark: a hollow ring while waiting, a pulsing neon dot while running, a neon check when done */
+.stage-shield .sh-step-mark {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.22);
+  transition:
+    box-shadow 0.3s ease,
+    background 0.3s ease;
+}
+.stage-shield .sh-step.is-on .sh-step-mark {
+  background: radial-gradient(circle, var(--neon-a) 0 30%, transparent 34%);
+  box-shadow:
+    inset 0 0 0 1.5px var(--neon-a),
+    0 0 12px rgba(var(--neon-a-rgb, 255, 255, 255), 0.5);
+  animation: sh-pulse 1.4s ease-in-out infinite;
+}
+.stage-shield .sh-step.is-done .sh-step-mark {
+  background: var(--neon-a);
+  box-shadow: 0 0 12px rgba(var(--neon-a-rgb, 255, 255, 255), 0.55);
+}
+.stage-shield .sh-step.is-done .sh-step-mark::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 3.5px;
+  width: 4.5px;
+  height: 8.5px;
+  border-right: 2px solid #000000;
+  border-bottom: 2px solid #000000;
+  transform: rotate(45deg);
+}
+@keyframes sh-pulse {
+  50% {
+    box-shadow:
+      inset 0 0 0 1.5px var(--neon-a),
+      0 0 20px rgba(var(--neon-a-rgb, 255, 255, 255), 0.8);
+  }
 }
 .stage-shield .sh-cta {
-  margin-top: 6px;
+  margin-top: 4px;
 }
 
 /* measures the shared layout tokens for the camera framing */
@@ -74,8 +164,9 @@
   .stage-shield .sh-title {
     font-size: clamp(2.8rem, 11.5vw, 5.8rem);
   }
-  .stage-shield .sh-stat {
-    font-size: clamp(4rem, 22vw, 9rem);
+  .stage-shield .sh-steps {
+    width: auto;
+    max-width: none;
   }
   .stage-shield .sh-panel {
     max-width: none;
@@ -102,10 +193,16 @@
     padding: 14px 16px 15px;
     border-radius: 18px;
   }
-  .stage-shield .sh-panel .hud-body,
-  .stage-shield .sh-stat-label {
+  .stage-shield .sh-panel .hud-body {
     font-size: 14.5px;
     line-height: 1.52;
+  }
+  .stage-shield .sh-steps {
+    padding: 4px 16px;
+    border-radius: 18px;
+  }
+  .stage-shield .sh-step {
+    padding: 8px 0;
   }
 }
 
@@ -120,8 +217,8 @@
     font-size: 13.5px;
     line-height: 1.48;
   }
-  .stage-shield .sh-stat {
-    font-size: 4.2rem;
+  .stage-shield .sh-step {
+    padding: 6px 0;
   }
 }
 
@@ -136,8 +233,15 @@
   .stage-shield .sh-title {
     font-size: clamp(1.9rem, 8.5vh, 2.6rem);
   }
-  .stage-shield .sh-stat {
-    font-size: clamp(2.6rem, 15vh, 3.8rem);
+  .stage-shield .sh-steps {
+    padding: 2px 14px;
+    width: min(340px, 44vw);
+  }
+  .stage-shield .sh-step {
+    padding: 4px 0;
+  }
+  .stage-shield .sh-fix-title {
+    font-size: clamp(1.3rem, 6vh, 1.8rem);
   }
   .stage-shield .sh-eyebrow {
     font-size: 10px;
@@ -147,8 +251,7 @@
     padding: 10px 14px;
     border-radius: 14px;
   }
-  .stage-shield .sh-panel .hud-body,
-  .stage-shield .sh-stat-label {
+  .stage-shield .sh-panel .hud-body {
     font-size: 12.5px;
     line-height: 1.42;
   }
