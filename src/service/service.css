@@ -278,7 +278,7 @@ html.is-svc.menu-open {
 }
 .svc-stat-in {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   flex-wrap: wrap;
   gap: 10px 36px;
   max-width: var(--svc-max);
