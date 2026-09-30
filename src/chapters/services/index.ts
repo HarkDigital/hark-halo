@@ -5,6 +5,7 @@ import { nextFrame } from '../../core/yield'
 import { N, TILE_H, TILE_W, buildDeck, type Deck } from './deck'
 import { Hud, type HudMetrics } from './hud'
 import { G } from '../../kit/glass'
+import { SERVICES, serviceUrl } from '../../content'
 import './services.css'
 
 /*
@@ -215,15 +216,22 @@ export default function create(): Chapter {
       await nextFrame()
       hud = new Hud(ctx.stage, k => window.__hark?.land('services', true, ANCHORS[k]))
 
-      // click a plate to land on it (click, not pointerdown: touch scrolls must not jump)
+      // click a plate to open its service page (click, not pointerdown: touch scrolls must not
+      // jump); cmd / ctrl / middle-click opens it in a new tab
       canvas = ctx.renderer.domElement
-      canvas.addEventListener('click', e => {
+      const open = (e: MouseEvent) => {
         if (!active || !canvas || lastLocal < A - 0.02 || lastLocal > CARD_OUT) return
         const r = canvas.getBoundingClientRect()
         ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1)
         const k = pick(ctx)
-        if (k >= 0) window.__hark?.land('services', true, ANCHORS[k])
-      })
+        const svc = k >= 0 ? SERVICES[k] : undefined
+        if (!svc) return
+        const url = serviceUrl(svc.slug)
+        if (e.metaKey || e.ctrlKey || e.button === 1) window.open(url, '_blank', 'noopener')
+        else window.location.href = url
+      }
+      canvas.addEventListener('click', open)
+      canvas.addEventListener('auxclick', e => e.button === 1 && open(e))
     },
 
     onEnter() {
