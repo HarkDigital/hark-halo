@@ -2,11 +2,11 @@ import * as THREE from 'three'
 import type { CameraPose, Chapter, ChapterContext, Frame } from '../../core/types'
 import { el, reveal, rise, setRise } from '../../core/dom'
 import { BRAND, MICROCOPY } from '../../content'
-import { clamp, lerp, segment, smoothstep } from '../../core/math'
+import { clamp, damp, lerp, segment, smoothstep } from '../../core/math'
 import { nextFrame } from '../../core/yield'
 import { LOGO } from '../../kit/palette'
 import { FLOOR_MIRROR, FLOOR_Y, FROST, MARK_S, THAW_A, THAW_B, buildCard, buildFloor, buildMark, buildNeonMark, buildReflection, refineMark, type HeroSet } from './scene'
-import { buildTubeMark, buildTubeNeon } from '../../kit/tube'
+import { buildTubeMark, buildTubeNeon, nearestOnTubes, pointerOnMark, setTubeHover } from '../../kit/tube'
 import './hero.css'
 
 /*
@@ -35,6 +35,10 @@ import './hero.css'
  *                      engine's TUBE SEGUE (services arrives with `segue:
  *                      'tube'`) squashes the picture into one line of neon,
  *                      then a point: services powers up out of it.
+ *
+ * HOVER (tube mark, a mouse, while not scrolling, at the headline and the
+ * settle): the mark leans toward the pointer, the neon and the glass light up
+ * where it passes, and a click on a tube sends a spark racing along it.
  *
  * Every pose derives from `local`; frame.time only drives the sway and the
  * light sweep (none under reduced motion; frozen with Motion off); the reveal
@@ -101,6 +105,15 @@ const FIT: Record<'land' | 'port', Record<'intro' | 'end', Fit>> = {
 export default function create(): Chapter {
   const group = new THREE.Group()
   let set: HeroSet | null = null
+  // hover (tube mark): the pointer on the mark's plane, how much it counts, the lean, a clicked spark
+  let neonCurves: THREE.Curve<THREE.Vector3>[] = []
+  const hoverP = new THREE.Vector2(99, 99)
+  let hoverAmt = 0
+  let hoverLive = false
+  let leanX = 0
+  let leanY = 0
+  let spark: { part: number; u0: number; dir: number; at: number } | null = null
+  const fine = typeof matchMedia === 'function' && matchMedia('(hover: hover) and (pointer: fine)').matches
   let reduced = false
   let mobile = false
 
@@ -257,6 +270,16 @@ export default function create(): Chapter {
       const haloRefl = TUBE ? buildTubeNeon(isFT, { floorY: FLOOR_Y, fade: 1.3 }) : buildNeonMark(isFT, { floorY: FLOOR_Y, fade: 1.3 })
       haloRefl.root.matrixAutoUpdate = false
       set = { ...mark, ...card, floor, reflection, neon: halo.parts, neonRefl: haloRefl, walls }
+      if (TUBE) neonCurves = (halo as ReturnType<typeof buildTubeNeon>).curves
+      // a click on a tube sends a spark racing along it (from where it was clicked)
+      if (TUBE)
+        ctx.renderer.domElement.addEventListener('click', () => {
+          if (!hoverLive || !set) return
+          const hit = nearestOnTubes(neonCurves, hoverP)
+          if (hit.part < 0 || hit.d > 0.09) return
+          spark = { part: hit.part, u0: hit.u, dir: hit.u < 0.5 ? 1 : -1, at: performance.now() / 1000 }
+          window.__hark?.engine?.wake()
+        })
       group.add(set.card, set.floor, set.pivot, set.reflection, haloRefl.root)
 
       // ---- DOM
@@ -346,10 +369,23 @@ export default function create(): Chapter {
       tgt.addScaledVector(tmpR, shiftR).addScaledVector(tmpU, shiftU)
       parallax = lerp(0.22, 0.03, macro) * (1 - outW)
 
+      // ---- hover (tube mark, a mouse, not scrolling; at the headline and the settle): the
+      // pointer on the mark's plane (last frame's pose), and the mark leans toward it
+      const hoverable = TUBE && fine && (local < 0.1 || (local > 0.6 && local < 0.86)) && Math.abs(frame.velocity) < 0.06
+      const onMark = hoverable && pointerOnMark(ctx.camera, frame.pointerRaw, s.logo.root, hoverP) && hoverP.length() < 0.85
+      hoverLive = onMark
+      hoverAmt = damp(hoverAmt, onMark ? 1 : 0, onMark ? 5 : 3, frame.dt)
+      leanX = damp(leanX, onMark ? clamp(hoverP.x / 0.6, -1, 1) : 0, 4, frame.dt)
+      leanY = damp(leanY, onMark ? clamp(hoverP.y / 0.6, -1, 1) : 0, 4, frame.dt)
+
       // ---- the mark: a slow turntable sway (±12° at rest, quieter in the payoff, still in macro)
-      const swayAmp = THREE.MathUtils.degToRad(lerp(12, 5, payW)) * (1 - macro) * (1 - outW) * calm
+      const swayAmp = THREE.MathUtils.degToRad(lerp(12, 5, payW)) * (1 - macro) * (1 - outW) * calm * (1 - 0.6 * hoverAmt)
       const sway = swayAmp * Math.sin(t * 0.36)
-      s.pivot.rotation.set(val[TILT] + 0.015 * Math.sin(t * 0.23) * calm * (1 - macro), val[ROT] + sway, 0)
+      s.pivot.rotation.set(
+        val[TILT] + 0.015 * Math.sin(t * 0.23) * calm * (1 - macro) - 0.34 * leanY,
+        val[ROT] + sway + 0.5 * leanX,
+        0,
+      )
       s.pivot.updateMatrixWorld(true)
       s.reflection.matrix.multiplyMatrices(FLOOR_MIRROR, s.logo.root.matrixWorld)
       s.neonRefl.root.matrix.multiplyMatrices(FLOOR_MIRROR, s.logo.root.matrixWorld)
@@ -474,6 +510,17 @@ export default function create(): Chapter {
                 py = 1.5 * Math.sin(Math.PI * f)
               }
             }
+            // a clicked spark races from where it was clicked toward the far end
+            if (spark && spark.part === i) {
+              const e = performance.now() / 1000 - spark.at
+              if (e < 1.5) {
+                px = spark.u0 + spark.dir * e * 0.7
+                // (the diamond is a closed loop: the spark goes round)
+                if (i === 2) px -= Math.floor(px)
+                py = Math.max(py, 4.8 * (1 - e / 1.5))
+                n.on.value *= 1 + 0.35 * Math.exp(-e * 5)
+              } else spark = null
+            }
             n.pulse.value.set(px, py)
           } else {
             n.k.main.tube = 3.0
@@ -488,6 +535,9 @@ export default function create(): Chapter {
           w.uniforms.uK.value = 0.42 * lerp(1, 0.8, macro)
         }
       }
+      if (TUBE) setTubeHover(s.neon, s.walls, hoverP, hoverAmt)
+      // (a still page drops to a slow heartbeat: keep drawing while the lean, the light or a spark moves)
+      if (spark || Math.abs(hoverAmt - (onMark ? 1 : 0)) > 0.004 || Math.abs(leanX) + Math.abs(leanY) > 0.004) window.__hark?.engine?.wake()
       // the reflection: the room's view only (the glass never sees it), dimmer
       for (let i = 0; i < s.neonRefl.parts.length; i++) {
         for (const n of s.neonRefl.parts[i]) {

@@ -74,6 +74,8 @@ export interface ThawScene {
   rim: THREE.ShaderMaterial | null
   /** the halo: the mark in neon behind the glass, per part (loop A, loop B, diamond) */
   neon: NeonPath[][]
+  /** the tube mark's neon axes, per part (for a click's spark); empty for the frosted mark */
+  curves: THREE.Curve<THREE.Vector3>[]
   thaw: ThawUniforms
   slits: THREE.Mesh
   slitU: {
@@ -236,6 +238,7 @@ export function buildScene(isFrameTarget: (rt: THREE.WebGLRenderTarget | null) =
 
   let logo: ThawScene['logo']
   let halo: { root: THREE.Group; parts: NeonPath[][] }
+  let curves: THREE.Curve<THREE.Vector3>[] = []
   let walls: THREE.ShaderMaterial[] = []
   let rim: THREE.ShaderMaterial | null = null
   if (TUBE) {
@@ -245,7 +248,9 @@ export function buildScene(isFrameTarget: (rt: THREE.WebGLRenderTarget | null) =
     walls = tm.walls
     rim = tm.rim
     turn.add(tm.pivot)
-    halo = buildTubeNeon(isFrameTarget)
+    const tn = buildTubeNeon(isFrameTarget)
+    halo = tn
+    curves = tn.curves
   } else {
     // the mark: a straight-walled slab (no bevel, sharp edges), translucent frosted faces
     const fl = frostedLogo({ depth: 0.23, bevel: 0, frost: FROST })
@@ -315,5 +320,5 @@ export function buildScene(isFrameTarget: (rt: THREE.WebGLRenderTarget | null) =
   slits.visible = false
   rig.add(slits)
 
-  return { rig, turn, logo, walls, rim, neon: halo.parts, thaw, slits, slitU }
+  return { rig, turn, logo, walls, rim, neon: halo.parts, curves, thaw, slits, slitU }
 }

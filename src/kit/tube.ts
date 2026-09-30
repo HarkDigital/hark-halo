@@ -171,9 +171,10 @@ export interface TubePrint {
 }
 
 const WALL_VERT = /* glsl */ `
-  varying vec3 vN; varying vec3 vV; varying float vObjY;
+  varying vec3 vN; varying vec3 vV; varying float vObjY; varying vec3 vPos;
   void main() {
     vObjY = position.y;
+    vPos = position;
     vec4 mv = modelViewMatrix * vec4(position, 1.0);
     vN = normalize(normalMatrix * normal);
     vV = normalize(-mv.xyz);
@@ -181,8 +182,9 @@ const WALL_VERT = /* glsl */ `
   }
 `
 const WALL_FRAG = /* glsl */ `
-  uniform vec3 uColor; uniform float uK, uOn, uPrint;
-  varying vec3 vN; varying vec3 vV; varying float vObjY;
+  uniform vec3 uColor; uniform float uK, uOn, uPrint, uHoverR;
+  uniform vec4 uHover;
+  varying vec3 vN; varying vec3 vV; varying float vObjY; varying vec3 vPos;
   void main() {
     if (vObjY > uPrint) discard;
     // light caught in the glass runs along its walls and shows where you look
@@ -190,6 +192,12 @@ const WALL_FRAG = /* glsl */ `
     float f = 1.0 - abs(dot(normalize(vN), normalize(vV)));
     float wall = f * f * f;
     vec3 col = uColor * (0.07 + 1.1 * wall);
+    // the pointer's light: the glass round it lights up
+    if (uHover.w > 0.0) {
+      vec2 d = vPos.xy - uHover.xy;
+      float hk = uHover.w * exp(-dot(d, d) / max(uHoverR * uHoverR, 1e-6));
+      col = col * (1.0 + 3.6 * hk) + uColor * 0.35 * hk;
+    }
     gl_FragColor = vec4(col * uK * uOn, 1.0);
   }
 `
@@ -316,7 +324,14 @@ export function buildTubeMark(mobile: boolean, envMap: THREE.Texture | null, mar
       depthWrite: false,
       blending: THREE.AdditiveBlending,
       toneMapped: false,
-      uniforms: { uColor: { value: new THREE.Color(colors[i === partGeos.length - 1 ? 2 : i]) }, uK: { value: 0 }, uOn: { value: 0 }, uPrint },
+      uniforms: {
+        uColor: { value: new THREE.Color(colors[i === partGeos.length - 1 ? 2 : i]) },
+        uK: { value: 0 },
+        uOn: { value: 0 },
+        uPrint,
+        uHover: { value: new THREE.Vector4() },
+        uHoverR: { value: 0.22 },
+      },
       vertexShader: WALL_VERT,
       fragmentShader: WALL_FRAG,
     })
@@ -455,8 +470,68 @@ export function sleeveWalls(color: THREE.ColorRepresentation): THREE.ShaderMater
     depthWrite: false,
     blending: THREE.AdditiveBlending,
     toneMapped: false,
-    uniforms: { uColor: { value: new THREE.Color(color) }, uK: { value: 0 }, uOn: { value: 1 }, uPrint: { value: 1e3 } },
+    uniforms: {
+      uColor: { value: new THREE.Color(color) },
+      uK: { value: 0 },
+      uOn: { value: 1 },
+      uPrint: { value: 1e3 },
+      uHover: { value: new THREE.Vector4() },
+      uHoverR: { value: 0.22 },
+    },
     vertexShader: WALL_VERT,
     fragmentShader: WALL_FRAG,
   })
+}
+
+// ------------------------------------------------------------------ the pointer on the mark
+
+const _ray = new THREE.Raycaster()
+const _plane = new THREE.Plane()
+const _n = new THREE.Vector3()
+const _o = new THREE.Vector3()
+const _hit = new THREE.Vector3()
+
+/**
+ * Where the pointer (`ndc`, -1..1) meets the mark's own plane (z = 0 of
+ * `root`), in the mark's units: false if it misses.
+ */
+export function pointerOnMark(camera: THREE.Camera, ndc: { x: number; y: number }, root: THREE.Object3D, out: THREE.Vector2): boolean {
+  _ray.setFromCamera(new THREE.Vector2(ndc.x, ndc.y), camera)
+  _n.set(0, 0, 1).transformDirection(root.matrixWorld)
+  _o.setFromMatrixPosition(root.matrixWorld)
+  _plane.setFromNormalAndCoplanarPoint(_n, _o)
+  if (!_ray.ray.intersectPlane(_plane, _hit)) return false
+  root.worldToLocal(_hit)
+  out.set(_hit.x, _hit.y)
+  return true
+}
+
+/** Point the neon's and the glass walls' hover light at `p` (mark units), strength `k` (0 = off). */
+export function setTubeHover(parts: NeonPath[][], walls: THREE.ShaderMaterial[], p: THREE.Vector2, k: number) {
+  for (const part of parts)
+    for (const n of part) {
+      n.hover.value.set(p.x, p.y, 0, k)
+      n.hoverR.value = 0.17
+    }
+  for (const w of walls) {
+    const u = w.uniforms.uHover
+    if (u) (u.value as THREE.Vector4).set(p.x, p.y, 0, k)
+  }
+}
+
+/**
+ * The tube point nearest `p` (mark units) along `curves` (one per part): the
+ * part, its u (0..1, the tube's draw / pulse u) and how far away it is.
+ */
+export function nearestOnTubes(curves: THREE.Curve<THREE.Vector3>[], p: THREE.Vector2): { part: number; u: number; d: number } {
+  let best = { part: -1, u: 0, d: Infinity }
+  const q = new THREE.Vector3()
+  curves.forEach((c, part) => {
+    for (let i = 0; i <= 240; i++) {
+      c.getPointAt(i / 240, q)
+      const d = Math.hypot(q.x - p.x, q.y - p.y)
+      if (d < best.d) best = { part, u: i / 240, d }
+    }
+  })
+  return best
 }

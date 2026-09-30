@@ -5,6 +5,7 @@ import { clamp, damp, ease, lerp, segment, smoothstep } from '../../core/math'
 import { nextFrame } from '../../core/yield'
 import { BRAND } from '../../content'
 import { G } from '../../kit/glass'
+import { nearestOnTubes, pointerOnMark, setTubeHover } from '../../kit/tube'
 import { buildHud, measureHud, type Hud, type HudLayout } from './hud'
 import { buildScene, GAIN, SLIT_DEPTH, THAW_OUTER, TUBE, type ThawScene } from './scene'
 import './contact.css'
@@ -32,6 +33,10 @@ import './contact.css'
  *              turns back toward you and makes room for the sign-off, which
  *              comes into focus beneath it (0.82–0.90)
  *   0.90–1.00  the final still: nothing moves
+ *
+ * HOVER (tube mark, a mouse, while not scrolling): the mark leans toward the
+ * pointer, the neon and the glass light up where it passes, and a click on a
+ * tube sends a spark racing along it.
  *
  * TUBE (the site's mark): the mark as neon in clear glass tubes. No frost to
  * thaw: the neon strikes as it arrives, a spark runs through the tubes
@@ -81,6 +86,14 @@ export default function create(): Chapter {
   let signY = NaN
   let hoverAmt = 0
   let idleAmt = 0
+  // the mark under the pointer (tube mark): where on its plane, how much it counts, the lean, a spark
+  const markP = new THREE.Vector2(99, 99)
+  let markHover = 0
+  let markLive = false
+  let leanX = 0
+  let leanY = 0
+  let spark: { part: number; u0: number; dir: number; at: number } | null = null
+  const fine = typeof matchMedia === 'function' && matchMedia('(hover: hover) and (pointer: fine)').matches
   const shortLandscape = () => matchMedia('(orientation: landscape) and (max-height: 500px)').matches
 
   const relayout = (W: number, H: number) => {
@@ -147,6 +160,14 @@ export default function create(): Chapter {
       await nextFrame()
       set = buildScene(rt => ctx.post.isFrameTarget(rt), ctx.mobile, ctx.world.envMap)
       group.add(set.rig)
+      if (TUBE)
+        ctx.renderer.domElement.addEventListener('click', () => {
+          if (!markLive) return
+          const hit = nearestOnTubes(set.curves, markP)
+          if (hit.part < 0 || hit.d > 0.09) return
+          spark = { part: hit.part, u0: hit.u, dir: hit.u < 0.5 ? 1 : -1, at: performance.now() / 1000 }
+          window.__hark?.engine?.wake()
+        })
       await nextFrame()
     },
 
@@ -189,9 +210,16 @@ export default function create(): Chapter {
       // "front-on" = facing the camera: undo the off-axis view angle of the art area
       const faceY = -Math.atan2(rig.position.x, D)
       const faceX = Math.atan2(rig.position.y, D)
+      // hover (tube mark, a mouse, not scrolling): the pointer on the mark's plane; it leans toward it
+      const hoverable = TUBE && fine && local > 0.2 && Math.abs(frame.velocity) < 0.06
+      const onMark = hoverable && pointerOnMark(ctx.camera, frame.pointerRaw, set.logo.root, markP) && markP.length() < 0.85
+      markLive = onMark
+      markHover = damp(markHover, onMark ? 1 : 0, onMark ? 5 : 3, frame.dt)
+      leanX = damp(leanX, onMark ? clamp(markP.x / 0.6, -1, 1) : 0, 4, frame.dt)
+      leanY = damp(leanY, onMark ? clamp(markP.y / 0.6, -1, 1) : 0, 4, frame.dt)
       set.turn.rotation.set(
-        faceX + tilt + 0.02 * Math.sin(t * 0.23) * idle,
-        faceY + yaw + 0.035 * Math.sin(t * 0.29 + 0.6) * idle,
+        faceX + tilt + 0.02 * Math.sin(t * 0.23) * idle - 0.34 * leanY,
+        faceY + yaw + 0.035 * Math.sin(t * 0.29 + 0.6) * idle + 0.5 * leanX,
         0.008 * Math.sin(t * 0.19) * idle,
       )
       set.turn.position.set(0, 0.012 * Math.sin(t * 0.5) * idle, lerp(-0.35, 0, arrive))
@@ -258,8 +286,19 @@ export default function create(): Chapter {
               py = 1.5 * Math.sin(Math.PI * f) * idle
             }
           }
+          // a clicked spark races from where it was clicked toward the far end
+          let surge = 1
+          if (spark && spark.part === i) {
+            const e = performance.now() / 1000 - spark.at
+            if (e < 1.5) {
+              px = spark.u0 + spark.dir * e * 0.7
+              if (i === 2) px -= Math.floor(px)
+              py = Math.max(py, 4.8 * (1 - e / 1.5))
+              surge = 1 + 0.35 * Math.exp(-e * 5)
+            } else spark = null
+          }
           for (const n of part) {
-            n.on.value = on
+            n.on.value = on * surge
             n.k.main.tube = 3.2
             n.k.main.glow = 0.2
             n.k.trans.tube = 3.0
@@ -273,6 +312,8 @@ export default function create(): Chapter {
           }
         })
         if (set.rim) set.rim.uniforms.uStrength.value = 0.14
+        setTubeHover(set.neon, set.walls, markP, markHover)
+        if (spark || Math.abs(markHover - (onMark ? 1 : 0)) > 0.004 || Math.abs(leanX) + Math.abs(leanY) > 0.004) window.__hark?.engine?.wake()
         set.logo.caps.envMapIntensity = 1.1
       } else
         for (const part of set.neon)

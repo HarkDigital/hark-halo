@@ -694,6 +694,9 @@ export interface NeonPath {
    */
   infect: { value: THREE.Vector4 }
   infectColor: { value: THREE.Color }
+  /** a light the pointer carries: xyz = where (the tube's own space), w = strength 0..1; hoverR its reach */
+  hover: { value: THREE.Vector4 }
+  hoverR: { value: number }
 }
 
 const NEON_PATH_VERT = /* glsl */ `
@@ -701,7 +704,9 @@ const NEON_PATH_VERT = /* glsl */ `
   varying vec3 vV;
   varying float vU;
   varying float vWY;
+  varying vec3 vPos;
   void main() {
+    vPos = position;
     vWY = (modelMatrix * vec4(position, 1.0)).y;
     vec4 mv = modelViewMatrix * vec4(position, 1.0);
     vN = normalize(normalMatrix * normal);
@@ -715,9 +720,18 @@ const NEON_PATH_VERT = /* glsl */ `
 const NEON_PATH_FADE = /* glsl */ `
   uniform float uMirror, uFloorY, uFade, uDraw, uEnd;
   uniform vec2 uPulse;
+  // HOVER: a light the pointer carries (xy in the tube's own space, w strength, radius uHoverR)
+  uniform vec4 uHover;
+  uniform float uHoverR;
   varying float vWY;
   varying float vU;
+  varying vec3 vPos;
   float pow2(float x) { return x * x; }
+  float hoverK() {
+    if (uHover.w <= 0.0) return 0.0;
+    vec2 d = vPos.xy - uHover.xy;
+    return uHover.w * exp(-dot(d, d) / max(uHoverR * uHoverR, 1e-6));
+  }
   float drawn() {
     if (vU > uDraw + 1e-4) discard;
     // a hot head where the stroke is being drawn, and the travelling spark
@@ -780,6 +794,8 @@ const NEON_PATH_TUBE = /* glsl */ `
     float edge;
     vec3 base = infect(toneColor(uColor, dim), edge);
     vec3 gas = mix(base, vec3(1.0), smoothstep(0.84, 1.0, f) * 0.85) + vec3(edge);
+    float hk = hoverK();
+    gas = gas * (1.0 + 2.4 * hk) + vec3(0.9 * hk);
     gl_FragColor = vec4(gas * dim * (0.5 + 0.5 * f) * uK * uOn * mirrorFade() * drawn(), 1.0);
   }
 `
@@ -796,7 +812,7 @@ const NEON_PATH_GLOW = /* glsl */ `
     float g = f * f * f;
     float dim;
     float edge;
-    vec3 base = infect(toneColor(uColor, dim), edge) + vec3(edge * 0.6);
+    vec3 base = (infect(toneColor(uColor, dim), edge) + vec3(edge * 0.6)) * (1.0 + 4.0 * hoverK());
     gl_FragColor = vec4(base * dim * g * g * uK * uOn * mirrorFade() * drawn(), 1.0);
   }
 `
@@ -856,6 +872,8 @@ export function neonPath(o: {
   const draw = { value: 1 }
   const pulse = { value: new THREE.Vector2(0, 0) }
   const infect = { value: new THREE.Vector4(0, 0, 0, 0) }
+  const hover = { value: new THREE.Vector4(0, 0, 0, 0) }
+  const hoverR = { value: 0.15 }
   const infectColor = { value: new THREE.Color(G.ember) }
   const tone = o.tone !== undefined ? { tone: o.tone, amt: o.toneAmt ?? 1 } : toneFor(o.color)
   // stretches of ~0.8 and ~0.3 world units, whole cycles round a closed loop
@@ -870,6 +888,8 @@ export function neonPath(o: {
     uPulse: pulse,
     uInfect: infect,
     uInfectColor: infectColor,
+    uHover: hover,
+    uHoverR: hoverR,
     uClosed: { value: o.closed ? 1 : 0 },
     uEnd: { value: o.endFade && !o.closed ? Math.min(0.5, o.endFade / Math.max(1e-6, len)) : 0 },
     uMirror: { value: o.mirror ? 1 : 0 },
@@ -908,7 +928,7 @@ export function neonPath(o: {
   bind(glow, 'glow')
   const root = new THREE.Group()
   root.add(tube, glow)
-  return { root, tube, glow, k, on, color, draw, pulse, infect, infectColor }
+  return { root, tube, glow, k, on, color, draw, pulse, infect, infectColor, hover, hoverR }
 }
 
 /**
