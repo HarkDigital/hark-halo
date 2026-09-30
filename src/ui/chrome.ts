@@ -1,7 +1,7 @@
 import type { Engine, EngineState } from '../core/Engine'
 import type { Frame } from '../core/types'
 import type { Sound } from './sound'
-import { BRAND } from '../content'
+import { BRAND, portfolioUrl } from '../content'
 import { logoSvg } from './mark'
 import { bindServicesMenu, servicesMenuItem } from './servicesMenu'
 import { bindMenuSheet, menuButtonHtml, menuRowHtml, menuSheetHtml, sectionName } from './menuSheet'
@@ -16,8 +16,9 @@ import { REDUCED_MOTION } from '../kit/motion'
  *
  *   top-left      the real Hark Digital logo (the mark, HARK, DIGITAL
  *                 DESIGN), white (→ the start)
- *   top-right     a frosted capsule: Work · Services · Contact (a hairline
- *                 comes into focus under the chapter you are in) and the
+ *   top-right     a frosted capsule: Services · Work · Contact (a hairline
+ *                 comes into focus under the chapter you are in; Work opens
+ *                 the Portfolio page, like the Menu sheet's Work row) and the
  *                 white "Start a project" pill. ≤ 720px: a "Menu" pill opens
  *                 the Menu sheet (ui/menuSheet.ts, shared with the service
  *                 pages; here with 'Read as a page' too). While it is up the
@@ -66,10 +67,10 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
 
   const brandInner = `<span class="ch-logo" aria-hidden="true">${logoSvg('ch-logo-svg')}</span>`
 
-  // (Services carries the dropdown of the eleven service pages)
+  // (Services carries the dropdown of the eleven service pages; Work goes straight to the Portfolio page)
   const links = NAV.filter(id => indexOf(id) >= 0)
     .map(id => {
-      const a = `<a class="ch-link" href="#${id}" data-go="${id}">${biz(id)}</a>`
+      const a = id === 'work' ? `<a class="ch-link" href="${portfolioUrl()}">${biz(id)}</a>` : `<a class="ch-link" href="#${id}" data-go="${id}">${biz(id)}</a>`
       return id === 'services' ? servicesMenuItem(a) : `<li>${a}</li>`
     })
     .join('')
@@ -81,9 +82,16 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
     )
     .join('')
 
-  // the Menu sheet's rows: plain names, no numbers or chapter nicknames
+  // the Menu sheet's rows: plain names, no numbers or chapter nicknames (Work opens the Portfolio page)
   const menuItems = slots
-    .map((s, i) => menuRowHtml({ id: s.def.id, name: biz(s.def.id, s.def.label), href: `#${s.def.id}`, go: true }, i))
+    .map((s, i) =>
+      menuRowHtml(
+        s.def.id === 'work'
+          ? { id: s.def.id, name: biz(s.def.id, s.def.label), href: portfolioUrl() }
+          : { id: s.def.id, name: biz(s.def.id, s.def.label), href: `#${s.def.id}`, go: true },
+        i,
+      ),
+    )
     .join('')
 
   // motion follows the visitor's system setting (there is no switch)

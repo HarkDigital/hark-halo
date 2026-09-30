@@ -1,4 +1,4 @@
-import { BRAND, CONTACT } from '../content'
+import { BRAND, CONTACT, portfolioUrl } from '../content'
 import { CHAPTER_COPY_IDS, buildChapterCopy } from '../core/srContent'
 import { CHAPTERS } from '../chapters/index'
 import { logoSvg, markOutlineSvg, markSvg } from './mark'
@@ -75,7 +75,7 @@ export function renderFallback(root: HTMLElement, at?: string) {
       <span class="fb-logo" aria-hidden="true">${logoSvg('fb-logo-svg')}</span>
     </a>
     <nav class="fb-nav" aria-label="Primary">
-      <a class="fb-link" href="#work">Work</a>
+      <a class="fb-link" href="${portfolioUrl()}">Work</a>
       <a class="fb-link" href="#services">Services</a>
       <a class="fb-link" href="#contact">Contact</a>
       ${live}
