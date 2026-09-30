@@ -1,6 +1,7 @@
 import { BRAND } from '../content'
 import { holdInert, releaseInert } from './inert'
 import { MARK_ALL, MARK_VIEWBOX, MARK_W } from './mark'
+import { REDUCED_MOTION } from '../kit/motion'
 
 /*
  * Boot screen: "the mark is cut from frosted glass".
@@ -78,7 +79,7 @@ export function createLoader(root: HTMLElement, { skip = false } = {}) {
     return { progress() {}, finish: () => Promise.resolve() }
   }
 
-  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches
+  const calm = REDUCED_MOTION
   const lowfx = matchMedia('(pointer: coarse)').matches || window.innerWidth < 768
 
   const paths = (attrs: string) => MARK_ALL.map(d => `<path d="${d}" ${attrs}/>`).join('')

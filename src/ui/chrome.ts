@@ -7,6 +7,7 @@ import { holdInert, releaseInert } from './inert'
 import { mountRotateGate } from './rotate'
 import { bindScene, holdScene, releaseScene } from './scene'
 import { noteChapter } from './fallback'
+import { REDUCED_MOTION } from '../kit/motion'
 
 /*
  * Persistent chrome: black, and frosted glass. Minimal, cold, precise — the
@@ -26,8 +27,7 @@ import { noteChapter } from './fallback'
  *                 still behind the frost.
  *   bottom-left   "Preferences" (a named region): Sound — three hairline
  *                 bars that ride the actual audio (aria-pressed); ≤ 440px a
- *                 round glyph pill. Motion follows prefers-reduced-motion
- *                 (reduced: html.motion-off, engine.motion = false).
+ *                 round glyph pill. Motion is always on (kit/motion.ts).
  *   bottom-right  the readout "03 / 07 · Etched · Services" over seven
  *                 hairline pips (each a ≥ 24px button; the current one a
  *                 white bar; hovering one cues "Go to …" in the readout).
@@ -74,7 +74,7 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
   const total = slots.length
   const indexOf = (id: string) => slots.findIndex(s => s.def.id === id)
   const biz = (id: string, fallback = '') => BUSINESS[id] ?? fallback
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
+  const reduced = REDUCED_MOTION
 
   // the rotate card and the menu sheet both hold the scene still behind their
   // frost (ref-counted, so engine.paused = shown for either, and only wakes

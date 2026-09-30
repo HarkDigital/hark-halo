@@ -697,20 +697,6 @@ body.svc {
   opacity: 1;
   transform: none;
 }
-@media (prefers-reduced-motion: reduce) {
-  .svc-rv {
-    opacity: 1;
-    transform: none;
-    transition: none;
-  }
-  .svc-gl,
-  .svc-feature::after,
-  .svc-step::after,
-  .svc-q summary i {
-    transition: none;
-  }
-}
-
 /* ---------------- hover: light that follows the cursor, lifts, neon accents ---------------- */
 .svc-spot {
   position: relative;

@@ -193,11 +193,3 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .stage-hero .hf-intro > *,
-  .stage-hero .hf-intro.is-in > * {
-    transition-delay: 0s !important;
-    filter: none;
-    transform: none;
-  }
-}

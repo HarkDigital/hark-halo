@@ -94,9 +94,3 @@
   outline: 2px solid var(--paper);
   outline-offset: 2px;
 }
-@media (prefers-reduced-motion: reduce) {
-  .fd,
-  .fd-sheet.hud-panel {
-    transition: none;
-  }
-}

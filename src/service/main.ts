@@ -13,6 +13,7 @@ import { mountNeonFrame } from './neonFrame'
 import { logoSvg } from '../ui/mark'
 import { SERVICE_PAGES } from './data/pages'
 import { SERVICE_CONTENT } from './data/content'
+import { REDUCED_MOTION } from '../kit/motion'
 
 /*
  * A SERVICE PAGE — one per service, at <base>services/<slug>/ (vite.config.ts
@@ -61,7 +62,7 @@ function render(i: number) {
   const prev = SERVICE_PAGES[(i - 1 + SERVICE_PAGES.length) % SERVICE_PAGES.length]
   const next = SERVICE_PAGES[(i + 1) % SERVICE_PAGES.length]
   const back = `${BASE}#services/${page.slug}`
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
+  const reduced = REDUCED_MOTION
   const mobile = matchMedia('(pointer: coarse)').matches || window.innerWidth < 768
 
   document.documentElement.classList.add('is-svc')

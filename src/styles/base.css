@@ -509,19 +509,6 @@ a {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    transition-duration: 0s !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-  }
-  .rise .rise-w > span {
-    transition-delay: 0s !important;
-  }
-}
-
 /* ---------------- word reveal (src/core/dom.ts rise/setRise) ----------------
    Glass: words come INTO FOCUS — blurred and a touch low, then sharp — like
    type seen through frosted glass as it clears. */

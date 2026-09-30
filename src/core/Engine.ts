@@ -7,6 +7,7 @@ import { clamp, damp } from './math'
 import { buildChapterCopy } from './srContent'
 import { nextFrame } from './yield'
 import type { CameraPose, Chapter, ChapterContext, ChapterDef, Frame } from './types'
+import { REDUCED_MOTION } from '../kit/motion'
 
 export interface ChapterSlot {
   def: ChapterDef
@@ -128,7 +129,7 @@ export class Engine {
     this.mobile = matchMedia('(pointer: coarse)').matches || window.innerWidth < 768
     // phones (and any device we've had to scale down) drop CSS backdrop-filter
     document.documentElement.classList.toggle('lowfx', this.mobile)
-    this.reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches
+    this.reducedMotion = REDUCED_MOTION
 
     this.renderer = new THREE.WebGLRenderer({
       canvas,

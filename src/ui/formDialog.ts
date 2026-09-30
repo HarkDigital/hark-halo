@@ -3,6 +3,7 @@ import { createContactForm } from './contactForm'
 import { holdInert, releaseInert } from './inert'
 import { holdScene, releaseScene } from './scene'
 import './formDialog.css'
+import { REDUCED_MOTION } from '../kit/motion'
 
 /*
  * The contact form as a frosted dialog over the story (the contact chapter's
@@ -20,7 +21,7 @@ let isOpen = false
 let opener: HTMLElement | null = null
 let holdTimer = 0
 
-const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches
+const reduced = () => REDUCED_MOTION
 
 function build() {
   const el = document.createElement('div')
