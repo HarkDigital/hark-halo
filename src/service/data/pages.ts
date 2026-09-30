@@ -1,6 +1,6 @@
 // Copied verbatim from the classic 2026 site (site-v2/src/data/servicePages.ts): the
-// service pages. Frost renders its own page per service (src/service/*); `scene` and
-// `relatedTags` are unused here.
+// service pages. Frost renders its own page per service (src/service/*); `scene` picks
+// the hero art (src/service/scenes, the classic scenes in neon); `relatedTags` is unused here.
 
 export interface ServicePageData {
   slug: string

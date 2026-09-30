@@ -15,7 +15,7 @@ import { bindServicesMenu, servicesMenuChip, servicesMenuItem } from '../ui/serv
 import { SERVICE_PAGES } from './data/pages'
 import { SERVICE_CONTENT } from './data/content'
 import { REDUCED_MOTION } from '../kit/motion'
-import { rise } from '../core/dom'
+import { rise } from '../core/rise'
 
 /*
  * A SERVICE PAGE — one per service, at <base>services/<slug>/ (vite.config.ts
@@ -24,8 +24,8 @@ import { rise } from '../core/dom'
  * black, frosted glass panels, bold caps labels, the two neon tubes.
  *
  *   top       the brand tile (home) + Work · Services · Contact + Start a project
- *   hero      the service's etched plate between the neon (src/service/hero.ts,
- *             WebGL; a CSS stand-in without it), eyebrow, headline, lede, CTAs
+ *   hero      the classic site's scene for the service, in glass and neon
+ *             (src/service/scenes, 2D canvas), eyebrow, headline, lede, CTAs
  *   features  "What you get": four frosted panels
  *   stat      the service's number
  *   process   "How it works": four steps on a hairline that lights on hover
@@ -65,7 +65,6 @@ function render(i: number) {
   const next = SERVICE_PAGES[(i + 1) % SERVICE_PAGES.length]
   const back = `${BASE}#services/${page.slug}`
   const reduced = REDUCED_MOTION
-  const mobile = matchMedia('(pointer: coarse)').matches || window.innerWidth < 768
 
   document.documentElement.classList.add('is-svc')
   document.title = `${page.title} · Hark Digital · ${SITE.name}`
@@ -166,8 +165,7 @@ function render(i: number) {
 
   document.getElementById('main')!.innerHTML = `
     <section class="svc-hero" aria-labelledby="svc-h1">
-      <canvas class="svc-gl" aria-hidden="true"></canvas>
-      <div class="svc-neon-css" aria-hidden="true"><i></i><i></i></div>
+      <div class="svc-art" aria-hidden="true"></div>
       <div class="svc-hero-scrim" aria-hidden="true"></div>
       <div class="svc-hero-copy">
         <p class="hud-eyebrow svc-rv" data-rv="wipe">${esc(page.title)}</p>
@@ -306,27 +304,8 @@ function render(i: number) {
     )
   }
 
-  // the hero art (WebGL), after the copy is up; without it the CSS neon stands in
-  const canvas = document.querySelector<HTMLCanvasElement>('.svc-gl')!
-  const hero = document.querySelector<HTMLElement>('.svc-hero')!
-  const gl2 = (() => {
-    try {
-      return !!document.createElement('canvas').getContext('webgl2')
-    } catch {
-      return false
-    }
-  })()
-  if (!gl2) hero.classList.add('is-nogl')
-  else
-    import('./hero')
-      .then(m => {
-        // the plate: this service's cell in the Services chapter's etched atlas
-        const plate = SERVICES.findIndex(s => s.slug === page.slug)
-        m.mountHero(canvas, plate >= 0 ? plate : i, { reduced, mobile })
-        requestAnimationFrame(() => hero.classList.add('is-gl'))
-      })
-      .catch(err => {
-        console.error('[service] hero failed', err)
-        hero.classList.add('is-nogl')
-      })
+  // the hero art: the classic site's scene for this service, redrawn in glass and neon (src/service/scenes)
+  import('./scenes')
+    .then(m => m.mountScene(document.querySelector<HTMLElement>('.svc-art')!, page.scene, { reduced }))
+    .catch(err => console.error('[service] hero scene failed', err))
 }
