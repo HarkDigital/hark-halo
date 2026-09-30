@@ -5,6 +5,10 @@ import { SERVICES, serviceUrl } from '../content'
  * the Services link stays what it was (the chapter, or back to it); a small
  * chevron beside it opens a frosted list of the eleven service pages.
  *
+ * On phones: the story's Menu sheet opens the same list under its Services
+ * row (servicesMenuSub), and a service page's top-right chip is a "Services"
+ * dropdown (servicesMenuChip) with "All services" (back to the story) first.
+ *
  * Opens on hover for a mouse, and on the chevron (click / Enter / Space) for
  * everyone; Escape closes it and returns focus to the chevron, as does a click
  * or focus anywhere else. The chevron carries aria-expanded / aria-controls;
@@ -14,21 +18,47 @@ import { SERVICES, serviceUrl } from '../content'
 let uid = 0
 const CHEVRON = `<svg viewBox="0 0 10 6" aria-hidden="true" focusable="false"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`
 const esc = (s: string) => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
+const entries = (cls: string, current?: string) =>
+  SERVICES.map(
+    s => `<li><a class="${cls}" href="${serviceUrl(s.slug)}"${s.slug === current ? ' aria-current="page"' : ''}>${esc(s.title)}</a></li>`,
+  ).join('')
 
 /** The nav item: `link` (the Services link's own markup) + the chevron + the list. */
 export function servicesMenuItem(link: string, current?: string): string {
   const id = `ch-dd-${++uid}`
-  const items = SERVICES.map(
-    s =>
-      `<li><a class="ch-dd-a" href="${serviceUrl(s.slug)}"${s.slug === current ? ' aria-current="page"' : ''}>${esc(s.title)}</a></li>`,
-  ).join('')
-  return `<li class="ch-dd">${link}<button class="ch-dd-btn" type="button" aria-expanded="false" aria-controls="${id}" aria-label="Service pages">${CHEVRON}</button><div class="ch-dd-panel" id="${id}"><ul class="ch-dd-list">${items}</ul></div></li>`
+  return `<li class="ch-dd">${link}<button class="ch-dd-btn" type="button" data-dd-toggle aria-expanded="false" aria-controls="${id}" aria-label="Service pages">${CHEVRON}</button><div class="ch-dd-panel" id="${id}"><ul class="ch-dd-list">${entries('ch-dd-a', current)}</ul></div></li>`
+}
+
+/** A service page's phone header: a "Services" chip that drops the list, "All services" (`back`) first. */
+export function servicesMenuChip(back: string, current?: string): string {
+  const id = `ch-dd-${++uid}`
+  return `<div class="ch-dd ch-dd--chip"><button class="ch-dd-chip ch-chip" type="button" data-dd-toggle aria-expanded="false" aria-controls="${id}"><span>Services</span>${CHEVRON}</button><div class="ch-dd-panel" id="${id}"><ul class="ch-dd-list"><li><a class="ch-dd-a ch-dd-a--back" href="${back}"><span aria-hidden="true">←</span> All services</a></li>${entries('ch-dd-a', current)}</ul></div></div>`
+}
+
+/** The story's Menu sheet: a chevron on the Services row that opens the list beneath it. */
+export function servicesMenuSub(): string {
+  const id = `ch-ml-sub-${++uid}`
+  return `<button class="ch-ml-more" type="button" aria-expanded="false" aria-controls="${id}" aria-label="Service pages">${CHEVRON}</button><ul class="ch-ml-sub" id="${id}" hidden>${entries('ch-ml-sa')}</ul>`
+}
+
+/** Wire the Menu sheet's Services sub-list (a plain disclosure). */
+export function bindServicesSub(root: ParentNode) {
+  for (const btn of root.querySelectorAll<HTMLButtonElement>('.ch-ml-more')) {
+    const list = document.getElementById(btn.getAttribute('aria-controls') ?? '')
+    if (!list) continue
+    btn.addEventListener('click', e => {
+      e.stopPropagation()
+      const open = btn.getAttribute('aria-expanded') !== 'true'
+      btn.setAttribute('aria-expanded', String(open))
+      list.hidden = !open
+    })
+  }
 }
 
 /** Wire every dropdown under `root`. */
 export function bindServicesMenu(root: ParentNode) {
   for (const li of root.querySelectorAll<HTMLElement>('.ch-dd')) {
-    const btn = li.querySelector<HTMLButtonElement>('.ch-dd-btn')
+    const btn = li.querySelector<HTMLButtonElement>('[data-dd-toggle]')
     if (!btn) continue
     let closeT = 0
     // opened by the mouse hovering: a click on the chevron then keeps it open instead of toggling it shut

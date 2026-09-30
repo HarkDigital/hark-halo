@@ -3,7 +3,7 @@ import type { Frame } from '../core/types'
 import type { Sound } from './sound'
 import { BRAND } from '../content'
 import { logoSvg, markOutlineSvg } from './mark'
-import { bindServicesMenu, servicesMenuItem } from './servicesMenu'
+import { bindServicesMenu, bindServicesSub, servicesMenuItem, servicesMenuSub } from './servicesMenu'
 import { holdInert, releaseInert } from './inert'
 import { mountRotateGate } from './rotate'
 import { bindScene, holdScene, releaseScene } from './scene'
@@ -102,11 +102,11 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
   const menuItems = slots
     .map(
       (s, i) =>
-        `<li style="--i:${i}"><a class="ch-ml" href="#${s.def.id}" data-go="${s.def.id}" aria-label="${esc(biz(s.def.id, s.def.label))}, chapter ${i + 1} of ${total}: ${esc(s.def.label)}">
+        `<li style="--i:${i}"${s.def.id === 'services' ? ' class="ch-ml-li--more"' : ''}><a class="ch-ml" href="#${s.def.id}" data-go="${s.def.id}" aria-label="${esc(biz(s.def.id, s.def.label))}, chapter ${i + 1} of ${total}: ${esc(s.def.label)}">
           <span class="ch-ml-n" aria-hidden="true">${pad(i + 1)}</span>
           <span class="ch-ml-name" aria-hidden="true">${esc(biz(s.def.id, s.def.label))}</span>
           <span class="ch-ml-lab" aria-hidden="true">${esc(s.def.label)}</span>
-        </a></li>`,
+        </a>${s.def.id === 'services' ? servicesMenuSub() : ''}</li>`,
     )
     .join('')
 
@@ -161,6 +161,7 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
   const $ = <T extends Element = HTMLElement>(s: string) => root.querySelector<T>(s)!
   const chr = $('.chr')
   bindServicesMenu(root)
+  bindServicesSub(root)
   const top = $('.ch-top')
   const bottom = $('.ch-bottom')
   const menu = $('.ch-menu')

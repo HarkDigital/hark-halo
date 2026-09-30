@@ -68,30 +68,19 @@ body.svc {
   padding: 4px 4px 4px 12px;
   border-radius: 999px;
 }
-.svc-back-chip {
+/* phones: the nav capsule gives way to the Services chip (ui/servicesMenu.ts) */
+.svc-top .ch-dd--chip {
   position: absolute;
   top: var(--ch-y);
   right: var(--gutter);
   display: none;
-  align-items: center;
-  gap: 8px;
-  height: var(--ch-h);
-  padding: 0 18px;
-  border-radius: 999px;
-  font-family: var(--font-label);
-  font-weight: var(--label-weight);
-  font-size: 11px;
-  letter-spacing: 0.077em;
-  text-transform: uppercase;
-  text-decoration: none;
-  color: var(--paper);
 }
 @media (max-width: 720px) {
   .svc-nav {
     display: none;
   }
-  .svc-back-chip {
-    display: inline-flex;
+  .svc-top .ch-dd--chip {
+    display: flex;
   }
 }
 

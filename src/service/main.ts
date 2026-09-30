@@ -11,7 +11,7 @@ import { BRAND, CONTACT, CONTACT_FORM, SERVICES, SITE } from '../content'
 import { createContactForm } from '../ui/contactForm'
 import { mountNeonFrame } from './neonFrame'
 import { logoSvg } from '../ui/mark'
-import { bindServicesMenu, servicesMenuItem } from '../ui/servicesMenu'
+import { bindServicesMenu, servicesMenuChip, servicesMenuItem } from '../ui/servicesMenu'
 import { SERVICE_PAGES } from './data/pages'
 import { SERVICE_CONTENT } from './data/content'
 import { REDUCED_MOTION } from '../kit/motion'
@@ -83,7 +83,7 @@ function render(i: number) {
         </ul>
         <a class="hud-btn ch-cta" href="#svc-contact">Start a project</a>
       </nav>
-      <a class="svc-back-chip ch-chip" href="${back}"><span aria-hidden="true">←</span> All services</a>
+      ${servicesMenuChip(back, page.slug)}
     </header>`
 
   bindServicesMenu(document.getElementById('svc-top')!)
