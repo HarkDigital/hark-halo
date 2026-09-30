@@ -51,7 +51,7 @@
   --p: 0;
   position: relative;
   display: grid;
-  grid-template-columns: 2.4em 1fr auto;
+  grid-template-columns: 1fr auto;
   align-items: center;
   gap: 10px;
   padding: 11px 0;
@@ -100,13 +100,6 @@
 .stage-shield .sh-step.is-on::before,
 .stage-shield .sh-step.is-on::after {
   opacity: 1;
-}
-.stage-shield .sh-step-n {
-  font-family: var(--font-label);
-  font-weight: var(--label-weight);
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  font-variant-numeric: tabular-nums;
 }
 .stage-shield .sh-step-t {
   font-family: var(--font-display);

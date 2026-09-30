@@ -252,14 +252,13 @@ export default function create(): Chapter {
       panel = el('div', 'hud-panel hud-panel--strong sh-panel', undefined, copyA)
       el('p', 'hud-body', SECURITY.body, panel)
 
-      // the fix: four steps, ticked off as the sign does them, and the emergency CTA
+      // the fix: the steps (unnumbered), ticked off as the sign does them, and the emergency CTA
       copyB = el('div', 'sh-b', undefined, stage)
       el('p', 'hud-eyebrow', SECURITY.fixEyebrow, copyB)
       fixTitle = rise(el('h2', 'hud-h2 sh-fix-title', undefined, copyB), SECURITY.fixTitle)
       const ol = el('ol', 'hud-panel hud-panel--strong sh-steps', undefined, copyB)
-      SECURITY.steps.forEach((s, i) => {
+      SECURITY.steps.forEach(s => {
         const li = el('li', 'sh-step', undefined, ol)
-        el('span', 'sh-step-n', String(i + 1).padStart(2, '0'), li)
         el('span', 'sh-step-t', s, li)
         const mark = el('span', 'sh-step-mark', undefined, li)
         mark.setAttribute('aria-hidden', 'true')

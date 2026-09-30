@@ -401,12 +401,12 @@ export const MICROCOPY = {
 export const SECURITY = {
   eyebrow: 'Hack remediation · Website & data security',
   title: 'Hacked? Breathe.',
-  body: 'We find the breach, clean the infection, restore your site, and lock the door behind us. Then we keep watch, hardening, monitoring, and backups, so it never happens again.',
+  body: 'It happens to careful businesses too, and it can be fixed. We handle the cleanup from start to finish, explain in plain English what happened, and keep watch afterward so it doesn’t happen again.',
   cta: 'Emergency cleanup →',
   href: 'mailto:info@hark.digital?subject=Emergency%3A%20my%20site%20was%20hacked',
   /** the fix, step by step (the sign does each as it's ticked off) */
   fixEyebrow: 'How we fix it',
-  fixTitle: 'Four steps. <em>No panic.</em>',
+  fixTitle: 'From hacked to <em>handled.</em>',
   steps: ['Find the breach', 'Clean the infection', 'Restore the site', 'Lock the door behind us'],
 }
 
