@@ -378,8 +378,9 @@ export default function create(): Chapter {
       leanX = damp(leanX, onMark ? clamp(hoverP.x / 0.6, -1, 1) : 0, 4, frame.dt)
       leanY = damp(leanY, onMark ? clamp(hoverP.y / 0.6, -1, 1) : 0, 4, frame.dt)
 
-      // ---- the mark: a slow turntable sway (±12° at rest, quieter in the payoff, still in macro)
-      const swayAmp = THREE.MathUtils.degToRad(lerp(12, 5, payW)) * (1 - macro) * (1 - outW) * calm * (1 - 0.6 * hoverAmt)
+      // ---- the mark: a slow turntable sway (±12° at rest, quieter in the payoff, still in macro);
+      // the pointer on it stills the sway entirely, so it holds and leans toward the pointer (as the contact's does)
+      const swayAmp = THREE.MathUtils.degToRad(lerp(12, 5, payW)) * (1 - macro) * (1 - outW) * calm * (1 - hoverAmt)
       const sway = swayAmp * Math.sin(t * 0.36)
       s.pivot.rotation.set(
         val[TILT] + 0.015 * Math.sin(t * 0.23) * calm * (1 - macro) - 0.34 * leanY,
