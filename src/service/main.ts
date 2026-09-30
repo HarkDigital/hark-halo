@@ -15,6 +15,7 @@ import { bindServicesMenu, servicesMenuChip, servicesMenuItem } from '../ui/serv
 import { SERVICE_PAGES } from './data/pages'
 import { SERVICE_CONTENT } from './data/content'
 import { REDUCED_MOTION } from '../kit/motion'
+import { rise } from '../core/dom'
 
 /*
  * A SERVICE PAGE — one per service, at <base>services/<slug>/ (vite.config.ts
@@ -94,8 +95,8 @@ function render(i: number) {
   const features = page.features
     .map(
       (f, k) => `
-        <li class="svc-feature hud-panel svc-rv" style="--d:${k}">
-          <p class="svc-n hud-label" aria-hidden="true">${pad(k + 1)}</p>
+        <li class="svc-feature hud-panel svc-rv" data-rv="panel" style="--d:${k}">
+          <span class="svc-trace svc-trace--halo" aria-hidden="true"></span><span class="svc-trace" aria-hidden="true"></span>
           <h3 class="svc-feature-t">${esc(f.title)}</h3>
           <p class="svc-feature-p">${esc(f.text)}</p>
         </li>`,
@@ -104,8 +105,8 @@ function render(i: number) {
   const steps = page.process
     .map(
       (s, k) => `
-        <li class="svc-step svc-rv" style="--d:${k}">
-          <p class="svc-n hud-label" aria-hidden="true">${pad(k + 1)}</p>
+        <li class="svc-step svc-rv" data-rv="step" style="--d:${k}">
+          <span class="svc-wire" aria-hidden="true"></span><span class="svc-node" aria-hidden="true"></span>
           <h3 class="svc-step-t">${esc(s.title)}</h3>
           <p class="svc-step-p">${esc(s.text)}</p>
         </li>`,
@@ -114,14 +115,14 @@ function render(i: number) {
   const article = content
     ? `
     <section class="svc-sec svc-article" aria-labelledby="svc-article-h">
-      <h2 class="svc-eyebrow hud-eyebrow svc-rv" id="svc-article-h">The longer version</h2>
+      <h2 class="svc-eyebrow hud-eyebrow svc-rv" data-rv="wipe" id="svc-article-h">The longer version</h2>
       <div class="svc-article-grid">
         ${content.article
           .map(
             (b, k) => `
-          <article class="svc-block svc-rv${k === 2 ? ' svc-block--wide' : ''}" style="--d:${Math.min(k, 3)}">
-            <h3 class="svc-block-t">${esc(b.heading)}</h3>
-            ${b.paragraphs.map(p => `<p>${esc(p)}</p>`).join('')}
+          <article class="svc-block${k === 2 ? ' svc-block--wide' : ''}">
+            <h3 class="svc-block-t svc-rv" data-words>${esc(b.heading)}</h3>
+            ${b.paragraphs.map((p, j) => `<p class="svc-rv" data-rv="wipe" style="--d:${j + 1}">${esc(p)}</p>`).join('')}
           </article>`,
           )
           .join('')}
@@ -131,13 +132,13 @@ function render(i: number) {
   const faq = content
     ? `
     <section class="svc-sec svc-faq" aria-labelledby="svc-faq-h">
-      <p class="hud-eyebrow svc-rv">Questions, answered</p>
-      <h2 class="hud-h2 svc-h2 svc-rv" id="svc-faq-h">What people ask us about ${esc(page.title.toLowerCase())}.</h2>
+      <p class="hud-eyebrow svc-rv" data-rv="wipe">Questions, answered</p>
+      <h2 class="hud-h2 svc-h2 svc-rv" data-words id="svc-faq-h">What people ask us about ${esc(page.title.toLowerCase())}.</h2>
       <div class="svc-faq-list">
         ${content.faqs
           .map(
-            f => `
-          <details class="svc-q svc-rv">
+            (f, k) => `
+          <details class="svc-q svc-rv" data-rv="row" style="--d:${k}">
             <summary><span>${esc(f.q)}</span><i aria-hidden="true"></i></summary>
             <p>${esc(f.a)}</p>
           </details>`,
@@ -149,9 +150,10 @@ function render(i: number) {
   const quote = page.quote
     ? `
     <section class="svc-sec svc-quote-sec" aria-label="A client">
-      <figure class="svc-quote hud-panel svc-rv">
+      <figure class="svc-quote hud-panel svc-rv" data-rv="panel">
+        <span class="svc-trace svc-trace--halo" aria-hidden="true"></span><span class="svc-trace" aria-hidden="true"></span>
         <span class="svc-quote-mark" aria-hidden="true">“</span>
-        <blockquote class="hud-quote">${esc(page.quote.text)}</blockquote>
+        <blockquote class="hud-quote svc-rv" data-words>${esc(page.quote.text)}</blockquote>
         <figcaption class="hud-label">${esc(page.quote.name)} · ${esc(page.quote.company)}</figcaption>
       </figure>
     </section>`
@@ -168,11 +170,11 @@ function render(i: number) {
       <div class="svc-neon-css" aria-hidden="true"><i></i><i></i></div>
       <div class="svc-hero-scrim" aria-hidden="true"></div>
       <div class="svc-hero-copy">
-        <p class="hud-eyebrow svc-rv">${esc(page.title)}</p>
-        <h1 class="hud-title svc-h1 svc-rv${long > 30 ? ' is-long' : ''}" id="svc-h1">${headline}</h1>
-        <p class="hud-body svc-lede svc-rv">${esc(page.lede)}</p>
-        ${svc ? `<ul class="hud-tags svc-tags svc-rv" aria-label="Includes">${svc.tags.map(t => `<li class="hud-tag">${esc(t)}</li>`).join('')}</ul>` : ''}
-        <div class="svc-ctas svc-rv">
+        <p class="hud-eyebrow svc-rv" data-rv="wipe">${esc(page.title)}</p>
+        <h1 class="hud-title svc-h1 svc-rv${long > 30 ? ' is-long' : ''}" data-words id="svc-h1">${headline}</h1>
+        <p class="hud-body svc-lede svc-rv" data-rv="wipe" style="--d:3">${esc(page.lede)}</p>
+        ${svc ? `<ul class="hud-tags svc-tags svc-rv" data-rv="pop" style="--d:5" aria-label="Includes">${svc.tags.map((t, k) => `<li class="hud-tag" style="--k:${k}">${esc(t)}</li>`).join('')}</ul>` : ''}
+        <div class="svc-ctas svc-rv" style="--d:7">
           <a class="hud-btn" href="#svc-contact">Start a project</a>
           <a class="hud-btn hud-btn--ghost" href="${back}"><span aria-hidden="true">←</span> All services</a>
         </div>
@@ -180,20 +182,20 @@ function render(i: number) {
     </section>
 
     <section class="svc-sec svc-features" aria-labelledby="svc-features-h">
-      <h2 class="svc-eyebrow hud-eyebrow svc-rv" id="svc-features-h">What you get</h2>
+      <h2 class="svc-eyebrow hud-eyebrow svc-rv" data-rv="wipe" id="svc-features-h">What you get</h2>
       <ul class="svc-feature-grid">${features}</ul>
     </section>
 
     <section class="svc-stat" aria-label="By the numbers">
-      <p class="svc-stat-in svc-rv">
+      <p class="svc-stat-in svc-rv" data-rv="stat">
         <span class="svc-stat-v">${esc(page.stat.value)}</span>
         <span class="svc-stat-l hud-label">${esc(page.stat.label)}</span>
       </p>
     </section>
 
     <section class="svc-sec svc-process" aria-labelledby="svc-process-h">
-      <p class="hud-eyebrow svc-rv">How it works</p>
-      <h2 class="hud-h2 svc-h2 svc-rv" id="svc-process-h">We listen first. Then we <em>build.</em></h2>
+      <p class="hud-eyebrow svc-rv" data-rv="wipe">How it works</p>
+      <h2 class="hud-h2 svc-h2 svc-rv" data-words id="svc-process-h">We listen first. Then we <em>build.</em></h2>
       <ol class="svc-steps">${steps}</ol>
     </section>
 
@@ -202,8 +204,8 @@ function render(i: number) {
     ${quote}
 
     <section class="svc-sec svc-next" aria-label="Next">
-      <p class="svc-cta-line svc-rv">${esc(page.cta)}</p>
-      <nav class="svc-pn svc-rv" aria-label="More services">
+      <p class="svc-cta-line svc-rv" data-words>${esc(page.cta)}</p>
+      <nav class="svc-pn svc-rv" data-rv="side" aria-label="More services">
         <a class="svc-pn-a" href="${serviceHref(prev.slug)}" rel="prev"><span class="hud-label">Previous</span><span class="svc-pn-t"><span aria-hidden="true">←</span> ${esc(prev.title)}</span></a>
         <a class="svc-pn-a svc-pn-a--next" href="${serviceHref(next.slug)}" rel="next"><span class="hud-label">Next</span><span class="svc-pn-t">${esc(next.title)} <span aria-hidden="true">→</span></span></a>
       </nav>
@@ -213,9 +215,9 @@ function render(i: number) {
       <div class="svc-contact-card hud-panel hud-panel--strong">
         <div class="svc-contact-grid">
           <div class="svc-contact-copy">
-            <p class="hud-eyebrow">${esc(CONTACT.eyebrow)}</p>
-            <h2 class="hud-title svc-contact-t" id="svc-contact-h">Say <em>hello.</em></h2>
-            <p class="hud-body">${esc(CONTACT.body)}</p>
+            <p class="hud-eyebrow svc-rv" data-rv="wipe">${esc(CONTACT.eyebrow)}</p>
+            <h2 class="hud-title svc-contact-t svc-rv" data-words id="svc-contact-h">Say <em>hello.</em></h2>
+            <p class="hud-body svc-rv" data-rv="wipe" style="--d:2">${esc(CONTACT.body)}</p>
           </div>
           <div class="svc-contact-form"></div>
         </div>
@@ -223,12 +225,25 @@ function render(i: number) {
     </section>
 
     <footer class="svc-foot">
-      <nav class="svc-idx" aria-label="All services">
-        <p class="hud-label">All services</p>
-        <ul>${index11}</ul>
-      </nav>
-      <div class="svc-foot-row">
-        <a class="svc-home hud-label" href="${BASE}"><span aria-hidden="true">←</span> Back to the story</a>
+      <div class="svc-foot-cols">
+        <nav class="svc-foot-col svc-foot-svc svc-rv" data-rv="list" aria-labelledby="svc-foot-svc-h">
+          <p class="hud-label svc-foot-h" id="svc-foot-svc-h">Services</p>
+          <ul>${index11}</ul>
+        </nav>
+        <nav class="svc-foot-col svc-rv" data-rv="list" aria-labelledby="svc-foot-nav-h">
+          <p class="hud-label svc-foot-h" id="svc-foot-nav-h">Explore</p>
+          <ul>
+            <li><a href="${BASE}">Home</a></li>
+            <li><a href="${BASE}#services">Services</a></li>
+            <li><a href="${BASE}#process">Process</a></li>
+            <li><a href="${BASE}#work">Work</a></li>
+            <li><a href="${BASE}#voices">Clients</a></li>
+            <li><a href="${BASE}#contact">Contact</a></li>
+          </ul>
+        </nav>
+      </div>
+      <div class="svc-foot-bar">
+        <a class="svc-foot-logo" href="${BASE}" aria-label="${esc(BRAND.name)}, home">${logoSvg('svc-foot-logo-svg')}</a>
         <p class="hud-label">© ${year} ${esc(BRAND.name)} · ${BRAND.locale.split(' · ').map(esc).join(' · ')}</p>
       </div>
     </footer>`
@@ -237,6 +252,11 @@ function render(i: number) {
   const cardEl = document.querySelector<HTMLElement>('.svc-contact-card')!
   document.querySelector('.svc-contact-form')!.append(createContactForm({ service: CONTACT_FORM.services.find(s => s === page.title) }))
   mountNeonFrame(cardEl)
+
+  // entrances (service pages only; the story has its own): headlines come into focus word by
+  // word (the story's rise), everything else by its data-rv kind (service.css)
+  for (const h of document.querySelectorAll<HTMLElement>('.svc-rv[data-words]')) rise(h, h.innerHTML)
+  document.querySelectorAll<HTMLElement>('.svc-foot-col').forEach(col => col.querySelectorAll<HTMLElement>('li').forEach((li, k) => li.style.setProperty('--k', String(k))))
 
   // reveals: in on scroll, once (instantly under reduced motion)
   const rv = [...document.querySelectorAll<HTMLElement>('.svc-rv')]
