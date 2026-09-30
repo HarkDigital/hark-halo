@@ -107,6 +107,9 @@ export default function create(): Chapter {
   const ndc = new THREE.Vector2()
   let lastHoverX = 9
   let lastHoverY = 9
+  /** the plate under the pointer (desktop), and each plate's Learn More hover glow */
+  let hoverPlate = -1
+  const btnHover = new Float32Array(N)
   /** where the plate in view sits on screen (world-field units: x = ndc.x·aspect) */
   const slot = { x: 0.3, y: 0, ok: false }
 
@@ -241,6 +244,7 @@ export default function create(): Chapter {
     },
     onLeave() {
       active = false
+      hoverPlate = -1
       if (canvas) canvas.style.cursor = ''
     },
 
@@ -303,6 +307,9 @@ export default function create(): Chapter {
         // the etching: razor lines on the face, light bleeding into the frost behind them
         const faceB = lerp(0.14 * louvreIn * (1 - louvreOut), mobile ? 1.35 : 1.6, sel * sel) * dim
         p.faceMat.uniforms.uBright.value = faceB
+        // the Learn More pill: lit on the plate in view, brighter while the pointer is on the plate
+        btnHover[i] = damp(btnHover[i], i === hoverPlate ? 1 : 0, 8, dt)
+        p.faceMat.uniforms.uBtn.value = lerp(0.03 * louvreIn * (1 - louvreOut), mobile ? 0.8 : 0.72, sel * sel) * dim * (1 + 0.4 * btnHover[i])
         p.glowMat.uniforms.uBright.value = lerp(0.08, 0.24, sel) * dim
         // a light band crosses the etched lines once as the plate settles (gone by the anchor)
         const s = clamp((u - i - 0.1) / 0.38)
@@ -412,6 +419,7 @@ export default function create(): Chapter {
           ndc.set(px, py)
           const k = local > A - 0.02 && local < CARD_OUT ? pick(ctx) : -1
           canvas.style.cursor = k >= 0 ? 'pointer' : ''
+          hoverPlate = k
         }
       }
     },

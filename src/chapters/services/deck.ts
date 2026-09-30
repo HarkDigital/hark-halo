@@ -66,18 +66,20 @@ const PLATE_VERT = /* glsl */ `
   }
 `
 
-/** crisp etched lines (R) + a slow light sweep across them */
+/** crisp etched lines (R) + a slow light sweep across them; the "Learn More" pill (B) in white light */
 const FACE_FRAG = /* glsl */ `
   uniform sampler2D uMap;
   uniform vec3 uColor;
-  uniform float uBright, uSweep, uSweepAmt;
+  uniform float uBright, uSweep, uSweepAmt, uBtn;
   varying vec2 vUv;
   varying vec2 vP;
   void main() {
-    float v = texture2D(uMap, vUv).r;
+    vec3 t = texture2D(uMap, vUv).rgb;
     float s = (vP.x * 0.8 + vP.y * 0.55) - uSweep;
     float band = exp(-(s * s) / 0.035);
-    gl_FragColor = vec4(uColor * v * (uBright + uSweepAmt * band), 1.0);
+    vec3 lines = uColor * t.r * (uBright + uSweepAmt * band);
+    vec3 pill = vec3(t.b * (uBtn + 0.3 * uSweepAmt * band));
+    gl_FragColor = vec4(lines + pill, 1.0);
   }
 `
 
@@ -206,6 +208,7 @@ export function buildDeck(mobile: boolean, envMap: THREE.Texture | null): Deck {
         uBright: { value: 0 },
         uSweep: { value: -3 },
         uSweepAmt: { value: 0 },
+        uBtn: { value: 0 },
       },
       vertexShader: PLATE_VERT,
       fragmentShader: FACE_FRAG,

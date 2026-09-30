@@ -10,6 +10,8 @@ import { SERVICES } from '../../content'
  *   R channel  the crisp etched lines (sampled by the face plate: razor sharp)
  *   G channel  the same icon, thick and blurred (sampled by the glow plate
  *              inside the glass: light bleeding into the frost around it)
+ *   B channel  the "Learn More" button, bottom right: a lit pill with its words
+ *              knocked out (its own channel, so the plate can brighten it on hover)
  *
  * The atlas is drawn opaque (black) with additive compositing, so the two
  * channels never premultiply into each other. Glyphs are designed in a
@@ -44,6 +46,19 @@ function rrect(g: Ctx, x: number, y: number, w: number, h: number, r: number) {
   g.arcTo(x, y, x + w, y, rr)
   g.closePath()
   g.stroke()
+}
+
+/** a filled rounded rect */
+function rrectFill(g: Ctx, x: number, y: number, w: number, h: number, r: number) {
+  const rr = Math.max(0, Math.min(r, w / 2, h / 2))
+  g.beginPath()
+  g.moveTo(x + rr, y)
+  g.arcTo(x + w, y, x + w, y + h, rr)
+  g.arcTo(x + w, y + h, x, y + h, rr)
+  g.arcTo(x, y + h, x, y, rr)
+  g.arcTo(x, y, x + w, y, rr)
+  g.closePath()
+  g.fill()
 }
 
 /** a four-point sparkle (concave star) centred at x,y with radius r */
@@ -247,7 +262,7 @@ export function buildAtlas(cellW: number, cellH: number, weight = 1): Atlas {
       g.translate(ox, oy)
       const u = cellH / 100 // layout unit: 1% of the cell height
 
-      // ---- registration marks: four hairline corners (R)
+      // ---- registration marks: hairline corners (R); the button takes the bottom right
       g.strokeStyle = 'rgb(150,0,0)'
       g.lineWidth = Math.max(1, 0.32 * u * weight)
       g.lineCap = 'butt'
@@ -257,7 +272,6 @@ export function buildAtlas(cellW: number, cellH: number, weight = 1): Atlas {
         [m, m, 1, 1],
         [cellW - m, m, -1, 1],
         [m, cellH - m, 1, -1],
-        [cellW - m, cellH - m, -1, -1],
       ]) {
         poly(g, [[cx, cy + sy * L], [cx, cy], [cx + sx * L, cy]])
       }
@@ -268,6 +282,39 @@ export function buildAtlas(cellW: number, cellH: number, weight = 1): Atlas {
       g.fillStyle = 'rgb(200,0,0)'
       g.font = `700 ${Math.round(3.5 * u)}px ${label}`
       spaced(g, svc.title.toUpperCase(), m + 3.2 * u, cellH - m - 2.6 * u, 0.36 * u)
+
+      // ---- the button, bottom right, level with the name: a lit pill (B, with a soft
+      // bloom in the frost, G), its words and arrow knocked out of it, like the site's
+      // white pill buttons
+      g.font = `600 ${Math.round(5.1 * u)}px ${label}`
+      const words = 'Learn More'
+      const tw = g.measureText(words).width
+      const aw = 3.7 * u // the arrow
+      const bh = 12.6 * u
+      const bw = 5.6 * u + tw + 2.9 * u + aw + 5.2 * u
+      const bx = cellW - m - 1.6 * u - bw
+      const cy = cellH - m - 3.9 * u // the name's middle
+      const by = cy - bh / 2
+      g.fillStyle = 'rgb(0,90,0)'
+      g.shadowColor = 'rgb(0,200,0)'
+      g.shadowBlur = 4 * u
+      rrectFill(g, bx, by, bw, bh, bh / 2)
+      g.shadowBlur = 0
+      g.shadowColor = 'transparent'
+      g.fillStyle = 'rgb(0,0,255)'
+      rrectFill(g, bx, by, bw, bh, bh / 2)
+      g.globalCompositeOperation = 'source-over'
+      g.fillStyle = '#000000'
+      g.strokeStyle = '#000000'
+      g.textBaseline = 'middle'
+      g.fillText(words, bx + 5.6 * u, cy + 0.2 * u)
+      const ax = bx + 5.6 * u + tw + 2.9 * u
+      g.lineWidth = 0.75 * u
+      g.lineCap = 'round'
+      g.lineJoin = 'round'
+      poly(g, [[ax, cy], [ax + aw, cy]])
+      poly(g, [[ax + aw - 1.5 * u, cy - 1.5 * u], [ax + aw, cy], [ax + aw - 1.5 * u, cy + 1.5 * u]])
+      g.globalCompositeOperation = 'lighter'
 
       // ---- the icon: a soft glow pass (G), then the crisp line (R)
       const gs = (cellH * 0.44) / 100 // icon box ≈ 44% of the cell height
