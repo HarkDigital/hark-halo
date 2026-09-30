@@ -105,13 +105,17 @@ const FIT: Record<'land' | 'port', Record<'intro' | 'end', Fit>> = {
 export default function create(): Chapter {
   const group = new THREE.Group()
   let set: HeroSet | null = null
-  // hover (tube mark): the pointer on the mark's plane, how much it counts, the lean, a clicked spark
+  // the pointer (tube mark): where it is on the mark's plane, how near (the light), the lean, a clicked spark
   let neonCurves: THREE.Curve<THREE.Vector3>[] = []
   const hoverP = new THREE.Vector2(99, 99)
+  const markNdc = new THREE.Vector3()
   let hoverAmt = 0
   let hoverLive = false
   let leanX = 0
   let leanY = 0
+  /** a mouse is in the window (the mark follows it); how much the follow has taken over from the sway */
+  let pointerIn = false
+  let engaged = 0
   let spark: { part: number; u0: number; dir: number; at: number } | null = null
   const fine = typeof matchMedia === 'function' && matchMedia('(hover: hover) and (pointer: fine)').matches
   let reduced = false
@@ -271,6 +275,12 @@ export default function create(): Chapter {
       haloRefl.root.matrixAutoUpdate = false
       set = { ...mark, ...card, floor, reflection, neon: halo.parts, neonRefl: haloRefl, walls }
       if (TUBE) neonCurves = (halo as ReturnType<typeof buildTubeNeon>).curves
+      // the mark follows a mouse anywhere in the window, and rests when it leaves
+      if (TUBE && fine) {
+        window.addEventListener('pointermove', e => (pointerIn = e.pointerType === 'mouse'), { passive: true })
+        document.addEventListener('pointerout', e => !e.relatedTarget && (pointerIn = false), { passive: true })
+        window.addEventListener('blur', () => (pointerIn = false))
+      }
       // a click on a tube sends a spark racing along it (from where it was clicked)
       if (TUBE)
         ctx.renderer.domElement.addEventListener('click', () => {
@@ -369,22 +379,32 @@ export default function create(): Chapter {
       tgt.addScaledVector(tmpR, shiftR).addScaledVector(tmpU, shiftU)
       parallax = lerp(0.22, 0.03, macro) * (1 - outW)
 
-      // ---- hover (tube mark, a mouse, not scrolling; at the headline and the settle): the
-      // pointer on the mark's plane (last frame's pose), and the mark leans toward it
-      const hoverable = TUBE && fine && (local < 0.1 || (local > 0.6 && local < 0.86)) && Math.abs(frame.velocity) < 0.06
-      const onMark = hoverable && pointerOnMark(ctx.camera, frame.pointerRaw, s.logo.root, hoverP) && hoverP.length() < 0.85
-      hoverLive = onMark
-      hoverAmt = damp(hoverAmt, onMark ? 1 : 0, onMark ? 5 : 3, frame.dt)
-      leanX = damp(leanX, onMark ? clamp(hoverP.x / 0.6, -1, 1) : 0, 4, frame.dt)
-      leanY = damp(leanY, onMark ? clamp(hoverP.y / 0.6, -1, 1) : 0, 4, frame.dt)
+      // ---- the pointer (tube mark, a mouse): wherever it is in the window the mark turns toward
+      // it (aimed from the mark's own place on screen, so the turn can't feed back into the aim),
+      // and the nearer it comes the more the neon and the glass light up where it points. The
+      // follow eases in and out with the headline and the settle (the close-ups hold still) and
+      // only lets go when the mouse leaves the window: no hard edges, no snapping back.
+      const followW = TUBE && fine ? 1 - smoothstep(0.07, 0.14, local) + smoothstep(0.56, 0.64, local) * (1 - smoothstep(0.84, 0.9, local)) : 0
+      const follow = pointerIn ? followW : 0
+      engaged = damp(engaged, follow, 3, frame.dt)
+      const soft = (v: number) => v / Math.sqrt(1 + v * v)
+      markNdc.setFromMatrixPosition(s.logo.root.matrixWorld).project(ctx.camera)
+      // (before the first real frame the projection isn't finite: aim nowhere rather than NaN)
+      const aim = follow > 0 && Number.isFinite(markNdc.x + markNdc.y)
+      leanX = damp(leanX, aim ? follow * soft(((frame.pointerRaw.x - markNdc.x) * aspect) / 0.55) : 0, 3.5, frame.dt)
+      leanY = damp(leanY, aim ? follow * soft((frame.pointerRaw.y - markNdc.y) / 0.55) : 0, 3.5, frame.dt)
+      const onPlane = followW > 0 && pointerOnMark(ctx.camera, frame.pointerRaw, s.logo.root, hoverP)
+      const near = onPlane ? 1 - smoothstep(0.5, 1.2, hoverP.length()) : 0
+      hoverLive = pointerIn && onPlane && hoverP.length() < 0.85
+      hoverAmt = damp(hoverAmt, follow * near, 4, frame.dt)
 
       // ---- the mark: a slow turntable sway (±12° at rest, quieter in the payoff, still in macro);
-      // the pointer on it stills the sway entirely, so it holds and leans toward the pointer (as the contact's does)
-      const swayAmp = THREE.MathUtils.degToRad(lerp(12, 5, payW)) * (1 - macro) * (1 - outW) * calm * (1 - hoverAmt)
+      // a mouse in the window all but stills it, so the mark holds and turns toward the pointer
+      const swayAmp = THREE.MathUtils.degToRad(lerp(12, 5, payW)) * (1 - macro) * (1 - outW) * calm * (1 - 0.85 * engaged)
       const sway = swayAmp * Math.sin(t * 0.36)
       s.pivot.rotation.set(
-        val[TILT] + 0.015 * Math.sin(t * 0.23) * calm * (1 - macro) - 0.34 * leanY,
-        val[ROT] + sway + 0.5 * leanX,
+        val[TILT] + 0.015 * Math.sin(t * 0.23) * calm * (1 - macro) - 0.3 * leanY,
+        val[ROT] + sway + 0.45 * leanX,
         0,
       )
       s.pivot.updateMatrixWorld(true)
@@ -538,7 +558,7 @@ export default function create(): Chapter {
       }
       if (TUBE) setTubeHover(s.neon, s.walls, hoverP, hoverAmt)
       // (a still page drops to a slow heartbeat: keep drawing while the lean, the light or a spark moves)
-      if (spark || Math.abs(hoverAmt - (onMark ? 1 : 0)) > 0.004 || Math.abs(leanX) + Math.abs(leanY) > 0.004) window.__hark?.engine?.wake()
+      if (spark || hoverAmt > 0.004 || engaged > 0.004 || Math.abs(leanX) + Math.abs(leanY) > 0.004) window.__hark?.engine?.wake()
       // the reflection: the room's view only (the glass never sees it), dimmer
       for (let i = 0; i < s.neonRefl.parts.length; i++) {
         for (const n of s.neonRefl.parts[i]) {

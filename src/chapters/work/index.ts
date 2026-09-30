@@ -99,12 +99,6 @@ const UP = new THREE.Vector3(0, 1, 0)
 const WORDS = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve']
 const pad = (n: number) => String(n).padStart(2, '0')
 const esc = (s: string) => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
-const emLast = (s: string) => {
-  const parts = s.split(' ')
-  if (parts.length < 2) return `<em>${esc(s)}</em>`
-  const last = parts.pop()!
-  return `${esc(parts.join(' '))} <em>${esc(last)}</em>`
-}
 const hostOf = (url: string) => {
   try {
     return new URL(url).hostname.replace(/^www\./, '')
@@ -401,7 +395,7 @@ class Work implements Chapter {
     const meta = el('div', 'wk-meta', undefined, root)
     el('span', 'hud-label wk-ind', w.industry, meta)
     if (pre) el('span', 'wk-badge', 'Preview', meta)
-    const name = rise(el('h3', 'hud-h2 wk-name', undefined, root), emLast(w.name))
+    const name = rise(el('h3', 'hud-h2 wk-name', undefined, root), esc(w.name)) // (plain: no italic last word)
     el('p', 'hud-body wk-blurb', w.blurb, root)
     const tags = el('ul', 'hud-tags wk-tags', undefined, root)
     for (const t of w.tags) el('li', 'hud-tag', t, tags)

@@ -86,12 +86,15 @@ export default function create(): Chapter {
   let signY = NaN
   let hoverAmt = 0
   let idleAmt = 0
-  // the mark under the pointer (tube mark): where on its plane, how much it counts, the lean, a spark
+  // the pointer (tube mark): where it is on the mark's plane, how near (the light), the lean, a spark
   const markP = new THREE.Vector2(99, 99)
+  const markNdc = new THREE.Vector3()
   let markHover = 0
   let markLive = false
   let leanX = 0
   let leanY = 0
+  /** a mouse is in the window (the mark follows it) */
+  let pointerIn = false
   let spark: { part: number; u0: number; dir: number; at: number } | null = null
   const fine = typeof matchMedia === 'function' && matchMedia('(hover: hover) and (pointer: fine)').matches
   const shortLandscape = () => matchMedia('(orientation: landscape) and (max-height: 500px)').matches
@@ -160,6 +163,12 @@ export default function create(): Chapter {
       await nextFrame()
       set = buildScene(rt => ctx.post.isFrameTarget(rt), ctx.mobile, ctx.world.envMap)
       group.add(set.rig)
+      // the mark follows a mouse anywhere in the window, and rests when it leaves
+      if (TUBE && fine) {
+        window.addEventListener('pointermove', e => (pointerIn = e.pointerType === 'mouse'), { passive: true })
+        document.addEventListener('pointerout', e => !e.relatedTarget && (pointerIn = false), { passive: true })
+        window.addEventListener('blur', () => (pointerIn = false))
+      }
       if (TUBE)
         ctx.renderer.domElement.addEventListener('click', () => {
           if (!markLive) return
@@ -210,16 +219,26 @@ export default function create(): Chapter {
       // "front-on" = facing the camera: undo the off-axis view angle of the art area
       const faceY = -Math.atan2(rig.position.x, D)
       const faceX = Math.atan2(rig.position.y, D)
-      // hover (tube mark, a mouse, not scrolling): the pointer on the mark's plane; it leans toward it
-      const hoverable = TUBE && fine && local > 0.2 && Math.abs(frame.velocity) < 0.06
-      const onMark = hoverable && pointerOnMark(ctx.camera, frame.pointerRaw, set.logo.root, markP) && markP.length() < 0.85
-      markLive = onMark
-      markHover = damp(markHover, onMark ? 1 : 0, onMark ? 5 : 3, frame.dt)
-      leanX = damp(leanX, onMark ? clamp(markP.x / 0.6, -1, 1) : 0, 4, frame.dt)
-      leanY = damp(leanY, onMark ? clamp(markP.y / 0.6, -1, 1) : 0, 4, frame.dt)
+      // the pointer (tube mark, a mouse): wherever it is in the window the mark turns toward it
+      // (aimed from the mark's own place on screen), and the nearer it comes the more the neon
+      // and the glass light up where it points; it eases in as the mark arrives and lets go only
+      // when the mouse leaves the window (as the hero's does): no hard edges, no snapping back
+      const followW = TUBE && fine ? smoothstep(0.16, 0.26, local) : 0
+      const follow = pointerIn ? followW : 0
+      const soft = (v: number) => v / Math.sqrt(1 + v * v)
+      markNdc.setFromMatrixPosition(set.logo.root.matrixWorld).project(ctx.camera)
+      // (before the first real frame the projection isn't finite: aim nowhere rather than NaN)
+      const aim = follow > 0 && Number.isFinite(markNdc.x + markNdc.y)
+      const screenAspect = frame.width / Math.max(1, frame.height)
+      leanX = damp(leanX, aim ? follow * soft(((frame.pointerRaw.x - markNdc.x) * screenAspect) / 0.55) : 0, 3.5, frame.dt)
+      leanY = damp(leanY, aim ? follow * soft((frame.pointerRaw.y - markNdc.y) / 0.55) : 0, 3.5, frame.dt)
+      const onPlane = followW > 0 && pointerOnMark(ctx.camera, frame.pointerRaw, set.logo.root, markP)
+      const near = onPlane ? 1 - smoothstep(0.5, 1.2, markP.length()) : 0
+      markLive = pointerIn && onPlane && markP.length() < 0.85
+      markHover = damp(markHover, follow * near, 4, frame.dt)
       set.turn.rotation.set(
-        faceX + tilt + 0.02 * Math.sin(t * 0.23) * idle - 0.34 * leanY,
-        faceY + yaw + 0.035 * Math.sin(t * 0.29 + 0.6) * idle + 0.5 * leanX,
+        faceX + tilt + 0.02 * Math.sin(t * 0.23) * idle - 0.3 * leanY,
+        faceY + yaw + 0.035 * Math.sin(t * 0.29 + 0.6) * idle + 0.45 * leanX,
         0.008 * Math.sin(t * 0.19) * idle,
       )
       set.turn.position.set(0, 0.012 * Math.sin(t * 0.5) * idle, lerp(-0.35, 0, arrive))
@@ -313,7 +332,7 @@ export default function create(): Chapter {
         })
         if (set.rim) set.rim.uniforms.uStrength.value = 0.14
         setTubeHover(set.neon, set.walls, markP, markHover)
-        if (spark || Math.abs(markHover - (onMark ? 1 : 0)) > 0.004 || Math.abs(leanX) + Math.abs(leanY) > 0.004) window.__hark?.engine?.wake()
+        if (spark || follow > 0 || markHover > 0.004 || Math.abs(leanX) + Math.abs(leanY) > 0.004) window.__hark?.engine?.wake()
         set.logo.caps.envMapIntensity = 1.1
       } else
         for (const part of set.neon)
