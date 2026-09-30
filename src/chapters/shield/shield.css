@@ -4,10 +4,13 @@
 .stage-shield .sh-b {
   position: absolute;
   left: var(--gutter);
+  /* landscape: the copy sits vertically centred in the band between the chrome */
   top: var(--safe-top);
+  bottom: var(--safe-bottom);
   width: max-content;
   max-width: min(560px, 42vw);
   display: grid;
+  align-content: center;
   justify-items: start;
   gap: clamp(14px, 2.4vh, 26px);
 }
