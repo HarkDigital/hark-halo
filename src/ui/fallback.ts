@@ -4,6 +4,7 @@ import { CHAPTERS } from '../chapters/index'
 import { logoSvg, markOutlineSvg, markSvg } from './mark'
 import { unmountRotateGate } from './rotate'
 import { releaseInert } from './inert'
+import { sectionName } from './menuSheet'
 
 /*
  * The plain HTML version: for browsers without WebGL2, the "Read as a page"
@@ -31,15 +32,6 @@ export function noteChapter(id: string) {
   liveChapter = id
 }
 
-const BUSINESS: Record<string, string> = {
-  hero: 'Home',
-  work: 'Work',
-  services: 'Services',
-  voices: 'Clients',
-  shield: 'Security',
-  process: 'Process',
-  contact: 'Contact',
-}
 const pad = (n: number) => String(n).padStart(2, '0')
 
 export function renderFallback(root: HTMLElement, at?: string) {
@@ -117,7 +109,7 @@ export function renderFallback(root: HTMLElement, at?: string) {
     const kicker = document.createElement('p')
     kicker.className = 'fb-k'
     kicker.setAttribute('aria-hidden', 'true')
-    kicker.innerHTML = `<span class="fb-k-n">${pad(i + 1)}</span><i></i><span class="fb-k-l">${label}</span><span class="fb-k-b">${BUSINESS[id] ?? ''}</span>`
+    kicker.innerHTML = `<span class="fb-k-n">${pad(i + 1)}</span><i></i><span class="fb-k-l">${label}</span><span class="fb-k-b">${sectionName(id)}</span>`
     sec.append(kicker, copy)
     root.appendChild(sec)
   })

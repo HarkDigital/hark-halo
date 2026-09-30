@@ -5,9 +5,8 @@ import { SERVICES, serviceUrl } from '../content'
  * the Services link stays what it was (the chapter, or back to it); a small
  * chevron beside it opens a frosted list of the eleven service pages.
  *
- * On phones: the story's Menu sheet opens the same list under its Services
- * row (servicesMenuSub), and a service page's top-right chip is a "Services"
- * dropdown (servicesMenuChip) with "All services" (back to the story) first.
+ * On phones: the Menu sheet (ui/menuSheet.ts, the story's and every service
+ * page's) opens the same list under its Services row (servicesMenuSub).
  *
  * Opens on hover for a mouse, and on the chevron (click / Enter / Space) for
  * everyone; Escape closes it and returns focus to the chevron, as does a click
@@ -29,16 +28,10 @@ export function servicesMenuItem(link: string, current?: string): string {
   return `<li class="ch-dd">${link}<button class="ch-dd-btn" type="button" data-dd-toggle aria-expanded="false" aria-controls="${id}" aria-label="Service pages">${CHEVRON}</button><div class="ch-dd-panel" id="${id}"><ul class="ch-dd-list">${entries('ch-dd-a', current)}</ul></div></li>`
 }
 
-/** A service page's phone header: a "Services" chip that drops the list, "All services" (`back`) first. */
-export function servicesMenuChip(back: string, current?: string): string {
-  const id = `ch-dd-${++uid}`
-  return `<div class="ch-dd ch-dd--chip"><button class="ch-dd-chip ch-chip" type="button" data-dd-toggle aria-expanded="false" aria-controls="${id}"><span>Services</span>${CHEVRON}</button><div class="ch-dd-panel" id="${id}"><ul class="ch-dd-list"><li><a class="ch-dd-a ch-dd-a--back" href="${back}"><span aria-hidden="true">←</span> All services</a></li>${entries('ch-dd-a', current)}</ul></div></div>`
-}
-
-/** The story's Menu sheet: a chevron on the Services row that opens the list beneath it. */
-export function servicesMenuSub(): string {
+/** The Menu sheet: a chevron on the Services row that opens the list beneath it (`current`: this page). */
+export function servicesMenuSub(current?: string): string {
   const id = `ch-ml-sub-${++uid}`
-  return `<button class="ch-ml-more" type="button" aria-expanded="false" aria-controls="${id}" aria-label="Service pages">${CHEVRON}</button><ul class="ch-ml-sub" id="${id}" hidden>${entries('ch-ml-sa')}</ul>`
+  return `<button class="ch-ml-more" type="button" aria-expanded="false" aria-controls="${id}" aria-label="Service pages">${CHEVRON}</button><ul class="ch-ml-sub" id="${id}" hidden>${entries('ch-ml-sa', current)}</ul>`
 }
 
 /** Wire the Menu sheet's Services sub-list (a plain disclosure). */

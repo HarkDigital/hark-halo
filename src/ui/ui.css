@@ -379,62 +379,7 @@
   color: #ffffff;
   background: rgba(255, 255, 255, 0.05);
 }
-/* phones, a service page: the "Services" chip drops the list (right-aligned, scrolls if short) */
-.ch-dd-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  height: var(--ch-h);
-  padding: 0 16px 0 18px;
-  border: 0;
-  border-radius: 999px;
-  font-family: var(--font-label);
-  font-weight: var(--label-weight);
-  font-size: 11px;
-  letter-spacing: 0.077em;
-  text-transform: uppercase;
-  color: var(--paper);
-  cursor: pointer;
-}
-.ch-dd-chip svg {
-  width: 9px;
-  height: 6px;
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.ch-dd--chip.is-open .ch-dd-chip svg {
-  transform: rotate(180deg);
-}
-.ch-dd-chip:focus-visible {
-  outline: 2px solid var(--paper);
-  outline-offset: 2px;
-}
-.ch-dd--chip .ch-dd-panel {
-  left: auto;
-  right: 0;
-  transform: translate3d(0, 6px, 0);
-}
-.ch-dd--chip.is-open .ch-dd-panel {
-  transform: none;
-}
-.ch-dd--chip .ch-dd-list {
-  min-width: min(300px, calc(100vw - 32px));
-  max-height: calc(100svh - 110px);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-.ch-dd-a--back {
-  margin-bottom: 4px;
-  font-family: var(--font-label);
-  font-weight: var(--label-weight);
-  font-size: 11px;
-  letter-spacing: 0.077em;
-  text-transform: uppercase;
-  color: var(--paper);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.1);
-  border-radius: 10px 10px 0 0;
-}
-
-/* the story's Menu sheet: a chevron on the Services row opens the service pages beneath it */
+/* the Menu sheet: a chevron on the Services row opens the service pages beneath it */
 .ch-menu-list li.ch-ml-li--more {
   position: relative;
 }
@@ -470,7 +415,7 @@
 }
 .ch-ml-sub {
   margin: 0;
-  padding: 2px 0 12px calc(14px + 2.6em + 10px);
+  padding: 2px 0 12px 14px;
   list-style: none;
 }
 .ch-ml-sub[hidden] {
@@ -488,6 +433,23 @@
 .ch-ml-sa:hover,
 .ch-ml-sa:focus-visible {
   color: #ffffff;
+}
+/* a service page: its own entry, lit like the section row above it */
+.ch-ml-sa[aria-current='page'] {
+  position: relative;
+  color: #ffffff;
+}
+.ch-ml-sa[aria-current='page']::before {
+  content: '';
+  position: absolute;
+  left: -12px;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  margin-top: -2.5px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffffff 0%, #e7ebf0 45%, #9aa1ab 100%);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.75);
 }
 .ch-ml-sa:focus-visible {
   outline: 2px solid var(--paper);
@@ -657,7 +619,7 @@
   outline-offset: 3px;
 }
 
-/* ---------------- menu sheet (≤ 720px) ---------------- */
+/* ---------------- menu sheet (≤ 720px; ui/menuSheet.ts, the story's and the service pages') ---------------- */
 .ch-menu {
   position: fixed;
   inset: 0;
@@ -680,7 +642,7 @@
 .ch-menu[hidden] {
   display: none;
 }
-.chr.is-menu .ch-menu {
+.ch-menu.is-open {
   opacity: 1;
 }
 .lowfx .ch-menu {
@@ -719,7 +681,7 @@ html.menu-open #stages {
     opacity 0.8s ease 0.1s,
     transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.chr.is-menu .ch-menu-mark {
+.ch-menu.is-open .ch-menu-mark {
   opacity: 1;
   transform: rotate(-8deg) scale(1);
 }
@@ -771,43 +733,28 @@ html.menu-open #stages {
     transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
   transition-delay: calc(var(--i, 0) * 40ms + 60ms);
 }
-.chr.is-menu .ch-menu-list li {
+.ch-menu.is-open .ch-menu-list li {
   opacity: 1;
   filter: none;
   transform: none;
 }
 .ch-ml {
   position: relative;
-  display: grid;
-  grid-template-columns: 2.6em 1fr auto;
-  align-items: baseline;
-  gap: 10px;
+  display: flex;
+  align-items: center;
   padding: 11px 2px 10px 14px;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
   text-decoration: none;
   color: #ffffff;
 }
-.ch-ml-n {
-  font-family: var(--font-label);
-  font-weight: var(--label-weight);
-  font-size: 10.5px;
-  letter-spacing: 0.066em;
-  color: var(--fr-text-2);
-}
 .ch-ml-name {
+  /* the whole row: the lit name's gradient spans it, so a short name stays bright */
+  flex: 1 1 auto;
   font-family: var(--font-display);
   font-weight: 560;
   font-size: clamp(28px, 8.4vw, 40px);
   line-height: 1;
   letter-spacing: -0.045em;
-}
-.ch-ml-lab {
-  font-family: var(--font-label);
-  font-weight: var(--label-weight);
-  font-size: 10px;
-  letter-spacing: 0.077em;
-  text-transform: uppercase;
-  color: var(--fr-text-2);
 }
 .ch-ml.is-now .ch-ml-name {
   font-style: italic;
@@ -817,18 +764,16 @@ html.menu-open #stages {
   -webkit-text-fill-color: transparent;
   padding-right: 0.06em;
 }
-.ch-ml.is-now .ch-ml-n {
-  color: #ffffff;
-}
-/* the chapter you are in: a lit glass bead before its number */
-.ch-ml.is-now .ch-ml-n::before {
+/* the section you are in: a lit glass bead before its name */
+.ch-ml.is-now::before {
   content: '';
-  display: inline-block;
+  position: absolute;
+  left: 2px;
+  top: 50%;
   width: 5px;
   height: 5px;
-  margin: 0 7px 0 -12px;
+  margin-top: -2.5px;
   border-radius: 50%;
-  vertical-align: 0.1em;
   background: radial-gradient(circle at 35% 30%, #ffffff 0%, #e7ebf0 45%, #9aa1ab 100%);
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.75);
 }
@@ -942,7 +887,7 @@ html.menu-open #stages {
     gap: 14px;
   }
   .ch-ml {
-    padding: 7px 2px 6px;
+    padding: 7px 2px 6px 14px;
   }
   .ch-ml-name {
     font-size: 24px;
@@ -1727,7 +1672,8 @@ html.no-webgl #stages {
     background: none;
     -webkit-text-fill-color: currentColor;
   }
-  .ch-ml.is-now .ch-ml-n::before {
+  .ch-ml.is-now::before,
+  .ch-ml-sa[aria-current='page']::before {
     background: Highlight;
   }
   .rot-body,

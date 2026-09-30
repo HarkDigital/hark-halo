@@ -11,9 +11,11 @@ import { BRAND, CONTACT, CONTACT_FORM, SERVICES, SITE } from '../content'
 import { createContactForm } from '../ui/contactForm'
 import { mountNeonFrame } from './neonFrame'
 import { logoSvg } from '../ui/mark'
-import { bindServicesMenu, servicesMenuChip, servicesMenuItem } from '../ui/servicesMenu'
+import { bindServicesMenu, servicesMenuItem } from '../ui/servicesMenu'
+import { SECTIONS, bindMenuSheet, menuButtonHtml, menuRowHtml, menuSheetHtml } from '../ui/menuSheet'
 import { SERVICE_PAGES } from './data/pages'
 import { SERVICE_CONTENT } from './data/content'
+import type { SceneHandle } from './scenes/runner'
 import { REDUCED_MOTION } from '../kit/motion'
 import { rise } from '../core/rise'
 
@@ -23,7 +25,8 @@ import { rise } from '../core/rise'
  * site's service page, verbatim (src/service/data), in Frost's language:
  * black, frosted glass panels, bold caps labels, the two neon tubes.
  *
- *   top       the brand tile (home) + Work · Services · Contact + Start a project
+ *   top       the brand tile (home) + Work · Services · Contact + Start a project;
+ *             on phones the story's Menu pill and sheet (ui/menuSheet.ts)
  *   hero      the classic site's scene for the service, in glass and neon
  *             (src/service/scenes, 2D canvas), eyebrow, headline, lede, CTAs
  *   features  "What you get": four frosted panels
@@ -46,7 +49,6 @@ applyLightsCss()
 
 const BASE = import.meta.env.BASE_URL
 const esc = (s: string) => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
-const pad = (n: number) => String(n).padStart(2, '0')
 const serviceHref = (slug: string) => `${BASE}services/${slug}/`
 
 const slug = location.pathname.match(/\/services\/([a-z0-9-]+)\/?$/)?.[1] ?? ''
@@ -70,7 +72,21 @@ function render(i: number) {
   document.title = `${page.title} · Hark Digital · ${SITE.name}`
 
   // ---------------------------------------------------------------- top
-  document.getElementById('svc-top')!.innerHTML = `
+  // the Menu sheet's sections lead back into the story (Services to this service's plate)
+  const menuRows = SECTIONS.map((sec, k) =>
+    menuRowHtml(
+      {
+        id: sec.id,
+        name: sec.name,
+        href: sec.id === 'hero' ? BASE : sec.id === 'services' ? back : `${BASE}#${sec.id}`,
+        now: sec.id === 'services',
+      },
+      k,
+      page.slug,
+    ),
+  ).join('')
+  const top = document.getElementById('svc-top')!
+  top.innerHTML = `
     <header class="svc-top">
       <a class="ch-brand" href="${BASE}" aria-label="${esc(BRAND.name)}, home">
         <span class="ch-logo" aria-hidden="true">${logoSvg('ch-logo-svg')}</span>
@@ -83,10 +99,37 @@ function render(i: number) {
         </ul>
         <a class="hud-btn ch-cta" href="#svc-contact">Start a project</a>
       </nav>
-      ${servicesMenuChip(back, page.slug)}
-    </header>`
+      ${menuButtonHtml('svc-menu')}
+    </header>
+    ${menuSheetHtml({ id: 'svc-menu', rows: menuRows, foot: `<a class="hud-btn ch-menu-cta" href="#svc-contact">Start a project</a>` })}`
 
-  bindServicesMenu(document.getElementById('svc-top')!)
+  bindServicesMenu(top)
+  const menuEl = document.getElementById('svc-menu')!
+  // the hero scene (mounted last, below) holds still once the sheet is up: it frosts a still
+  // image, as on the story (a live canvas under backdrop-filter is costly on a phone)
+  let art: SceneHandle | undefined
+  let stillTimer = 0
+  const menu = bindMenuSheet({
+    sheet: menuEl,
+    button: top.querySelector<HTMLButtonElement>('.svc-top .ch-menu-btn')!,
+    reduced,
+    behind: () => [top.querySelector<HTMLElement>('.svc-top'), document.getElementById('main'), document.querySelector<HTMLElement>('.skip-link')],
+    onOpen: () => {
+      clearTimeout(stillTimer)
+      stillTimer = window.setTimeout(() => {
+        if (menu.isOpen) art?.hold(true)
+      }, reduced ? 0 : 420)
+    },
+    onClose: () => {
+      clearTimeout(stillTimer)
+      art?.hold(false)
+    },
+  })
+  // a link to this page (Start a project) closes the sheet so the page can scroll to it
+  menuEl.addEventListener('click', e => {
+    const a = (e.target as Element).closest<HTMLAnchorElement>('a[href^="#"]')
+    if (a) menu.close(false)
+  })
 
   // ---------------------------------------------------------------- body
   const headline = `${esc(page.headline)}${page.headlineAccent ? ` <em>${esc(page.headlineAccent)}</em>` : ''}`
@@ -306,6 +349,9 @@ function render(i: number) {
 
   // the hero art: the classic site's scene for this service, redrawn in glass and neon (src/service/scenes)
   import('./scenes')
-    .then(m => m.mountScene(document.querySelector<HTMLElement>('.svc-art')!, page.scene, { reduced }))
+    .then(m => {
+      art = m.mountScene(document.querySelector<HTMLElement>('.svc-art')!, page.scene, { reduced })
+      if (menu.isOpen) art.hold(true)
+    })
     .catch(err => console.error('[service] hero scene failed', err))
 }

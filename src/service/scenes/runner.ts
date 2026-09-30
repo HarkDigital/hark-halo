@@ -8,12 +8,15 @@ import { Pen, type Pointer, type Scene } from './kit'
  *
  * The pointer is tracked across the window (like the classic site) but only
  * counts as `inside` over the art; a touch counts while the finger is down.
- * Drawn only while the hero is on screen and the tab visible. Under reduced
+ * Drawn only while the hero is on screen, the tab visible and the scene not
+ * held (the phone Menu sheet holds it still behind its frost). Under reduced
  * motion the scene settles off screen and one still frame is drawn.
  * `?autopilot` drives a synthetic cursor (for headless screenshots).
  */
 
 export interface SceneHandle {
+  /** hold the scene on its last frame (the Menu sheet frosts a still image), or let it run */
+  hold(on: boolean): void
   dispose(): void
 }
 
@@ -43,6 +46,7 @@ export function runScene(host: HTMLElement, scene: Scene, o: { reduced: boolean 
   let running = false
   let onScreen = false
   let disposed = false
+  let held = false
   let lit = false
   const start = performance.now()
   let last = start
@@ -87,7 +91,7 @@ export function runScene(host: HTMLElement, scene: Scene, o: { reduced: boolean 
   }
 
   const sync = () => {
-    const want = onScreen && !document.hidden && !disposed && !o.reduced
+    const want = onScreen && !document.hidden && !disposed && !held && !o.reduced
     if (want && !running) {
       running = true
       last = performance.now()
@@ -178,6 +182,10 @@ export function runScene(host: HTMLElement, scene: Scene, o: { reduced: boolean 
   resize()
 
   return {
+    hold(on: boolean) {
+      held = on
+      sync()
+    },
     dispose() {
       disposed = true
       sync()

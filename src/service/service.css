@@ -68,20 +68,18 @@ body.svc {
   padding: 4px 4px 4px 12px;
   border-radius: 999px;
 }
-/* phones: the nav capsule gives way to the Services chip (ui/servicesMenu.ts) */
-.svc-top .ch-dd--chip {
-  position: absolute;
-  top: var(--ch-y);
-  right: var(--gutter);
-  display: none;
-}
+/* phones: the nav capsule gives way to the Menu pill and its sheet (ui/menuSheet.ts, as on
+   the story); the page stays put behind the sheet */
 @media (max-width: 720px) {
   .svc-nav {
     display: none;
   }
-  .svc-top .ch-dd--chip {
-    display: flex;
+  .svc-top .ch-menu-btn {
+    display: inline-flex;
   }
+}
+html.is-svc.menu-open {
+  overflow: hidden;
 }
 
 /* ---------------- hero ---------------- */

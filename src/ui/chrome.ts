@@ -2,9 +2,9 @@ import type { Engine, EngineState } from '../core/Engine'
 import type { Frame } from '../core/types'
 import type { Sound } from './sound'
 import { BRAND } from '../content'
-import { logoSvg, markOutlineSvg } from './mark'
-import { bindServicesMenu, bindServicesSub, servicesMenuItem, servicesMenuSub } from './servicesMenu'
-import { holdInert, releaseInert } from './inert'
+import { logoSvg } from './mark'
+import { bindServicesMenu, servicesMenuItem } from './servicesMenu'
+import { bindMenuSheet, menuButtonHtml, menuRowHtml, menuSheetHtml, sectionName } from './menuSheet'
 import { mountRotateGate } from './rotate'
 import { bindScene, holdScene, releaseScene } from './scene'
 import { noteChapter } from './fallback'
@@ -19,11 +19,8 @@ import { REDUCED_MOTION } from '../kit/motion'
  *   top-right     a frosted capsule: Work · Services · Contact (a hairline
  *                 comes into focus under the chapter you are in) and the
  *                 white "Start a project" pill. ≤ 720px: a "Menu" pill opens
- *                 a full-screen black frosted sheet (a real modal dialog:
- *                 focus trap, Escape, inert background with a fallback,
- *                 focus returns to Menu) with a big nav, 'Start a project',
- *                 'Read as a page', and the mark drawn as a hairline
- *                 behind it. While it is up the
+ *                 the Menu sheet (ui/menuSheet.ts, shared with the service
+ *                 pages; here with 'Read as a page' too). While it is up the
  *                 chapter layer underneath is hidden and the scene holds
  *                 still behind the frost.
  *   bottom-right  seven hairline pips (each a ≥ 24px button named for its
@@ -45,33 +42,18 @@ import { REDUCED_MOTION } from '../kit/motion'
  * Navigation always uses engine.land(id) (lands on settled copy; long jumps cut).
  */
 
-/** Plain business names beside each chapter's poetic label. */
-const BUSINESS: Record<string, string> = {
-  hero: 'Home',
-  work: 'Work',
-  services: 'Services',
-  voices: 'Clients',
-  shield: 'Security',
-  process: 'Process',
-  contact: 'Contact',
-}
 const NAV = ['services', 'work', 'contact']
-const MENU_QUERY = '(max-width: 720px)'
 const READ_LABEL = 'Read as a page'
 /** the static page (main.ts renders the fallback for ?read; it scrolls to the #chapter) */
 const readHref = (id: string) => `?read#${id}`
 
-const pad = (n: number) => String(n).padStart(2, '0')
 const esc = (s: string) => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
-
-const MENU_IC = `<svg class="ch-ic" viewBox="0 0 18 12" aria-hidden="true" focusable="false"><path d="M2 3.5h14M5 8.5h11"/></svg>`
-const CLOSE_IC = `<svg class="ch-ic" viewBox="0 0 18 12" aria-hidden="true" focusable="false"><path d="M4.5 1.5l9 9M13.5 1.5l-9 9"/></svg>`
 
 export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
   const slots = engine.slots
   const total = slots.length
   const indexOf = (id: string) => slots.findIndex(s => s.def.id === id)
-  const biz = (id: string, fallback = '') => BUSINESS[id] ?? fallback
+  const biz = sectionName
   const reduced = REDUCED_MOTION
 
   // the rotate card and the menu sheet both hold the scene still behind their
@@ -99,15 +81,9 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
     )
     .join('')
 
+  // the Menu sheet's rows: plain names, no numbers or chapter nicknames
   const menuItems = slots
-    .map(
-      (s, i) =>
-        `<li style="--i:${i}"${s.def.id === 'services' ? ' class="ch-ml-li--more"' : ''}><a class="ch-ml" href="#${s.def.id}" data-go="${s.def.id}" aria-label="${esc(biz(s.def.id, s.def.label))}, chapter ${i + 1} of ${total}: ${esc(s.def.label)}">
-          <span class="ch-ml-n" aria-hidden="true">${pad(i + 1)}</span>
-          <span class="ch-ml-name" aria-hidden="true">${esc(biz(s.def.id, s.def.label))}</span>
-          <span class="ch-ml-lab" aria-hidden="true">${esc(s.def.label)}</span>
-        </a>${s.def.id === 'services' ? servicesMenuSub() : ''}</li>`,
-    )
+    .map((s, i) => menuRowHtml({ id: s.def.id, name: biz(s.def.id, s.def.label), href: `#${s.def.id}`, go: true }, i))
     .join('')
 
   // motion follows the visitor's system setting (there is no switch)
@@ -126,9 +102,7 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
         <ul class="ch-links">${links}</ul>
         <a class="hud-btn ch-cta" href="#contact" data-go="contact" data-focus>Start a project</a>
       </nav>
-      <button class="ch-menu-btn ch-chip" type="button" aria-expanded="false" aria-controls="ch-menu" aria-haspopup="dialog">
-        <span class="ch-menu-t">Menu</span>${MENU_IC}
-      </button>
+      ${menuButtonHtml('ch-menu')}
     </header>
 
     <div class="ch-bottom">
@@ -138,35 +112,21 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
       <a class="ch-readpage" href="${readHref(first)}" data-read>${READ_LABEL}</a>
     </div>
 
-    <div class="ch-menu" id="ch-menu" role="dialog" aria-modal="true" aria-labelledby="ch-menu-title" data-lenis-prevent hidden>
-      <div class="ch-menu-mark" aria-hidden="true">${markOutlineSvg('ch-menu-mark-svg', 5)}</div>
-      <div class="ch-menu-top">
-        <span class="ch-brand ch-menu-brand" aria-hidden="true">${brandInner}</span>
-        <button class="ch-menu-btn ch-menu-close ch-chip" type="button">
-          <span class="ch-menu-t">Close</span>${CLOSE_IC}
-        </button>
-      </div>
-      <div class="ch-menu-body">
-        <p class="hud-eyebrow ch-menu-eyebrow" id="ch-menu-title">Menu</p>
-        <nav class="ch-menu-nav" aria-label="Chapters"><ol class="ch-menu-list">${menuItems}</ol></nav>
-        <div class="ch-menu-foot">
-          <a class="hud-btn ch-menu-cta" href="#contact" data-go="contact">Start a project</a>
-          <a class="hud-btn hud-btn--ghost ch-menu-read" href="${readHref(first)}" data-read>${READ_LABEL}</a>
-        </div>
-        <p class="ch-menu-mail"><a href="mailto:${BRAND.email}">${BRAND.email}</a></p>
-      </div>
-    </div>
+    ${menuSheetHtml({
+      id: 'ch-menu',
+      rows: menuItems,
+      foot: `<a class="hud-btn ch-menu-cta" href="#contact" data-go="contact">Start a project</a>
+          <a class="hud-btn hud-btn--ghost ch-menu-read" href="${readHref(first)}" data-read>${READ_LABEL}</a>`,
+    })}
   </div>`
 
   const $ = <T extends Element = HTMLElement>(s: string) => root.querySelector<T>(s)!
   const chr = $('.chr')
   bindServicesMenu(root)
-  bindServicesSub(root)
   const top = $('.ch-top')
   const bottom = $('.ch-bottom')
   const menu = $('.ch-menu')
   const menuBtn = $<HTMLButtonElement>('.ch-top .ch-menu-btn')
-  const menuClose = $<HTMLButtonElement>('.ch-menu-close')
   const navEls = [...root.querySelectorAll<HTMLAnchorElement>('.ch-link')]
   const pipEls = [...root.querySelectorAll<HTMLButtonElement>('.ch-pip')]
   const menuLinks = [...root.querySelectorAll<HTMLAnchorElement>('.ch-ml')]
@@ -179,8 +139,8 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
     if (!a || !root.contains(a)) return
     e.preventDefault()
     const id = a.dataset.go!
-    const fromMenu = menuOpen && menu.contains(a)
-    if (menuOpen) closeMenu(false)
+    const fromMenu = sheet.isOpen && menu.contains(a)
+    if (sheet.isOpen) sheet.close(false)
     sound.blip(a.matches('.ch-cta, .ch-menu-cta') ? 5 : Math.max(0, indexOf(id)))
     if (indexOf(id) >= 0) engine.land(id)
     // keyboard activation (detail 0) hands focus on to the chapter's heading;
@@ -204,85 +164,41 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
   }
   // --------------------------------------------------------------- menu sheet
 
-  let menuOpen = false
-  let hideTimer = 0
-  const focusables = () =>
-    [...menu.querySelectorAll<HTMLElement>('a[href], button')].filter(el => !el.hidden && el.getClientRects().length > 0)
-  const openMenu = () => {
-    if (menuOpen) return
-    menuOpen = true
-    clearTimeout(hideTimer)
-    menu.hidden = false
-    // flush the closed state so the entrance runs
-    void menu.offsetWidth
-    chr.classList.add('is-menu')
-    // the chapter layer underneath is hidden while the sheet is up (ui.css)
-    document.documentElement.classList.add('menu-open')
-    menuBtn.setAttribute('aria-expanded', 'true')
-    holdInert('menu', [
+  let stillTimer = 0
+  const sheet = bindMenuSheet({
+    sheet: menu,
+    button: menuBtn,
+    reduced: reduced || !motionOn,
+    behind: () => [
       document.getElementById('stages'),
       document.getElementById('track'),
       document.querySelector<HTMLElement>('.skip-link'),
       top,
       bottom,
-    ])
-    engine.lenis.stop()
-    // hold the frame once the sheet is up (it frosts a still image)
-    hideTimer = window.setTimeout(
-      () => {
-        if (menuOpen) holdScene('menu')
-      },
-      reduced || !motionOn ? 0 : 420,
-    )
-    menu.scrollTop = 0
-    const now = menuLinks[lastIndex] ?? menuLinks[0]
-    now?.focus({ preventScroll: true })
-  }
-  const closeMenu = (restoreFocus = true) => {
-    if (!menuOpen) return
-    menuOpen = false
-    clearTimeout(hideTimer)
-    chr.classList.remove('is-menu')
-    document.documentElement.classList.remove('menu-open')
-    menuBtn.setAttribute('aria-expanded', 'false')
-    releaseInert('menu')
-    releaseScene('menu')
-    engine.lenis.start()
-    hideTimer = window.setTimeout(
-      () => {
-        if (!menuOpen) menu.hidden = true
-      },
-      reduced || !motionOn ? 20 : 360,
-    )
-    if (restoreFocus) menuBtn.focus({ preventScroll: true })
-  }
-  menuBtn.addEventListener('click', () => (menuOpen ? closeMenu() : openMenu()))
-  menuClose.addEventListener('click', () => closeMenu())
-  // capture: the dialog's own trap runs ahead of the no-`inert` fallback in inert.ts
-  window.addEventListener(
-    'keydown',
-    e => {
-      if (!menuOpen) return
-      if (e.key === 'Escape') {
-        e.preventDefault()
-        closeMenu()
-      } else if (e.key === 'Tab') {
-        const f = focusables()
-        if (!f.length) return
-        const i = f.indexOf(document.activeElement as HTMLElement)
-        const next = e.shiftKey ? (i <= 0 ? f.length - 1 : i - 1) : i < 0 || i === f.length - 1 ? 0 : i + 1
-        e.preventDefault()
-        f[next].focus()
-      }
+    ],
+    // the chapter you are in
+    focus: () => menuLinks[lastIndex] ?? menuLinks[0],
+    onOpen: () => {
+      // the chrome's own rows step aside (.chr.is-menu, ui.css; the chapter layer
+      // underneath goes with html.menu-open, set by the sheet) and the frame is held
+      // once the sheet is up (it frosts a still image)
+      chr.classList.add('is-menu')
+      engine.lenis.stop()
+      clearTimeout(stillTimer)
+      stillTimer = window.setTimeout(
+        () => {
+          if (sheet.isOpen) holdScene('menu')
+        },
+        reduced || !motionOn ? 0 : 420,
+      )
     },
-    true,
-  )
-  const narrow = matchMedia(MENU_QUERY)
-  const onNarrow = (e: MediaQueryListEvent) => {
-    if (!e.matches) closeMenu(false)
-  }
-  if (typeof narrow.addEventListener === 'function') narrow.addEventListener('change', onNarrow)
-  else narrow.addListener?.(onNarrow)
+    onClose: () => {
+      chr.classList.remove('is-menu')
+      clearTimeout(stillTimer)
+      releaseScene('menu')
+      engine.lenis.start()
+    },
+  })
 
   syncMotion()
 
