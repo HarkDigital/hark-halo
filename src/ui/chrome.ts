@@ -1,7 +1,7 @@
 import type { Engine, EngineState } from '../core/Engine'
 import type { Frame } from '../core/types'
 import type { Sound } from './sound'
-import { BRAND, MICROCOPY } from '../content'
+import { BRAND } from '../content'
 import { logoSvg, markOutlineSvg } from './mark'
 import { holdInert, releaseInert } from './inert'
 import { mountRotateGate } from './rotate'
@@ -21,16 +21,14 @@ import { REDUCED_MOTION } from '../kit/motion'
  *                 a full-screen black frosted sheet (a real modal dialog:
  *                 focus trap, Escape, inert background with a fallback,
  *                 focus returns to Menu) with a big nav, 'Start a project',
- *                 'Read as a page', the Sound switch, and the
- *                 mark drawn as a hairline behind it. While it is up the
+ *                 'Read as a page', and the mark drawn as a hairline
+ *                 behind it. While it is up the
  *                 chapter layer underneath is hidden and the scene holds
  *                 still behind the frost.
- *   bottom-left   "Preferences" (a named region): Sound — three hairline
- *                 bars that ride the actual audio (aria-pressed); ≤ 440px a
- *                 round glyph pill. Motion is always on (kit/motion.ts).
- *   bottom-right  the readout "03 / 07 · Etched · Services" over seven
- *                 hairline pips (each a ≥ 24px button; the current one a
- *                 white bar; hovering one cues "Go to …" in the readout).
+ *   bottom-right  seven hairline pips (each a ≥ 24px button named for its
+ *                 chapter; the current one a white bar). No readout text,
+ *                 no switches: sound stays off (ui/sound.ts) and motion is
+ *                 always on (kit/motion.ts).
  *   Read as a page  the static page (?read), opened at the chapter you are
  *                 on (?read#<id>, kept in step by update()). The last chrome
  *                 Tab stop, hidden until focused like a skip link; the Menu
@@ -67,7 +65,6 @@ const esc = (s: string) => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;
 
 const MENU_IC = `<svg class="ch-ic" viewBox="0 0 18 12" aria-hidden="true" focusable="false"><path d="M2 3.5h14M5 8.5h11"/></svg>`
 const CLOSE_IC = `<svg class="ch-ic" viewBox="0 0 18 12" aria-hidden="true" focusable="false"><path d="M4.5 1.5l9 9M13.5 1.5l-9 9"/></svg>`
-const EQ = `<span class="ch-eq" aria-hidden="true"><i></i><i></i><i></i><b></b></span>`
 
 export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
   const slots = engine.slots
@@ -110,8 +107,6 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
 
   // motion follows the visitor's system setting (there is no switch)
   const motionOn = !reduced
-  const soundBtn = (extra = '') =>
-    `<button class="ch-tgl ch-sound ch-chip${extra}" type="button" data-sound-toggle aria-pressed="false">${EQ}<span class="ch-tgl-k">${MICROCOPY.audio}</span><span class="ch-tgl-st" aria-hidden="true">${MICROCOPY.audioOff}</span></button>`
   const first = slots[0]?.def.id ?? 'hero'
 
   root.innerHTML = `
@@ -132,9 +127,7 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
     </header>
 
     <div class="ch-bottom">
-      <section class="ch-prefs" aria-label="Preferences">${soundBtn()}</section>
       <div class="ch-prog">
-        <p class="ch-read" aria-hidden="true"><span class="ch-read-n"></span><span class="ch-read-l"></span><span class="ch-read-b"></span></p>
         <nav class="ch-chapters" aria-label="Chapters"><ol class="ch-pips">${pips}</ol></nav>
       </div>
       <a class="ch-readpage" href="${readHref(first)}" data-read>${READ_LABEL}</a>
@@ -155,7 +148,6 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
           <a class="hud-btn ch-menu-cta" href="#contact" data-go="contact">Start a project</a>
           <a class="hud-btn hud-btn--ghost ch-menu-read" href="${readHref(first)}" data-read>${READ_LABEL}</a>
         </div>
-        <div class="ch-menu-prefs" role="group" aria-label="Preferences">${soundBtn(' ch-menu-tgl')}</div>
         <p class="ch-menu-mail"><a href="mailto:${BRAND.email}">${BRAND.email}</a></p>
       </div>
     </div>
@@ -171,12 +163,6 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
   const navEls = [...root.querySelectorAll<HTMLAnchorElement>('.ch-link')]
   const pipEls = [...root.querySelectorAll<HTMLButtonElement>('.ch-pip')]
   const menuLinks = [...root.querySelectorAll<HTMLAnchorElement>('.ch-ml')]
-  const soundBtns = [...root.querySelectorAll<HTMLButtonElement>('[data-sound-toggle]')]
-  const bars = [...root.querySelectorAll<HTMLElement>('.ch-eq i')]
-  const readN = $('.ch-read-n')
-  const readL = $('.ch-read-l')
-  const readB = $('.ch-read-b')
-  const readEl = $('.ch-read')
   const readLinks = [...root.querySelectorAll<HTMLAnchorElement>('[data-read]')]
 
   // ---------------------------------------------------------------- navigation
@@ -199,50 +185,7 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
     else if (fromMenu) menuBtn.focus({ preventScroll: true })
   })
 
-  // ------------------------------------------------------------- the readout
-
   let lastIndex = -1
-  let cueIndex = -1
-  const showReadout = (i: number, cue = false) => {
-    const s = slots[i]
-    if (!s) return
-    readN.textContent = cue ? `Go to ${pad(i + 1)}` : `${pad(i + 1)} / ${pad(total)}`
-    readL.textContent = s.def.label
-    readB.textContent = biz(s.def.id, s.def.label)
-    readEl.classList.toggle('is-cue', cue)
-  }
-  pipEls.forEach((b, i) => {
-    const cue = () => {
-      cueIndex = i
-      showReadout(i, i !== lastIndex)
-    }
-    b.addEventListener('pointerenter', e => {
-      if ((e as PointerEvent).pointerType !== 'touch') cue()
-    })
-    b.addEventListener('focus', cue)
-    const uncue = () => {
-      if (cueIndex !== i) return
-      cueIndex = -1
-      if (lastIndex >= 0) showReadout(lastIndex)
-    }
-    b.addEventListener('pointerleave', uncue)
-    b.addEventListener('blur', uncue)
-  })
-
-  // --------------------------------------------------------------------- sound
-
-  const syncSound = (on: boolean) => {
-    for (const b of soundBtns) {
-      b.setAttribute('aria-pressed', String(on))
-      const st = b.querySelector('.ch-tgl-st')
-      if (st) st.textContent = on ? MICROCOPY.audioOn : MICROCOPY.audioOff
-    }
-    chr.classList.toggle('is-sound', on)
-    if (!on) for (const d of bars) d.style.transform = ''
-  }
-  for (const b of soundBtns) b.addEventListener('click', () => sound.toggle())
-  sound.onChange.push(syncSound)
-  syncSound(sound.enabled)
 
   // -------------------------------------------------------------------- motion
 
@@ -338,36 +281,19 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
 
   // -------------------------------------------------------------------- update
 
-  const lv = [0, 0, 0]
-  const rest = [0.45, 1, 0.6]
-  /** measured resting band levels (analyser bytes / 255) and the headroom above them */
-  const FLOOR = [0.78, 0.36, 0.3]
-  const SPAN = [0.2, 0.34, 0.34]
-
   return {
     update(frame: Frame, state: EngineState) {
       const slot = state.slots[state.index]
       if (!slot) return
 
       if (state.index !== lastIndex) {
-        const firstRun = lastIndex < 0
         lastIndex = state.index
-        // a pip still under the pointer keeps its cue, but "Go to" only while it is elsewhere
-        if (cueIndex < 0) showReadout(state.index)
-        else showReadout(cueIndex, cueIndex !== state.index)
         pipEls.forEach((p, i) => {
           p.classList.toggle('is-on', i === state.index)
           p.classList.toggle('is-past', i < state.index)
           if (i === state.index) p.setAttribute('aria-current', 'step')
           else p.removeAttribute('aria-current')
         })
-        if (!firstRun && !reduced && motionOn && typeof readEl.animate === 'function') {
-          // the new name comes into focus, like type through clearing frost
-          readEl.animate([{ filter: 'blur(4px)', opacity: 0.2 }, { filter: 'blur(0px)', opacity: 1 }], {
-            duration: 650,
-            easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-          })
-        }
         const activeId = slot.def.id
         navEls.forEach(a => {
           const on = a.dataset.go === activeId
@@ -387,17 +313,6 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
         noteChapter(activeId)
       }
 
-      // the Sound glyph rides the real signal (a calm fixed shape when motion is off)
-      if (sound.enabled && bars.length) {
-        const live = !reduced && motionOn && sound.meter(lv)
-        for (let k = 0; k < bars.length; k++) {
-          const i = k % 3
-          // each band over its own resting level: the drone's slow breath in
-          // the low bar, the glass strikes lifting the upper two
-          const v = live ? 0.2 + 0.8 * Math.min(1, Math.max(0, (lv[i] - FLOOR[i]) / SPAN[i])) : rest[i]
-          bars[k].style.transform = `scaleY(${(1 + v * 3).toFixed(2)})`
-        }
-      }
     },
   }
 }

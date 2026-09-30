@@ -327,147 +327,14 @@
   bottom: var(--ch-by);
   display: flex;
   align-items: flex-end;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 12px;
 }
 
-/* Preferences: Sound */
-.ch-prefs {
-  display: flex;
-  gap: 8px;
-}
-.ch-tgl {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  height: 38px;
-  padding: 0 15px 0 13px;
-  font-family: var(--font-label);
-  font-weight: var(--label-weight);
-  font-size: 10.5px;
-  letter-spacing: 0.083em;
-  text-transform: uppercase;
-  border-radius: 999px;
-  cursor: pointer;
-  transition: box-shadow 0.3s ease;
-}
-.ch-tgl:hover {
-  box-shadow: var(--fr-rim-hi);
-}
-.ch-tgl:focus-visible {
-  box-shadow: var(--fr-rim-hi);
-}
-.ch-tgl-st {
-  min-width: 2.4em;
-  color: var(--fr-text-2);
-}
-.ch-tgl[aria-pressed='true'] .ch-tgl-st {
-  color: #ffffff;
-}
-/* sound: three hairline bars (flat dots while off) */
-.ch-eq {
-  display: inline-flex;
-  align-items: center;
-  gap: 2.5px;
-  width: 14px;
-  height: 14px;
-  justify-content: center;
-}
-.ch-eq i {
-  display: block;
-  width: 1.5px;
-  height: 2.5px;
-  border-radius: 1px;
-  background: rgba(255, 255, 255, 0.7);
-  transform-origin: 50% 50%;
-  transition:
-    transform 0.18s linear,
-    background 0.3s ease;
-}
-/* off: a hairline slash through the bars (muted) */
-.ch-eq {
-  position: relative;
-}
-.ch-eq b {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 17px;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.85);
-  transform: translate(-50%, -50%) rotate(-45deg);
-  transition:
-    opacity 0.25s ease,
-    transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.ch-sound[aria-pressed='true'] .ch-eq b {
-  opacity: 0;
-  transform: translate(-50%, -50%) rotate(-45deg) scaleX(0);
-}
-.ch-sound[aria-pressed='false'] .ch-eq i:nth-child(1) {
-  height: 5px;
-}
-.ch-sound[aria-pressed='false'] .ch-eq i:nth-child(2) {
-  height: 9px;
-}
-.ch-sound[aria-pressed='false'] .ch-eq i:nth-child(3) {
-  height: 6px;
-}
-.ch-sound[aria-pressed='true'] .ch-eq i {
-  background: #ffffff;
-  box-shadow: 0 0 5px rgba(255, 255, 255, 0.6);
-}
-/* progress: readout + hairline pips */
+/* progress: hairline pips (no readout text) */
 .ch-prog {
   display: grid;
   justify-items: end;
-  gap: 2px;
-}
-.ch-read {
-  display: flex;
-  align-items: baseline;
-  gap: 0;
-  margin: 0 0 0;
-  padding-right: 6px;
-  font-family: var(--font-label);
-  font-weight: var(--label-weight);
-  font-size: 10.5px;
-  letter-spacing: 0.083em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: #ffffff;
-}
-.ch-read-l,
-.ch-read-b {
-  display: inline-flex;
-  align-items: baseline;
-}
-.ch-read-l::before,
-.ch-read-b::before {
-  content: '·';
-  margin: 0 0.8em;
-  color: var(--fr-text-2);
-}
-/* the poetic label, italic, in frost silver */
-.ch-read-l {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 500;
-  font-size: 14.5px;
-  letter-spacing: -0.012em;
-  text-transform: none;
-}
-.ch-read-l::before {
-  font-family: var(--font-label);
-  font-weight: var(--label-weight);
-  font-style: normal;
-  font-size: 10.5px;
-}
-.ch-read-b {
-  color: #ffffff;
-}
-.ch-read.is-cue .ch-read-n {
-  color: #ffffff;
 }
 .ch-pips {
   display: flex;
@@ -741,11 +608,6 @@ html.menu-open #stages {
   flex-wrap: wrap;
   gap: 10px;
 }
-.ch-menu-prefs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
 .ch-menu-mail {
   margin: 0;
   font-family: var(--font-label);
@@ -794,30 +656,6 @@ html.menu-open #stages {
   .ch-logo-svg {
     height: 36px;
   }
-  /* the switches become round glyph pills (the name stays for assistive tech) */
-  .ch-prefs .ch-tgl {
-    width: 42px;
-    height: 42px;
-    padding: 0;
-    justify-content: center;
-  }
-  .ch-prefs .ch-tgl-k,
-  .ch-prefs .ch-tgl-st {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-  .ch-read-l {
-    font-size: 13.5px;
-  }
-  .ch-read-l::before,
-  .ch-read-b::before {
-    margin: 0 0.55em;
-  }
   .ch-pip.is-on {
     width: 34px;
   }
@@ -825,11 +663,8 @@ html.menu-open #stages {
     width: 24px;
   }
 }
-/* the tightest phones: the poetic label steps aside, the business name stays */
+/* the tightest phones: narrower pips */
 @media (max-width: 374px) {
-  .ch-read-l {
-    display: none;
-  }
   .ch-pip {
     width: 24px;
   }
@@ -864,32 +699,10 @@ html.menu-open #stages {
     padding: 0 14px;
     font-size: 12.5px;
   }
-  .ch-prefs .ch-tgl {
-    width: 36px;
-    height: 36px;
-    padding: 0;
-    justify-content: center;
-  }
-  .ch-prefs .ch-tgl-k,
-  .ch-prefs .ch-tgl-st {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
   .ch-prog {
     display: flex;
     align-items: center;
     gap: 6px;
-  }
-  .ch-read {
-    font-size: 10px;
-  }
-  .ch-read-l {
-    font-size: 13px;
   }
   .ch-menu-body {
     padding-top: 12px;
@@ -1664,12 +1477,6 @@ html.no-webgl #stages {
   .ch-pip.is-on i {
     height: 4px;
     background: Highlight;
-  }
-  /* Sound: the three bars and the mute slash */
-  .ch-eq i,
-  .ch-eq b,
-  .ch-sound[aria-pressed='true'] .ch-eq i {
-    background: ButtonText;
   }
   /* menu sheet + rotate card: an opaque surface, no watermark behind the list */
   .ch-menu,

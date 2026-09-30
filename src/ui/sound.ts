@@ -21,10 +21,12 @@ import type { EngineState } from '../core/Engine'
  *   tone()   a pure sine a chapter may ask for (also via 'hark:tone' events).
  *   meter()  three band levels for the chrome's sound glyph.
  *
- * Off by default. Sound only ever starts from a real gesture: the toggle's
- * own click / tap / Enter / Space. A remembered "on" (localStorage) waits for
- * the first real activation (a click or tap, or Enter / Space on a control;
- * never Tab, arrows or scrolling). Faded out and suspended while the tab is
+ * OFF, and the page has no switch for it (the owner's call, Sep 2026): nothing
+ * on the page calls toggle(), and a remembered "on" from an earlier visit is
+ * forgotten. To bring sound back, give the chrome a switch that calls
+ * toggle() and restore the remembered-on arming (git history). When on, sound
+ * only ever starts from a real gesture (a click or tap, or Enter / Space on a
+ * control; never Tab, arrows or scrolling). Faded out and suspended while the tab is
  * hidden. On iOS the audio session is set to "playback" so the silent switch
  * doesn't swallow it. Levels stay very low, behind a gentle compressor.
  */
@@ -123,8 +125,12 @@ export class Sound {
   private toneLevel = 0
 
   constructor() {
-    this.armed = stored() === true
-    if (this.armed) this.waitForGesture()
+    // (no switch on the page: forget an "on" remembered from an earlier visit)
+    try {
+      localStorage.removeItem(STORE_KEY)
+    } catch {
+      /* storage blocked */
+    }
     document.addEventListener('visibilitychange', () => {
       this.hidden = document.hidden
       this.applyRunning()

@@ -71,12 +71,6 @@ const ROT = 9
 const TILT = 10
 const NV = 11
 
-/** the macro captions' local windows: 01 neon halo, 02 frosted face, 03 thaw */
-const BEATS: [number, number][] = [
-  [0.14, 0.3],
-  [0.31, 0.43],
-  [0.44, 0.55],
-]
 
 /** mark-unit point (1u tall mark) → world */
 const U = (x: number) => x * MARK_S
@@ -111,7 +105,6 @@ export default function create(): Chapter {
   let intro: HTMLElement
   let payoff: HTMLElement
   let title: HTMLElement
-  const caps: HTMLElement[] = []
 
   // reveal clock (performance time, seconds)
   let revealAt = -1
@@ -271,17 +264,6 @@ export default function create(): Chapter {
       const hint = el('p', 'hud-label hf-hint', undefined, intro)
       el('span', 'hf-hint-line', undefined, hint).setAttribute('aria-hidden', 'true')
       el('span', '', MICROCOPY.scrollHint, hint)
-
-      // macro captions: a watch-film detail index (decorative)
-      const capWrap = el('div', 'hf-caps', undefined, ctx.stage)
-      capWrap.setAttribute('aria-hidden', 'true')
-      ;(TUBE ? ['Neon core', 'Glass tube', 'Current'] : ['Neon halo', 'Frosted face', 'Thaw']).forEach((txt, i) => {
-        const c = el('p', 'hud-label hf-cap', undefined, capWrap)
-        el('span', 'hf-cap-n', `0${i + 1}`, c)
-        el('span', 'hf-cap-line', undefined, c)
-        el('span', 'hf-cap-t', txt, c)
-        caps.push(c)
-      })
 
       payoff = el('div', 'hf-payoff', undefined, ctx.stage)
       const inner = el('div', 'hf-payoff-inner', undefined, payoff)
@@ -560,10 +542,6 @@ export default function create(): Chapter {
       // ---- DOM
       reveal(intro, 1 - smoothstep(0.06, 0.1, local))
       intro.classList.toggle('is-in', revealAt >= 0 && since > (reduced ? 0 : 0.6))
-      for (let i = 0; i < caps.length; i++) {
-        const [a, b] = BEATS[i]
-        reveal(caps[i], smoothstep(a, a + 0.025, local) * (1 - smoothstep(b - 0.025, b, local)), 8)
-      }
       reveal(payoff, smoothstep(0.6, 0.66, local) * (1 - smoothstep(0.93, 0.965, local)), 0)
       // the headline and its CTAs leave together (with the payoff's fade)
       setRise(title, local > 0.61 && local < 0.965)
