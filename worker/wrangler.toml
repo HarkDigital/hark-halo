@@ -10,7 +10,7 @@ compatibility_date = "2026-09-01"
 
 [vars]
 # where inquiries go, and the verified SendGrid sender they come from
-CONTACT_TO_EMAIL = "mike@hark.digital"
+CONTACT_TO_EMAIL = "info@hark.digital"
 CONTACT_FROM_EMAIL = "noreply@hark.digital"
 # sites allowed to post the form (comma separated)
 ALLOWED_ORIGINS = "https://harkdigital.github.io,https://hark.digital,https://www.hark.digital,http://localhost:6380,http://localhost:6390"

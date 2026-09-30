@@ -71,7 +71,7 @@ export default {
 
     // SendGrid
     if (!env.SENDGRID_API_KEY) return json(500, { error: 'Email service is not configured' })
-    const to = env.CONTACT_TO_EMAIL || 'mike@hark.digital'
+    const to = env.CONTACT_TO_EMAIL || 'info@hark.digital'
     const from = env.CONTACT_FROM_EMAIL || 'noreply@hark.digital'
     const lines = [`Name: ${name}`, `Email: ${email}`, company ? `Company: ${company}` : '', service ? `Service: ${service}` : '', '', message].filter(
       (l, i, a) => l !== '' || i === a.length - 2,

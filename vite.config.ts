@@ -44,12 +44,13 @@ function servicePages(): Plugin {
         const title = `${p.title} · Hark Digital`
         const desc = SERVICE_CONTENT[p.slug]?.metaDescription ?? p.lede
         const url = `${ORIGIN}${base}services/${p.slug}/`
+        // (replacer functions, not strings: copy like "$1M" must go in as written, not as a $1 backreference)
         const page = html
-          .replace(/<title>[^<]*<\/title>/, `<title>${esc(title)}</title>`)
-          .replace(/(<meta\s+name="description"\s+content=")[^"]*"/, `$1${esc(desc)}"`)
-          .replace(/(<meta\s+property="og:url"\s+content=")[^"]*"/, `$1${esc(url)}"`)
-          .replace(/(<meta\s+property="og:title"\s+content=")[^"]*"/, `$1${esc(title)}"`)
-          .replace(/(<meta\s+property="og:description"\s+content=")[^"]*"/, `$1${esc(desc)}"`)
+          .replace(/<title>[^<]*<\/title>/, () => `<title>${esc(title)}</title>`)
+          .replace(/(<meta\s+name="description"\s+content=")[^"]*"/, (_, open) => `${open}${esc(desc)}"`)
+          .replace(/(<meta\s+property="og:url"\s+content=")[^"]*"/, (_, open) => `${open}${esc(url)}"`)
+          .replace(/(<meta\s+property="og:title"\s+content=")[^"]*"/, (_, open) => `${open}${esc(title)}"`)
+          .replace(/(<meta\s+property="og:description"\s+content=")[^"]*"/, (_, open) => `${open}${esc(desc)}"`)
         const dir = path.join(outDir, 'services', p.slug)
         fs.mkdirSync(dir, { recursive: true })
         fs.writeFileSync(path.join(dir, 'index.html'), page)
