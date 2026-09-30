@@ -767,16 +767,29 @@ body.svc {
   mask-image: linear-gradient(100deg, #000 calc(var(--rv-x) - 22%), rgba(0, 0, 0, 0) var(--rv-x));
   transition: --rv-x 1.5s cubic-bezier(0.3, 0.1, 0.2, 1) calc(var(--d, 0) * 110ms);
 }
+/* once the band has passed, the mask comes off: a mask clips to the box, and the eyebrow
+   bead's glow reaches past it */
 .svc-rv[data-rv='wipe'].is-in {
   --rv-x: 124%;
+  animation: svc-unmask 0s linear calc(1.5s + var(--d, 0) * 110ms) forwards;
+}
+@keyframes svc-unmask {
+  to {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
 }
 
-/* panel: the card fades up; a neon line traces its edge and fades back to glass */
+/* panel: the card fades up; a neon line traces its edge and fades back to glass
+   (translate and box-shadow are the hover lift, below: it rides on translate so it
+   leaves the entrance's fade and transform alone) */
 .svc-rv[data-rv='panel'] {
   transform: translate3d(0, 22px, 0) scale(0.985);
   transition:
     opacity 0.7s ease calc(var(--d, 0) * 140ms),
-    transform 1.1s var(--svc-ease) calc(var(--d, 0) * 140ms);
+    transform 1.1s var(--svc-ease) calc(var(--d, 0) * 140ms),
+    translate 0.5s var(--svc-ease),
+    box-shadow 0.4s ease;
 }
 .svc-rv[data-rv='panel'].is-in {
   transform: none;
@@ -905,7 +918,13 @@ body.svc {
   animation: svc-wire 1.6s cubic-bezier(0.5, 0, 0.3, 1) calc(var(--d, 0) * 380ms) both;
 }
 .svc-rv[data-rv='step'].is-in > .svc-node {
-  animation: svc-node 0.9s ease calc(var(--d, 0) * 380ms) both;
+  animation: svc-node 0.9s ease calc(var(--d, 0) * 380ms) backwards;
+}
+/* lit once the current has passed: a resting style, not the animation's fill, so the
+   step's own light can still take it on hover (kept at the hover rule's weight: hover, below, wins) */
+.svc-step.is-in > .svc-node {
+  background: var(--neon-a);
+  box-shadow: 0 0 10px rgba(var(--neon-a-rgb), 0.8);
 }
 .svc-rv[data-rv='step'].is-in > :is(.svc-step-t, .svc-step-p) {
   opacity: 1;
@@ -959,8 +978,10 @@ body.svc {
 .svc-rv[data-rv='stat'] .svc-stat-v {
   opacity: 0;
 }
+/* (backwards, not both: once struck it rests on its own glow, which hover can swell) */
 .svc-rv[data-rv='stat'].is-in .svc-stat-v {
-  animation: svc-strike 1.4s linear 0.1s both;
+  opacity: 1;
+  animation: svc-strike 1.4s linear 0.1s backwards;
 }
 .svc-rv[data-rv='stat'] .svc-stat-l {
   --rv-x: 0%;
@@ -970,6 +991,7 @@ body.svc {
 }
 .svc-rv[data-rv='stat'].is-in .svc-stat-l {
   --rv-x: 124%;
+  animation: svc-unmask 0s linear 2.1s forwards;
 }
 @keyframes svc-strike {
   0% {
@@ -999,23 +1021,25 @@ body.svc {
   }
 }
 
-/* row: FAQ rows slide in one by one; the plus spins in */
+/* row: FAQ rows slide in one by one and land flush with the list; the plus spins in */
 .svc-rv[data-rv='row'] {
   transform: translate3d(-28px, 0, 0);
   transition:
     opacity 0.6s ease calc(var(--d, 0) * 90ms),
     transform 0.9s var(--svc-ease) calc(var(--d, 0) * 90ms);
 }
-.svc-rv[data-rv='row'] summary i {
-  transform: rotate(-180deg) scale(0.4);
-}
-.svc-rv[data-rv='row'].is-in summary i {
+.svc-rv[data-rv='row'].is-in {
   transform: none;
-  transition: transform 0.9s var(--svc-ease) calc(0.2s + var(--d, 0) * 90ms);
 }
-.svc-rv[data-rv='row'].is-in[open] summary i {
-  transform: rotate(45deg);
-  transition-delay: 0s;
+/* the spin is an animation, not a transition: once it has played, the plus is back on
+   its own quick turn as the row opens and closes (.svc-q[open]) */
+.svc-rv[data-rv='row'].is-in summary i {
+  animation: svc-plus 0.9s var(--svc-ease) calc(0.2s + var(--d, 0) * 90ms) backwards;
+}
+@keyframes svc-plus {
+  from {
+    transform: rotate(-180deg) scale(0.4);
+  }
 }
 
 /* pop: the tags, one by one */
@@ -1051,8 +1075,10 @@ body.svc {
     opacity 0.7s ease 0.1s,
     transform 1s var(--svc-ease) 0.1s;
 }
+/* (never further than the gutter: a start state past the right edge widens the page,
+   and a phone zooms the whole page out to fit it) */
 .svc-rv[data-rv='side'] > .svc-pn-a--next {
-  transform: translate3d(36px, 0, 0);
+  transform: translate3d(min(36px, var(--gutter)), 0, 0);
 }
 .svc-rv[data-rv='side'].is-in > .svc-pn-a {
   opacity: 1;
@@ -1101,14 +1127,9 @@ body.svc {
   .svc-spot:hover .svc-glow {
     opacity: 1;
   }
-  /* features: lift, a neon edge */
-  .svc-feature.hud-panel {
-    transition:
-      transform 0.5s var(--svc-ease),
-      box-shadow 0.4s ease;
-  }
+  /* features: lift, a neon edge (the transitions live on the panel entrance) */
   .svc-feature.hud-panel:hover {
-    transform: translate3d(0, -4px, 0);
+    translate: 0 -4px;
     box-shadow:
       inset 0 1px 0 var(--glass-hi),
       inset 0 0 0 1px rgba(var(--spot-rgb), 0.45),

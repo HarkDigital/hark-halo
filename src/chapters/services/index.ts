@@ -101,6 +101,7 @@ export default function create(): Chapter {
   const probe = new THREE.PerspectiveCamera()
   const pv = new THREE.Vector3()
   const dir = new THREE.Vector3()
+  const subject = new THREE.Vector3()
   const box: THREE.Vector3[] = Array.from({ length: 8 }, () => new THREE.Vector3())
   const raycaster = new THREE.Raycaster()
   const ndc = new THREE.Vector2()
@@ -109,19 +110,19 @@ export default function create(): Chapter {
   /** where the plate in view sits on screen (world-field units: x = ndc.x·aspect) */
   const slot = { x: 0.3, y: 0, ok: false }
 
-  function aim(cy: number, d: number, elev: number, ax: number, ay: number, tv: number, th: number) {
-    pose.pos.set(0, cy + d * Math.sin(elev), d * Math.cos(elev))
-    // aim off-centre so the subject (0, cy, 0) lands at (ax, ay) on screen
+  function aim(c: THREE.Vector3, d: number, elev: number, ax: number, ay: number, tv: number, th: number) {
+    pose.pos.set(c.x, c.y + d * Math.sin(elev), c.z + d * Math.cos(elev))
+    // aim off-centre so the subject c lands at (ax, ay) on screen
     const s = ax * th * d
     const v = ay * tv * d
-    pose.target.set(-s, cy - v * Math.cos(elev), v * Math.sin(elev))
+    pose.target.set(c.x - s, c.y - v * Math.cos(elev), c.z + v * Math.sin(elev))
   }
 
   /**
-   * Frame a box (centre cy, half extents hw/hh) into the space the copy
+   * Frame a box (centre c, half extents hw/hh/hd) into the space the copy
    * leaves free, then find where the plate slot and the backlight land.
    */
-  function computePose(frame: Frame, m: HudMetrics, cy: number, hw: number, hh: number, hd: number, bias: number, push: number, lightY: number) {
+  function computePose(frame: Frame, m: HudMetrics, c: THREE.Vector3, hw: number, hh: number, hd: number, bias: number, push: number, lightY: number) {
     const W = Math.max(1, frame.width)
     const H = Math.max(1, frame.height)
     const aspect = W / H
@@ -154,7 +155,7 @@ export default function create(): Chapter {
 
     // the box corners
     let k = 0
-    for (const sx of [-1, 1]) for (const sy of [-1, 1]) for (const sz of [-1, 1]) box[k++].set(sx * hw, cy + sy * hh, sz * hd)
+    for (const sx of [-1, 1]) for (const sy of [-1, 1]) for (const sz of [-1, 1]) box[k++].set(c.x + sx * hw, c.y + sy * hh, c.z + sz * hd)
 
     let d = Math.max(hw / (th * hwN), hh / (tv * hhN)) + hd
     let ax = cx
@@ -163,7 +164,7 @@ export default function create(): Chapter {
     probe.aspect = aspect
     probe.updateProjectionMatrix()
     for (let it = 0; it < 3; it++) {
-      aim(cy, d, elev, ax, ay, tv, th)
+      aim(c, d, elev, ax, ay, tv, th)
       probe.position.copy(pose.pos)
       probe.lookAt(pose.target)
       probe.updateMatrixWorld()
@@ -182,13 +183,13 @@ export default function create(): Chapter {
       d *= clamp(kk, 0.5, 2)
     }
     d *= push
-    aim(cy, d, elev, ax, ay, tv, th)
+    aim(c, d, elev, ax, ay, tv, th)
     pose.fov = fov
 
     probe.position.copy(pose.pos)
     probe.lookAt(pose.target)
     probe.updateMatrixWorld()
-    pv.set(0, lightY, -0.9).project(probe)
+    pv.set(c.x, lightY, -0.9).project(probe)
     if (Number.isFinite(pv.x + pv.y)) {
       slot.x = pv.x * aspect
       slot.y = pv.y
@@ -273,11 +274,14 @@ export default function create(): Chapter {
       deck.column.rotation.y = yaw
       deck.column.position.y = idle * 0.012 * Math.sin(t * 0.37)
       const vis = mobile ? 3.3 : 4.6
+      // how far the plate in view has slid out of the louvres (0..1)
+      let lead = 0
       for (const p of deck.plates) {
         const i = p.index
         const d = i - f
         const ad = Math.abs(d)
         const sel = open * (1 - smoothstep(0, 1, ad))
+        lead = Math.max(lead, sel)
         const sgn = d < 0 ? -1 : d > 0 ? 1 : 0
         const far = smoothstep(1.2, 4.4, ad)
         const y = -d * SP - PART * open * sgn * smoothstep(0, 1, ad)
@@ -316,10 +320,13 @@ export default function create(): Chapter {
       const hw = lerp(TILE_W * 0.52, TILE_W * (tall ? 0.53 : 0.56), near)
       const hh = lerp(((N - 1) / 2) * SP + 0.3, tall ? TILE_H / 2 + 0.14 : TILE_H / 2 + SP + PART * 0.55, near)
       const hd = lerp(0.35, 0.45, near)
+      // (portrait: the plate in view slides out along the column's yawed z, which carries it
+      // sideways off the column's axis: centre the box on it, so it sits mid-screen)
+      subject.set(tall ? FWD * lead * near * Math.sin(yaw) : 0, cy, 0)
       // at the ends of the column, frame the plate a little off-centre toward the empty end
       const bias = tall ? 0 : near * 0.16 * (1 - 2 * clamp(f / (N - 1)))
       const push = 1 + 0.06 * (1 - glide(local / 0.07)) - 0.05 * louvreOut
-      computePose(frame, m, cy, hw, hh, hd, bias, push, lerp(colCY, 0, open))
+      computePose(frame, m, subject, hw, hh, hd, bias, push, lerp(colCY, 0, open))
 
       // ---------- the backlight: tall behind the whole column → a softbox behind the plate in view
       const target = 1 - 0.3 * turning * calm
@@ -342,7 +349,8 @@ export default function create(): Chapter {
       bu.uTail.value = lerp(2.2, 1.3, open)
       bu.uTailAmt.value = lerp(0.12, 0.05, open)
       ;(bu.uHot.value as THREE.Vector2).set(0.35 * open, 0.45 * open)
-      deck.back.position.set(0, lerp(colCY, 0, open), -0.95)
+      // (behind the box's centre: in portrait that is the plate in view, off the column's axis)
+      deck.back.position.set(subject.x, lerp(colCY, 0, open), -0.95)
       deck.back.lookAt(pose.pos.x, pose.pos.y, pose.pos.z)
 
       // ---------- world: the halo behind the plate, the light sweep on the bevels
