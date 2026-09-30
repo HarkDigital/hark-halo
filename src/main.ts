@@ -5,7 +5,7 @@ import './styles/base.css'
 import './ui/ui.css'
 
 import { installPrintPolyfills } from './ui/polyfills'
-import { applyLightsCss, takeResume } from './kit/palette'
+import { applyLightsCss } from './kit/palette'
 import { openContactDialog } from './ui/formDialog'
 import { Engine } from './core/Engine'
 import { CHAPTERS } from './chapters/index'
@@ -49,8 +49,6 @@ document.addEventListener('click', e => {
   e.preventDefault()
   openContactDialog(b)
 })
-// back from a lights switch: resume where the visitor was, without the intro again
-const resume = takeResume()
 
 async function boot() {
   const canvas = document.getElementById('gl') as HTMLCanvasElement
@@ -68,7 +66,7 @@ async function boot() {
     renderFallback(track)
     return
   }
-  const loader = createLoader(document.getElementById('loader')!, { skip: params.has('nointro') || resume !== null })
+  const loader = createLoader(document.getElementById('loader')!, { skip: params.has('nointro') })
 
   const engine = new Engine(canvas, track, stages)
   // the GPU context is gone for good: show the static copy, not an empty canvas
@@ -104,8 +102,7 @@ async function boot() {
   const svc = hash.match(/^services\/([a-z0-9-]+)$/)?.[1]
   const svcAt = svc ? SERVICES.findIndex(s => s.slug === svc) : -1
   const svcSlot = engine.slots.find(s => s.def.id === 'services')
-  if (resume !== null) engine.goto(resume)
-  else if (p) engine.goto(parseFloat(p))
+  if (p) engine.goto(parseFloat(p))
   else if (c) engine.gotoChapter(c, parseFloat(params.get('l') ?? '0'))
   else if (svcAt >= 0 && svcSlot) engine.land('services', false, svcSlot.chapter.anchors?.[svcAt])
   else if (hash && CHAPTERS.some(ch => ch.id === hash)) engine.land(hash, false)

@@ -2,39 +2,32 @@ import type { Engine, EngineState } from '../core/Engine'
 import type { Frame } from '../core/types'
 import type { Sound } from './sound'
 import { BRAND, MICROCOPY } from '../content'
-import { CONCEPT_TAG, WORDMARK, markOutlineSvg, markSvg } from './mark'
+import { logoSvg, markOutlineSvg } from './mark'
 import { holdInert, releaseInert } from './inert'
 import { mountRotateGate } from './rotate'
 import { bindScene, holdScene, releaseScene } from './scene'
 import { noteChapter } from './fallback'
-import { ACTIVE, LIGHTS, LOGO, LOGO_STYLES, switchLights, switchLogo } from '../kit/palette'
 
 /*
  * Persistent chrome: black, and frosted glass. Minimal, cold, precise — the
  * placards in a black gallery.
  *
- *   top-left      the Hark mark, razor sharp and white, set in a small
- *                 frosted glass tile lit from behind; the real
- *                 "Hark.Digital" wordmark (its dot a polished glass bead)
- *                 and a small "Concept · Halo" tag (→ the start)
+ *   top-left      the real Hark Digital logo (the mark, HARK, DIGITAL
+ *                 DESIGN), white (→ the start)
  *   top-right     a frosted capsule: Work · Services · Contact (a hairline
  *                 comes into focus under the chapter you are in) and the
  *                 white "Start a project" pill. ≤ 720px: a "Menu" pill opens
  *                 a full-screen black frosted sheet (a real modal dialog:
  *                 focus trap, Escape, inert background with a fallback,
  *                 focus returns to Menu) with a big nav, 'Start a project',
- *                 'Read as a page', the Sound / Motion switches, and the
+ *                 'Read as a page', the Sound switch, and the
  *                 mark drawn as a hairline behind it. While it is up the
  *                 chapter layer underneath is hidden and the scene holds
  *                 still behind the frost.
- *   bottom-left   "Preferences" (a named region, so the pause control is
- *                 reachable by landmark): Sound — three hairline bars that
- *                 ride the actual audio (aria-pressed); Motion — a hairline
- *                 turntable whose bead turns slowly while motion is on
- *                 (aria-pressed). Motion off sets html.motion-off and
- *                 engine.motion = false, is remembered for the session and
- *                 starts off under prefers-reduced-motion. ≤ 440px both
- *                 become round glyph pills.
+ *   bottom-left   "Preferences" (a named region): Sound — three hairline
+ *                 bars that ride the actual audio (aria-pressed); ≤ 440px a
+ *                 round glyph pill. Motion follows prefers-reduced-motion
+ *                 (reduced: html.motion-off, engine.motion = false).
  *   bottom-right  the readout "03 / 07 · Etched · Services" over seven
  *                 hairline pips (each a ≥ 24px button; the current one a
  *                 white bar; hovering one cues "Go to …" in the readout).
@@ -65,39 +58,16 @@ const BUSINESS: Record<string, string> = {
 }
 const NAV = ['work', 'services', 'contact']
 const MENU_QUERY = '(max-width: 720px)'
-const MOTION_KEY = 'hark-halo:motion'
 const READ_LABEL = 'Read as a page'
 /** the static page (main.ts renders the fallback for ?read; it scrolls to the #chapter) */
 const readHref = (id: string) => `?read#${id}`
 
-const readMotion = (fallback: boolean) => {
-  try {
-    const v = sessionStorage.getItem(MOTION_KEY)
-    if (v === '1') return true
-    if (v === '0') return false
-  } catch {
-    /* blocked storage: the default for this visit */
-  }
-  return fallback
-}
-const rememberMotion = (on: boolean) => {
-  try {
-    sessionStorage.setItem(MOTION_KEY, on ? '1' : '0')
-  } catch {
-    /* blocked storage: the choice lasts until reload */
-  }
-}
 const pad = (n: number) => String(n).padStart(2, '0')
 const esc = (s: string) => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
 
 const MENU_IC = `<svg class="ch-ic" viewBox="0 0 18 12" aria-hidden="true" focusable="false"><path d="M2 3.5h14M5 8.5h11"/></svg>`
 const CLOSE_IC = `<svg class="ch-ic" viewBox="0 0 18 12" aria-hidden="true" focusable="false"><path d="M4.5 1.5l9 9M13.5 1.5l-9 9"/></svg>`
 const EQ = `<span class="ch-eq" aria-hidden="true"><i></i><i></i><i></i><b></b></span>`
-/** the lights: three dots in the active palette's colours */
-const LIGHT_DOTS = `<span class="ch-lights-dots" aria-hidden="true"><i></i><i></i><i></i></span>`
-/** the hero logo: a glass tube with a line of light down it */
-const TUBE_IC = `<svg class="ch-tube" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect class="ch-tube-g" x="1.6" y="4.6" width="12.8" height="6.8" rx="3.4"/><path class="ch-tube-n" d="M4.6 8h6.8"/></svg>`
-const ORBIT = `<svg class="ch-orbit" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle class="ch-orbit-r" cx="8" cy="8" r="5.6"/><g class="ch-orbit-g"><circle class="ch-orbit-b" cx="8" cy="2.4" r="1.7"/></g></svg>`
 
 export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
   const slots = engine.slots
@@ -114,8 +84,7 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
 
   // ---------------------------------------------------------------- markup
 
-  const brandInner = `<span class="ch-tile" aria-hidden="true">${markSvg('ch-mark-svg')}</span>
-      <span class="ch-brand-text" aria-hidden="true">${WORDMARK}${CONCEPT_TAG}</span>`
+  const brandInner = `<span class="ch-logo" aria-hidden="true">${logoSvg('ch-logo-svg')}</span>`
 
   const links = NAV.filter(id => indexOf(id) >= 0)
     .map(id => `<li><a class="ch-link" href="#${id}" data-go="${id}">${biz(id)}</a></li>`)
@@ -139,19 +108,10 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
     )
     .join('')
 
-  let motionOn = readMotion(!reduced)
+  // motion follows the visitor's system setting (there is no switch)
+  const motionOn = !reduced
   const soundBtn = (extra = '') =>
     `<button class="ch-tgl ch-sound ch-chip${extra}" type="button" data-sound-toggle aria-pressed="false">${EQ}<span class="ch-tgl-k">${MICROCOPY.audio}</span><span class="ch-tgl-st" aria-hidden="true">${MICROCOPY.audioOff}</span></button>`
-  const motionBtn = (extra = '') =>
-    `<button class="ch-tgl ch-motion ch-chip${extra}" type="button" data-motion-toggle aria-pressed="${motionOn}">${ORBIT}<span class="ch-tgl-k">${MICROCOPY.motion}</span><span class="ch-tgl-st" aria-hidden="true">${motionOn ? MICROCOPY.audioOn : MICROCOPY.audioOff}</span></button>`
-  // the lights: cycle Option 1 → 2 → 3 (a reload: every neon is built in its colour)
-  const nextLights = LIGHTS[ACTIVE.id % LIGHTS.length]
-  const lightsBtn = (extra = '') =>
-    `<button class="ch-tgl ch-lights ch-chip${extra}" type="button" data-lights-toggle aria-label="Lights: ${ACTIVE.name} of ${LIGHTS.length}. Switch to ${nextLights.name}">${LIGHT_DOTS}<span class="ch-tgl-k" aria-hidden="true">Lights</span><span class="ch-tgl-st" aria-hidden="true">${ACTIVE.id}</span></button>`
-  // the hero logo: Frost ↔ Tube (a reload: the hero is built once)
-  const nextLogo = LOGO_STYLES[LOGO.id % LOGO_STYLES.length]
-  const logoBtn = (extra = '') =>
-    `<button class="ch-tgl ch-logo ch-chip${extra}" type="button" data-logo-toggle aria-label="Logo: ${LOGO.name}. Switch to ${nextLogo.name}">${TUBE_IC}<span class="ch-tgl-k" aria-hidden="true">Logo</span><span class="ch-tgl-st" aria-hidden="true">${LOGO.name}</span></button>`
   const first = slots[0]?.def.id ?? 'hero'
 
   root.innerHTML = `
@@ -172,7 +132,7 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
     </header>
 
     <div class="ch-bottom">
-      <section class="ch-prefs" aria-label="Preferences">${soundBtn()}${motionBtn()}${lightsBtn()}${logoBtn()}</section>
+      <section class="ch-prefs" aria-label="Preferences">${soundBtn()}</section>
       <div class="ch-prog">
         <p class="ch-read" aria-hidden="true"><span class="ch-read-n"></span><span class="ch-read-l"></span><span class="ch-read-b"></span></p>
         <nav class="ch-chapters" aria-label="Chapters"><ol class="ch-pips">${pips}</ol></nav>
@@ -195,7 +155,7 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
           <a class="hud-btn ch-menu-cta" href="#contact" data-go="contact">Start a project</a>
           <a class="hud-btn hud-btn--ghost ch-menu-read" href="${readHref(first)}" data-read>${READ_LABEL}</a>
         </div>
-        <div class="ch-menu-prefs" role="group" aria-label="Preferences">${soundBtn(' ch-menu-tgl')}${motionBtn(' ch-menu-tgl')}${lightsBtn(' ch-menu-tgl')}${logoBtn(' ch-menu-tgl')}</div>
+        <div class="ch-menu-prefs" role="group" aria-label="Preferences">${soundBtn(' ch-menu-tgl')}</div>
         <p class="ch-menu-mail"><a href="mailto:${BRAND.email}">${BRAND.email}</a></p>
       </div>
     </div>
@@ -212,9 +172,7 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
   const pipEls = [...root.querySelectorAll<HTMLButtonElement>('.ch-pip')]
   const menuLinks = [...root.querySelectorAll<HTMLAnchorElement>('.ch-ml')]
   const soundBtns = [...root.querySelectorAll<HTMLButtonElement>('[data-sound-toggle]')]
-  const motionBtns = [...root.querySelectorAll<HTMLButtonElement>('[data-motion-toggle]')]
   const bars = [...root.querySelectorAll<HTMLElement>('.ch-eq i')]
-  const orbits = [...root.querySelectorAll<SVGGElement>('.ch-orbit-g')]
   const readN = $('.ch-read-n')
   const readL = $('.ch-read-l')
   const readB = $('.ch-read-b')
@@ -292,34 +250,8 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
     document.documentElement.classList.toggle('motion-off', !motionOn)
     engine.motion = motionOn
     chr.classList.toggle('is-still', !motionOn)
-    for (const b of motionBtns) {
-      b.setAttribute('aria-pressed', String(motionOn))
-      const st = b.querySelector('.ch-tgl-st')
-      if (st) st.textContent = motionOn ? MICROCOPY.audioOn : MICROCOPY.audioOff
-    }
     window.dispatchEvent(new CustomEvent('hark:motion', { detail: { on: motionOn } }))
   }
-  for (const b of motionBtns)
-    b.addEventListener('click', () => {
-      motionOn = !motionOn
-      rememberMotion(motionOn)
-      sound.blip(motionOn ? 4 : 1)
-      syncMotion()
-    })
-
-  // the lights: remember the next option and reload where the visitor is
-  let progressNow = 0
-  for (const b of root.querySelectorAll<HTMLButtonElement>('[data-lights-toggle]'))
-    b.addEventListener('click', () => {
-      sound.blip(3)
-      switchLights(nextLights.id, progressNow)
-    })
-  for (const b of root.querySelectorAll<HTMLButtonElement>('[data-logo-toggle]'))
-    b.addEventListener('click', () => {
-      sound.blip(3)
-      switchLogo(nextLogo.id, progressNow)
-    })
-
   // --------------------------------------------------------------- menu sheet
 
   let menuOpen = false
@@ -411,12 +343,9 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
   /** measured resting band levels (analyser bytes / 255) and the headroom above them */
   const FLOOR = [0.78, 0.36, 0.3]
   const SPAN = [0.2, 0.34, 0.34]
-  let orbitDeg = 0
-  let lastOrbit = ''
 
   return {
     update(frame: Frame, state: EngineState) {
-      progressNow = frame.progress
       const slot = state.slots[state.index]
       if (!slot) return
 
@@ -456,16 +385,6 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
         const href = readHref(activeId)
         for (const a of readLinks) a.setAttribute('href', href)
         noteChapter(activeId)
-      }
-
-      // the Motion glyph's bead turns slowly while motion is on (a turntable)
-      if (motionOn && !reduced && !frame.still) {
-        orbitDeg = (orbitDeg + frame.dt * 30) % 360
-        const t = `rotate(${orbitDeg.toFixed(1)} 8 8)`
-        if (t !== lastOrbit) {
-          lastOrbit = t
-          for (const g of orbits) g.setAttribute('transform', t)
-        }
       }
 
       // the Sound glyph rides the real signal (a calm fixed shape when motion is off)

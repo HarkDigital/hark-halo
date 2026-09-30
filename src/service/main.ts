@@ -10,7 +10,7 @@ import { applyLightsCss } from '../kit/palette'
 import { BRAND, CONTACT, CONTACT_FORM, SERVICES, SITE } from '../content'
 import { createContactForm } from '../ui/contactForm'
 import { mountNeonFrame } from './neonFrame'
-import { CONCEPT_TAG, WORDMARK, markSvg } from '../ui/mark'
+import { logoSvg } from '../ui/mark'
 import { SERVICE_PAGES } from './data/pages'
 import { SERVICE_CONTENT } from './data/content'
 
@@ -71,8 +71,7 @@ function render(i: number) {
   document.getElementById('svc-top')!.innerHTML = `
     <header class="svc-top">
       <a class="ch-brand" href="${BASE}" aria-label="${esc(BRAND.name)}, home">
-        <span class="ch-tile" aria-hidden="true">${markSvg('ch-mark-svg')}</span>
-        <span class="ch-brand-text" aria-hidden="true">${WORDMARK}${CONCEPT_TAG}</span>
+        <span class="ch-logo" aria-hidden="true">${logoSvg('ch-logo-svg')}</span>
       </a>
       <nav class="svc-nav ch-chip" aria-label="Primary">
         <ul class="ch-links">

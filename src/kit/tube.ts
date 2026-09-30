@@ -1,11 +1,12 @@
 import * as THREE from 'three'
 import { mergeGeometries, toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js'
-import { G, closedOutline, edgeGlow, neonPath, sharpTransmission, type NeonPath } from '../../kit/glass'
-import { extrudeInset, logoParts } from '../../logo/logo'
+import { G, closedOutline, neonPath, type NeonPath } from './glass'
+import { extrudeInset, logoParts } from '../logo/logo'
 
 /*
- * TUBE — the hero logo's second option (kit/palette LOGO_STYLES): the mark IS
- * the neon. Each loop of the mark is a band of even width; a neon tube runs
+ * TUBE — the Hark mark as neon encased in glass (the story's mark: hero,
+ * process, contact; kit/palette LOGO_STYLES keeps the frosted one at ?logo=1).
+ * The mark IS the neon. Each loop of the mark is a band of even width; a neon tube runs
  * down the middle of it, encased in a clear glass tube as wide as the band
  * (rounded glass ends where the artwork's ends are cut), so the silhouette is
  * still the mark. The diamond is a small clear glass tile with a neon square
@@ -128,6 +129,9 @@ function bandCenterline(shape: THREE.Shape): Band {
   return { pts, width: widths[Math.floor(widths.length / 2)] }
 }
 
+/** the glass tube's radius (mark units) */
+export const tubeRadius = () => tubeBands().radius
+
 let bands: { loops: Band[]; radius: number } | null = null
 /** both loops' centre lines (cached) and the glass tube radius */
 function tubeBands() {
@@ -155,9 +159,21 @@ function diamondRing(inset: number): THREE.Vector2[] {
   return closedOutline(path, 0.002, 0.004)
 }
 
+/*
+ * PRINT (optional): the glass can be built up from the floor (the process
+ * chapter prints it). Everything above the front (object y, mark units) is
+ * discarded; the freshly fused layer glows and cools.
+ */
+export interface TubePrint {
+  uPrint: { value: number }
+  uHot: { value: number }
+  uHotColor: { value: THREE.Color }
+}
+
 const WALL_VERT = /* glsl */ `
-  varying vec3 vN; varying vec3 vV;
+  varying vec3 vN; varying vec3 vV; varying float vObjY;
   void main() {
+    vObjY = position.y;
     vec4 mv = modelViewMatrix * vec4(position, 1.0);
     vN = normalize(normalMatrix * normal);
     vV = normalize(-mv.xyz);
@@ -165,9 +181,10 @@ const WALL_VERT = /* glsl */ `
   }
 `
 const WALL_FRAG = /* glsl */ `
-  uniform vec3 uColor; uniform float uK, uOn;
-  varying vec3 vN; varying vec3 vV;
+  uniform vec3 uColor; uniform float uK, uOn, uPrint;
+  varying vec3 vN; varying vec3 vV; varying float vObjY;
   void main() {
+    if (vObjY > uPrint) discard;
     // light caught in the glass runs along its walls and shows where you look
     // through the most glass: the silhouettes; a faint tint across the rest
     float f = 1.0 - abs(dot(normalize(vN), normalize(vV)));
@@ -176,6 +193,46 @@ const WALL_FRAG = /* glsl */ `
     gl_FragColor = vec4(col * uK * uOn, 1.0);
   }
 `
+/** the glass's own edge in the studio light (the kit's edgeGlow, printable) */
+const RIM_FRAG = /* glsl */ `
+  uniform vec3 uColor; uniform float uStrength, uPrint;
+  varying vec3 vN; varying vec3 vV; varying float vObjY;
+  void main() {
+    if (vObjY > uPrint) discard;
+    float f = 1.0 - abs(dot(normalize(vN), normalize(vV)));
+    gl_FragColor = vec4(uColor * f * f * f * uStrength, 1.0);
+  }
+`
+
+const LOD_RE = /float lod = log2\( transmissionSamplerSize\.x \) \* applyIorToRoughness\( roughness, ior \);\s*return textureBicubic\( transmissionSamplerMap, fragCoord\.xy, lod \);/
+
+/** clear glass reads what's behind at mip 0 (crisp neon); printed glass clips at the front and glows there */
+function patchGlass(m: THREE.MeshPhysicalMaterial, print?: TubePrint) {
+  const chunk = THREE.ShaderChunk.transmission_pars_fragment
+  const sharp = LOD_RE.test(chunk) ? chunk.replace(LOD_RE, 'return textureLod( transmissionSamplerMap, fragCoord.xy, 0.0 );') : null
+  if (!sharp && import.meta.env.DEV) console.warn('[tube] three transmission chunk changed; the glass will blur a little')
+  m.onBeforeCompile = sh => {
+    if (sharp) sh.fragmentShader = sh.fragmentShader.replace('#include <transmission_pars_fragment>', sharp)
+    if (!print) return
+    Object.assign(sh.uniforms, print)
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vPrP;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvPrP = position;')
+    sh.fragmentShader = sh.fragmentShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vPrP;\nuniform float uPrint, uHot;\nuniform vec3 uHotColor;')
+      .replace('#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>\n\tif ( vPrP.y > uPrint ) discard;')
+      .replace(
+        '#include <emissivemap_fragment>',
+        `#include <emissivemap_fragment>
+	if ( uHot > 0.0 ) {
+		float prD = max( uPrint - vPrP.y, 0.0 );
+		float prK = prD / 0.0055;
+		totalEmissiveRadiance += uHotColor * uHot * ( exp( -prK * prK ) * 1.5 + 0.22 * exp( -prD / 0.05 ) );
+	}`,
+      )
+  }
+  m.customProgramCacheKey = () => (print ? 'hark-tube-glass-print' : 'hark-tube-glass')
+}
 
 export interface TubeMark {
   pivot: THREE.Group
@@ -189,7 +246,7 @@ export interface TubeMark {
 }
 
 /** the glass: every tube and the diamond tile, one clear transmissive mesh (mark units) */
-export function buildTubeMark(mobile: boolean, envMap: THREE.Texture | null, markS: number): TubeMark {
+export function buildTubeMark(mobile: boolean, envMap: THREE.Texture | null, markS: number, print?: TubePrint): TubeMark {
   const { loops, radius: r } = tubeBands()
   const radial = mobile ? 18 : 32
   const partGeos: THREE.BufferGeometry[] = []
@@ -245,20 +302,21 @@ export function buildTubeMark(mobile: boolean, envMap: THREE.Texture | null, mar
   })
   glass.dispersion = mobile ? 0 : 0.28
   // crisp: the neon inside reads sharp through the clear glass
-  sharpTransmission(glass)
+  patchGlass(glass, print)
   if (envMap) glass.envMap = envMap
   const mark = new THREE.Mesh(all, glass)
   const root = new THREE.Group()
   root.add(mark)
 
   const colors = [G.neonA, G.neonB, G.neonC]
+  const uPrint = print?.uPrint ?? { value: 1e3 }
   const walls = partGeos.map((g, i) => {
     const m = new THREE.ShaderMaterial({
       transparent: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
       toneMapped: false,
-      uniforms: { uColor: { value: new THREE.Color(colors[i === partGeos.length - 1 ? 2 : i]) }, uK: { value: 0 }, uOn: { value: 0 } },
+      uniforms: { uColor: { value: new THREE.Color(colors[i === partGeos.length - 1 ? 2 : i]) }, uK: { value: 0 }, uOn: { value: 0 }, uPrint },
       vertexShader: WALL_VERT,
       fragmentShader: WALL_FRAG,
     })
@@ -268,7 +326,15 @@ export function buildTubeMark(mobile: boolean, envMap: THREE.Texture | null, mar
     return m
   })
   // a faint white rim: the glass's own edge in the studio light
-  const rim = edgeGlow(G.ice, 3, 0)
+  const rim = new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    toneMapped: false,
+    uniforms: { uColor: { value: new THREE.Color(G.ice) }, uStrength: { value: 0 }, uPrint },
+    vertexShader: WALL_VERT,
+    fragmentShader: RIM_FRAG,
+  })
   const rimMesh = new THREE.Mesh(all, rim)
   rimMesh.renderOrder = 3
   root.add(rimMesh)
@@ -286,7 +352,10 @@ export function buildTubeMark(mobile: boolean, envMap: THREE.Texture | null, mar
  * short of the glass ends, where the electrodes would be) and a square in the
  * diamond. Same shape as the kit's neonMark: `parts[i]` = part i's tubes.
  */
-export function buildTubeNeon(isFrameTarget: (rt: THREE.WebGLRenderTarget | null) => boolean, mirror?: { floorY: number; fade?: number }): { root: THREE.Group; parts: NeonPath[][] } {
+export function buildTubeNeon(
+  isFrameTarget: (rt: THREE.WebGLRenderTarget | null) => boolean,
+  mirror?: { floorY: number; fade?: number },
+): { root: THREE.Group; parts: NeonPath[][]; curves: THREE.Curve<THREE.Vector3>[] } {
   const { loops, radius: r } = tubeBands()
   const colors = [G.neonA, G.neonB, G.neonC]
   const root = new THREE.Group()
@@ -321,5 +390,7 @@ export function buildTubeNeon(isFrameTarget: (rt: THREE.WebGLRenderTarget | null
   })
   root.add(d.root)
   parts.push([d])
-  return { root, parts }
+  // each part's tube axis (getPointAt(u) matches the tube's draw / pulse u)
+  const curves = parts.map(p => p[0].tube.geometry.parameters.path)
+  return { root, parts, curves }
 }

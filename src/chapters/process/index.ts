@@ -5,6 +5,7 @@ import { PROCESS } from '../../content'
 import { clamp, ease, lerp, segment, smoothstep, window01 } from '../../core/math'
 import { nextFrame } from '../../core/yield'
 import { G } from '../../kit/glass'
+import { tubeRadius } from '../../kit/tube'
 import {
   DEPTH,
   FLOOR_MIRROR,
@@ -20,6 +21,7 @@ import {
   buildSketch,
   buildSpark,
   FLOOR_Y,
+  TUBE,
   type Neon,
   type PrintedMark,
   type Spark,
@@ -55,6 +57,11 @@ import './process.css'
  *                            then, a steady glow
  *   0.78–0.95  finale: pull back to the finished mark alone, glowing
  *   0.95–1.00  out-beat
+ *
+ * TUBE (the site's mark): the same steps with the mark as neon in glass
+ * tubes. The loops' neon draws in down the bands' centre lines and stays in
+ * the mark's plane; 03 prints the clear glass tubes round it from the floor
+ * up (the neon glows through them); 04's sparks run along the tubes.
  *
  * Everything derives from `local`; frame.time only drives idle motion (the
  * rings' slow drift, the sparks, a gentle sway; held under Motion off, gone
@@ -222,13 +229,14 @@ export default function create(): Chapter {
       const isFrame = (rt: THREE.WebGLRenderTarget | null) => ctx.post.isFrameTarget(rt)
 
       // ---- the glass mark (printed in step 03) with the neon, the drawing and the print head in its space
-      glass = buildGlass(ctx.world.envMap)
+      glass = buildGlass(ctx.world.envMap, ctx.mobile)
       pivot.add(glass.logo.root)
       await nextFrame()
       neon = buildNeon(isFrame)
       glass.logo.root.add(neon.root)
       ;[G.neonA, G.neonB, G.neonC].forEach((c, i) => {
-        const sp = buildSpark(c, isFrame, i < 2 ? 0.28 : 0.12)
+        // (clear tubes: a softer glow in the glass than the frost needs)
+        const sp = buildSpark(c, isFrame, i < 2 ? 0.28 : 0.12, TUBE ? 1.1 : 5.0)
         neon.root.add(sp.mesh)
         sparks.push(sp)
       })
@@ -385,7 +393,8 @@ export default function create(): Chapter {
       pivot.rotation.set(tilt - facePitch, yaw + faceYaw, 0, 'YXZ')
 
       // ================= 03 BUILD: the outline glides back into the halo; the glass is printed
-      const recede = ease.inOutCubic(segment(local, RECEDE[0], RECEDE[1]))
+      // (the tube mark's neon stays inside its glass: no halo to become)
+      const recede = TUBE ? 0 : ease.inOutCubic(segment(local, RECEDE[0], RECEDE[1]))
       neon.root.position.z = lerp(0, HALO_Z, recede)
       neon.root.scale.setScalar(lerp(1, HALO_SCALE, recede))
 
@@ -398,9 +407,19 @@ export default function create(): Chapter {
       const headK = window01(local, PRINT[0] - 0.004, PRINT[1] + 0.01, 0.014) * (1 - smoothstep(0.44, 0.53, front)) * smoothstep(-0.53, -0.46, front)
       head.u.uK.value = headK
       head.mesh.visible = headK > 0.001
-      head.mesh.position.set(0, front, DEPTH / 2 + 0.006)
-      glass.logo.caps.envMapIntensity = 0.13
-      glass.logo.sides.envMapIntensity = lerp(0.3, 1.5, lit)
+      head.mesh.position.set(0, front, (TUBE ? tubeRadius() : DEPTH / 2) + 0.006)
+      if (TUBE) {
+        // clear glass tubes (caps and sides are one glass); the light in their walls
+        glass.logo.caps.envMapIntensity = lerp(0.3, 1.15, lit)
+        for (let i = 0; i < glass.walls.length; i++) {
+          glass.walls[i].uniforms.uOn.value = lit
+          glass.walls[i].uniforms.uK.value = 0.42
+        }
+        if (glass.rim) glass.rim.uniforms.uStrength.value = 0.14 * lit
+      } else {
+        glass.logo.caps.envMapIntensity = 0.13
+        glass.logo.sides.envMapIntensity = lerp(0.3, 1.5, lit)
+      }
 
       pivot.updateMatrixWorld(true)
       reflection.matrix.multiplyMatrices(FLOOR_MIRROR, glass.logo.root.matrixWorld)
@@ -445,9 +464,10 @@ export default function create(): Chapter {
           n.draw.value = draws[i]
           n.pulse.value.set(px, py)
           n.k.main.tube = 3.0
-          n.k.main.glow = 0.55
+          // (tube mark: once its glass is there, the room sees the neon through it)
+          n.k.main.glow = TUBE ? lerp(0.55, 0.2, lit) : 0.55
           n.k.trans.tube = 3.0
-          n.k.trans.glow = 0.78
+          n.k.trans.glow = TUBE ? lerp(0.78, 0.34, lit) : 0.78
         }
         for (const n of neonRefl.parts[i]) {
           n.root.visible = on > 0 && draws[i] > 0
@@ -493,14 +513,15 @@ export default function create(): Chapter {
       cu.uHalf.value = cardSize / 2
       cu.uCore.value = 0.62
       cu.uWideR.value = 1.6
-      card.k.trans.glow = 0.19 * lit
-      card.k.trans.wide = 0.055 * lit
+      // (clear tubes show what's behind as it is: only a whisper of the card)
+      card.k.trans.glow = (TUBE ? 0.05 : 0.19) * lit
+      card.k.trans.wide = (TUBE ? 0.012 : 0.055) * lit
       card.k.main.glow = 0.035 * lit
       card.k.main.wide = 0
       card.mesh.visible = lit > 0.001
 
       floor.material.uniforms.uK.value = 0.012 + 0.012 * proto + 0.028 * lit
-      reflection.material.uniforms.uStrength.value = 0.2 * lit * (portrait ? 0.35 : 1)
+      reflection.material.uniforms.uStrength.value = (TUBE ? 0.1 : 0.2) * lit * (portrait ? 0.35 : 1)
       reflection.material.uniforms.uFade.value = portrait ? 4 : 1.6
 
       // ---- world: black; a backlight halo behind the mark — faint and warm while only

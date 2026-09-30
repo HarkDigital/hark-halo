@@ -1,5 +1,5 @@
 import { SITE } from '../content'
-import { MARK_DIAMOND, MARK_LOOPS, MARK_VIEW } from '../logo/svgSource'
+import { MARK_DIAMOND, MARK_LOOPS, MARK_VIEW, WORDMARK_SVG } from '../logo/svgSource'
 
 /*
  * The Hark mark as inline-SVG path data for the DOM layer (chrome, loader,
@@ -26,6 +26,22 @@ export const MARK_ALL = [...MARK_PATHS.loops, MARK_PATHS.diamond].filter(Boolean
  * find-in-page still read "Hark.Digital". Styled by the .wm rules in ui.css.
  */
 export const WORDMARK = `<span class="wm"><span class="wm-a">Hark</span><span class="wm-dot">.</span><span class="wm-b">Digital</span></span>`
+
+/** the logo's artwork, tight (its own viewBox has a margin): the mark, HARK, DIGITAL DESIGN */
+const LOGO_VIEWBOX = '122.68 96.07 5543.09 1486.99'
+const LOGO_INNER = WORDMARK_SVG.replace(/^[\s\S]*?<\/defs>/, '')
+  .replace(/<\/svg>\s*$/, '')
+  .replace(/ class="st0"/g, '')
+  .trim()
+
+/**
+ * The real Hark Digital logo (the 2026 site's Hark-Logo.svg): the mark beside
+ * HARK over DIGITAL DESIGN, all white (currentColor). Decorative: the link or
+ * heading around it carries the name.
+ */
+export function logoSvg(className = '') {
+  return `<svg class="${className}" viewBox="${LOGO_VIEWBOX}" fill="currentColor" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">${LOGO_INNER}</svg>`
+}
 
 /** This site is a concept direction, not a rebrand: a small tag, never part of the name. */
 export const CONCEPT_TAG = `<span class="wm-tag"><span class="wm-tag-k">Concept</span><b aria-hidden="true">·</b><em>${SITE.name}</em></span>`

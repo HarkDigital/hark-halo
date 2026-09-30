@@ -21,8 +21,8 @@ import { MARK_ALL, MARK_VIEWBOX, MARK_W } from './mark'
  * Rules: shows at least ~1.2 s, never hangs (every wait is a timer, never an
  * animation frame, so a background tab still finishes; frames only paint the
  * in-betweens), the page behind is inert while it's up, skip (?nointro)
- * removes it at once. Reduced motion (or Motion switched off earlier this
- * session): no fog, the line simply completes and the black fades.
+ * removes it at once. Reduced motion: no fog, the line simply completes and
+ * the black fades.
  *
  * API used by main.ts: createLoader(root, { skip }) → { progress(0..1), finish() }.
  */
@@ -78,13 +78,7 @@ export function createLoader(root: HTMLElement, { skip = false } = {}) {
     return { progress() {}, finish: () => Promise.resolve() }
   }
 
-  let motionOff = false
-  try {
-    motionOff = sessionStorage.getItem('hark-halo:motion') === '0'
-  } catch {
-    /* blocked storage */
-  }
-  const calm = motionOff || matchMedia('(prefers-reduced-motion: reduce)').matches
+  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches
   const lowfx = matchMedia('(pointer: coarse)').matches || window.innerWidth < 768
 
   const paths = (attrs: string) => MARK_ALL.map(d => `<path d="${d}" ${attrs}/>`).join('')

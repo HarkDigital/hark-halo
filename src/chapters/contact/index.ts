@@ -6,7 +6,7 @@ import { nextFrame } from '../../core/yield'
 import { BRAND } from '../../content'
 import { G } from '../../kit/glass'
 import { buildHud, measureHud, type Hud, type HudLayout } from './hud'
-import { buildScene, GAIN, SLIT_DEPTH, THAW_OUTER, type ThawScene } from './scene'
+import { buildScene, GAIN, SLIT_DEPTH, THAW_OUTER, TUBE, type ThawScene } from './scene'
 import './contact.css'
 
 /*
@@ -32,6 +32,11 @@ import './contact.css'
  *              turns back toward you and makes room for the sign-off, which
  *              comes into focus beneath it (0.82–0.90)
  *   0.90–1.00  the final still: nothing moves
+ *
+ * TUBE (the site's mark): the mark as neon in clear glass tubes. No frost to
+ * thaw: the neon strikes as it arrives, a spark runs through the tubes
+ * across the thaw's stretch (0.33–0.62) and once more as the mark settles over
+ * the sign-off (0.74–0.9); the glass catches the studio's strips as it turns.
  *
  * Everything is derived from `local`; frame.time only adds a tiny idle float
  * that is off under reduced motion / Motion off and dies for the finale.
@@ -140,7 +145,7 @@ export default function create(): Chapter {
       sign = rise(el('p', 'hud-h2 ct-sign', undefined, ctx.stage), `${words.join(' ')} <em>${last}</em>`)
       sign.setAttribute('aria-hidden', 'true')
       await nextFrame()
-      set = buildScene(rt => ctx.post.isFrameTarget(rt))
+      set = buildScene(rt => ctx.post.isFrameTarget(rt), ctx.mobile, ctx.world.envMap)
       group.add(set.rig)
       await nextFrame()
     },
@@ -230,19 +235,54 @@ export default function create(): Chapter {
       wp.focus.set(mx, my)
       wp.haloSize = unitField * 0.95
       wp.haloColor = G.ice
-      wp.halo = 0.55 + 0.45 * smoothstep(0.02, 0.24, local) + 0.25 * clear - 0.08 * home + 0.12 * hoverAmt + 0.18 * copied
+      wp.halo = (0.55 + 0.45 * smoothstep(0.02, 0.24, local) + (TUBE ? 0 : 0.25 * clear) - 0.08 * home + 0.12 * hoverAmt + 0.18 * copied) * (TUBE ? 0.6 : 1)
       wp.slits = 0
       set.slitU.uStrength.value = 0.55 + 0.35 * clear
       // the halo: tubes + sleeves in the room; the glass buffer gets more (the frost diffuses it,
       // the thawed glass shows the tubes crisp)
-      for (const part of set.neon)
-        for (const n of part) {
-          n.on.value = smoothstep(0.0, 0.12, local)
-          n.k.main.tube = 3.0
-          n.k.main.glow = 0.55
-          n.k.trans.tube = 3.0
-          n.k.trans.glow = 1.0
-        }
+      if (TUBE) {
+        // the neon inside the glass: the room sees it only through the glass (refracted), so
+        // the glass buffer carries the tube and its glow; the room keeps the halo past the glass
+        const on = smoothstep(0.0, 0.12, local)
+        const c1 = segment(local, 0.33, 0.62)
+        const c2 = segment(local, 0.74, 0.9)
+        set.neon.forEach((part, i) => {
+          let px = c1 > 0 && c1 < 1 ? c1 : c2
+          let py = c1 > 0 && c1 < 1 ? 2.4 * Math.sin(Math.PI * c1) : c2 > 0 && c2 < 1 ? 1.8 * Math.sin(Math.PI * c2) : 0
+          // now and then at rest (not in the still finale)
+          if (py === 0 && idle > 0) {
+            const ph = (t + i * 0.45) / 7
+            const f = ((ph - Math.floor(ph)) * 7) / 1.9
+            if (f < 1) {
+              px = f
+              py = 1.5 * Math.sin(Math.PI * f) * idle
+            }
+          }
+          for (const n of part) {
+            n.on.value = on
+            n.k.main.tube = 3.2
+            n.k.main.glow = 0.2
+            n.k.trans.tube = 3.0
+            n.k.trans.glow = 0.34
+            n.pulse.value.set(px, py)
+          }
+          const w = set.walls[i]
+          if (w) {
+            w.uniforms.uOn.value = on
+            w.uniforms.uK.value = 0.42 + 0.08 * hoverAmt
+          }
+        })
+        if (set.rim) set.rim.uniforms.uStrength.value = 0.14
+        set.logo.caps.envMapIntensity = 1.1
+      } else
+        for (const part of set.neon)
+          for (const n of part) {
+            n.on.value = smoothstep(0.0, 0.12, local)
+            n.k.main.tube = 3.0
+            n.k.main.glow = 0.55
+            n.k.trans.tube = 3.0
+            n.k.trans.glow = 1.0
+          }
       wp.slitAngle = 0
       wp.env = 1.1
       // light sweeps: one glides along the bevels through the thaw, one more
@@ -255,8 +295,9 @@ export default function create(): Chapter {
       // ---- post: bloom only where a line of light crosses its threshold
       // (the melt line, the rime); the frosted and clear stills gain nothing
       const pp = ctx.post.params
-      pp.bloomStrength = 0.22 * Math.max(melt, rime)
-      pp.bloomRadius = 0.35
+      pp.bloomStrength = TUBE ? 0.22 : 0.22 * Math.max(melt, rime)
+      pp.bloomRadius = TUBE ? 0.25 : 0.35
+      if (TUBE) pp.bloomThreshold = 1.6
       pp.vignette = 0.55
 
       // ---- copy

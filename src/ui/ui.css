@@ -155,69 +155,37 @@
     visibility 0s linear 0.3s;
 }
 
-/* ---------------- top-left: the mark in a frosted tile ---------------- */
+/* ---------------- top-left: the Hark Digital logo ---------------- */
 .ch-brand {
   position: absolute;
   top: var(--ch-y);
   left: var(--gutter);
   display: flex;
   align-items: center;
-  gap: 12px;
   min-height: var(--ch-h);
-  padding-right: 6px;
   text-decoration: none;
   color: var(--paper);
-  border-radius: 14px;
+  border-radius: 8px;
 }
-.ch-tile {
-  position: relative;
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 13px;
-  /* backlit frost: a soft light behind the sandblasted face */
-  background:
-    radial-gradient(62% 62% at 50% 44%, rgba(236, 241, 247, 0.2), rgba(236, 241, 247, 0) 72%),
-    var(--fr-grain),
-    var(--fr-chip);
-  box-shadow: var(--fr-rim-hi);
-  overflow: hidden;
-  transition: box-shadow 0.35s ease;
-}
-/* a polished bevel catching one studio strip */
-.ch-tile::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(128deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 34%, rgba(255, 255, 255, 0) 70%, rgba(255, 255, 255, 0.1) 100%);
-  pointer-events: none;
-}
-.ch-mark-svg {
-  position: relative;
-  z-index: 1;
+.ch-logo {
   display: block;
-  width: 24px;
-  height: 24px;
+  line-height: 0;
+}
+.ch-logo-svg {
+  display: block;
+  height: 44px;
+  width: auto;
   color: #ffffff;
-  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.4));
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.22));
+  transition: filter 0.35s ease;
 }
-.ch-brand-text {
-  display: block;
+.ch-brand:hover .ch-logo-svg,
+.ch-brand:focus-visible .ch-logo-svg {
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.45));
 }
-.ch-brand:hover .ch-tile {
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.55),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.34),
-    0 0 26px rgba(255, 255, 255, 0.16);
-}
-.ch-brand:focus-visible .ch-tile {
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.55),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.34),
-    0 0 26px rgba(255, 255, 255, 0.16);
+.ch-brand:focus-visible {
+  outline: 2px solid var(--paper);
+  outline-offset: 6px;
 }
 
 /* ---------------- top-right: the nav capsule ---------------- */
@@ -363,7 +331,7 @@
   gap: 12px;
 }
 
-/* Preferences: Sound + Motion */
+/* Preferences: Sound */
 .ch-prefs {
   display: flex;
   gap: 8px;
@@ -394,53 +362,6 @@
   color: var(--fr-text-2);
 }
 .ch-tgl[aria-pressed='true'] .ch-tgl-st {
-  color: #ffffff;
-}
-/* lights: three dots in the active palette (kit/palette.ts sets --neon-a/b/c) */
-.ch-lights-dots {
-  display: inline-flex;
-  gap: 3px;
-}
-.ch-lights-dots i {
-  display: block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--neon-a, #ffffff);
-  box-shadow: 0 0 6px var(--neon-a, #ffffff);
-}
-.ch-lights-dots i:nth-child(2) {
-  background: var(--neon-b, #ffffff);
-  box-shadow: 0 0 6px var(--neon-b, #ffffff);
-}
-.ch-lights-dots i:nth-child(3) {
-  background: var(--neon-c, #ffffff);
-  box-shadow: 0 0 6px var(--neon-c, #ffffff);
-}
-.ch-lights .ch-tgl-st {
-  min-width: 1em;
-  color: #ffffff;
-}
-/* logo: a glass tube with a line of neon down it */
-.ch-tube {
-  width: 16px;
-  height: 16px;
-  overflow: visible;
-}
-.ch-tube-g {
-  fill: none;
-  stroke: rgba(255, 255, 255, 0.6);
-  stroke-width: 1.2;
-}
-.ch-tube-n {
-  fill: none;
-  stroke: var(--neon-a, #ffffff);
-  stroke-width: 1.6;
-  stroke-linecap: round;
-  filter: drop-shadow(0 0 2px var(--neon-a, #ffffff));
-}
-.ch-logo .ch-tgl-st {
-  min-width: 2.6em;
   color: #ffffff;
 }
 /* sound: three hairline bars (flat dots while off) */
@@ -496,33 +417,6 @@
   background: #ffffff;
   box-shadow: 0 0 5px rgba(255, 255, 255, 0.6);
 }
-/* motion: a hairline turntable with a bead (turns slowly while on, JS) */
-.ch-orbit {
-  width: 15px;
-  height: 15px;
-  overflow: visible;
-}
-.ch-orbit-r {
-  fill: none;
-  stroke: rgba(255, 255, 255, 0.72);
-  stroke-width: 1;
-}
-.ch-orbit-b {
-  fill: #0b0c0e;
-  stroke: rgba(255, 255, 255, 0.85);
-  stroke-width: 1;
-}
-.ch-motion[aria-pressed='true'] .ch-orbit-r {
-  stroke: #ffffff;
-}
-.ch-motion[aria-pressed='true'] .ch-orbit-b {
-  fill: #ffffff;
-  stroke: #ffffff;
-}
-.ch-motion[aria-pressed='false'] .ch-orbit-r {
-  stroke-dasharray: 2 2.4;
-}
-
 /* progress: readout + hairline pips */
 .ch-prog {
   display: grid;
@@ -880,31 +774,6 @@ html.menu-open #stages {
     right: calc(9px + 0.15em);
   }
 }
-/* four switches and the chapter line get tight: glyph pills until the menu takes over */
-@media (min-width: 721px) and (max-width: 820px) {
-  .ch-prefs .ch-tgl {
-    width: 38px;
-    height: 38px;
-    padding: 0;
-    justify-content: center;
-  }
-  .ch-prefs .ch-tgl-k,
-  .ch-prefs .ch-tgl-st {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-}
-/* with the menu button: the logo switch lives in the menu sheet (the bar keeps room for the chapter line) */
-@media (max-width: 720px) {
-  .ch-prefs .ch-logo {
-    display: none;
-  }
-}
 @media (max-width: 720px) {
   .ch-nav {
     display: none;
@@ -922,20 +791,8 @@ html.menu-open #stages {
   :root {
     --ch-h: 42px;
   }
-  .ch-tile {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-  }
-  .ch-mark-svg {
-    width: 22px;
-    height: 22px;
-  }
-  .ch-brand {
-    gap: 10px;
-  }
-  .wm {
-    font-size: 15.5px;
+  .ch-logo-svg {
+    height: 36px;
   }
   /* the switches become round glyph pills (the name stays for assistive tech) */
   .ch-prefs .ch-tgl {
@@ -985,29 +842,13 @@ html.menu-open #stages {
 }
 /* short landscape (a phone turned sideways after 'Continue anyway'): thin rows */
 @media (orientation: landscape) and (max-height: 500px) {
-  .ch-prefs .ch-logo {
-    display: none;
-  }
   :root {
     --ch-y: max(8px, env(safe-area-inset-top, 0px));
     --ch-by: max(8px, env(safe-area-inset-bottom, 0px));
     --ch-h: 36px;
   }
-  .ch-tile {
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
-  }
-  .ch-mark-svg {
-    width: 19px;
-    height: 19px;
-  }
-  .wm {
-    font-size: 14.5px;
-  }
-  .wm-tag {
-    margin-top: 3px;
-    font-size: 9px;
+  .ch-logo-svg {
+    height: 30px;
   }
   .ch-nav {
     padding: 3px 3px 3px 8px;
@@ -1388,21 +1229,14 @@ html.no-webgl #stages {
   text-decoration: none;
   border-radius: 12px;
 }
-.fb-tile {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 13px;
-  background:
-    radial-gradient(62% 62% at 50% 44%, rgba(236, 241, 247, 0.2), rgba(236, 241, 247, 0) 72%),
-    var(--fr-grain),
-    var(--fr-chip);
-  box-shadow: var(--fr-rim-hi);
+.fb-logo {
+  display: block;
+  line-height: 0;
 }
-.fb-tile-svg {
-  width: 24px;
-  height: 24px;
+.fb-logo-svg {
+  display: block;
+  height: 40px;
+  width: auto;
   color: #ffffff;
 }
 .fb-nav {
@@ -1767,9 +1601,7 @@ html.no-webgl #stages {
   /* chips: an opaque surface (no grain, no rim) with an outline; the
      WebGL scene is not recoloured, so nothing may rely on it being dark */
   .ch-chip,
-  .ch-tile,
   .rot-card,
-  .fb-tile,
   .fb-live,
   .fb-sec--work li,
   .fallback-copy button {
@@ -1781,11 +1613,8 @@ html.no-webgl #stages {
     background: ButtonFace;
     border-color: ButtonText;
   }
-  .ch-tile::after {
-    display: none;
-  }
-  .ch-mark-svg,
-  .fb-tile-svg,
+  .ch-logo-svg,
+  .fb-logo-svg,
   .fb-foot-svg {
     color: CanvasText;
     filter: none;
@@ -1841,19 +1670,6 @@ html.no-webgl #stages {
   .ch-eq b,
   .ch-sound[aria-pressed='true'] .ch-eq i {
     background: ButtonText;
-  }
-  /* Motion: the turntable ring and bead (filled while on) */
-  .ch-orbit-r,
-  .ch-motion[aria-pressed='true'] .ch-orbit-r {
-    stroke: ButtonText;
-  }
-  .ch-orbit-b {
-    fill: ButtonFace;
-    stroke: ButtonText;
-  }
-  .ch-motion[aria-pressed='true'] .ch-orbit-b {
-    fill: ButtonText;
-    stroke: ButtonText;
   }
   /* menu sheet + rotate card: an opaque surface, no watermark behind the list */
   .ch-menu,

@@ -1,19 +1,19 @@
 /*
  * The LIGHTS: the neon palette (the only saturated light in the room). Six
- * options, all kept so they can be compared and switched back:
+ * options, all kept so they can be compared (there is no switch on the page;
+ * add ?lights=N to a URL to preview one):
  *
  *   Option 1  the original Halo: electric cyan / electric violet / hot magenta
  *   Option 2  Ember: amber / neon red / hot pink
- *   Option 3  Aurora: neon green / electric blue / electric purple (the default)
+ *   Option 3  Aurora: neon green / electric blue / electric purple (the site's)
  *   Option 4  White: white neon only (a whisper of cool and warm between the three)
  *   Option 5  Bar: turquoise / orange drifting to deep red / yellow (tubes shift between
  *             lighter and darker stretches along their length)
  *   Option 6  blue / lime / hot pink (a subtler light-to-dark drift)
  *
  * a = loop A (and the first neon of a set), b = loop B, c = the diamond (a third accent).
- * Chosen once at boot: ?lights=N (remembered), else the remembered choice,
- * else DEFAULT_LIGHTS. Switching reloads the page (every neon material is
- * built with its colour), resuming where the visitor was.
+ * Chosen once at boot (every neon material is built with its colour): ?lights=N
+ * for that page only, else DEFAULT_LIGHTS. Nothing is remembered.
  */
 
 export interface Lights {
@@ -43,23 +43,24 @@ export const LIGHTS: Lights[] = [
 ]
 export const DEFAULT_LIGHTS = 3
 
-const KEY = 'hark-halo:lights'
-const RESUME_KEY = 'hark-halo:resume'
+/** an option from the URL (?name=N), this page only */
+function fromUrl<T extends { id: number }>(name: string, list: T[]): T | undefined {
+  try {
+    const q = Number(new URLSearchParams(location.search).get(name))
+    return list.find(l => l.id === q)
+  } catch {
+    return undefined
+  }
+}
+// (the page used to remember a switched option; the switches are gone, so forget it)
+try {
+  for (const k of ['hark-halo:lights', 'hark-halo:logo']) localStorage.removeItem(k)
+} catch {
+  /* storage blocked */
+}
 
 function pick(): Lights {
-  const byId = (id: number) => LIGHTS.find(l => l.id === id)
-  try {
-    const q = new URLSearchParams(location.search).get('lights')
-    if (q && byId(Number(q))) {
-      localStorage.setItem(KEY, q)
-      return byId(Number(q))!
-    }
-    const saved = Number(localStorage.getItem(KEY))
-    if (byId(saved)) return byId(saved)!
-  } catch {
-    /* storage blocked: the default */
-  }
-  return byId(DEFAULT_LIGHTS)!
+  return fromUrl('lights', LIGHTS) ?? LIGHTS.find(l => l.id === DEFAULT_LIGHTS)!
 }
 
 /** the palette this page was built with */
@@ -80,31 +81,13 @@ export function applyLightsCss(root: HTMLElement = document.documentElement) {
   root.dataset.logo = LOGO.kind
 }
 
-/** switch to another option: remember it and reload, resuming at `progress` (0..1 through the story) */
-export function switchLights(id: number, progress?: number) {
-  reloadWith('lights', KEY, id, progress)
-}
-
-/** remember an option (and where the visitor is), then reload with it in the URL */
-function reloadWith(param: string, key: string, id: number, progress?: number) {
-  try {
-    localStorage.setItem(key, String(id))
-    if (progress !== undefined) sessionStorage.setItem(RESUME_KEY, String(progress))
-  } catch {
-    /* storage blocked: the URL still carries it */
-  }
-  const url = new URL(location.href)
-  url.searchParams.set(param, String(id))
-  location.replace(url.toString())
-}
-
 /*
- * The HERO LOGO: how the mark in the hero is made. Chosen like the lights
- * (?logo=N, remembered; switching reloads where the visitor was).
+ * The LOGO: how the story's mark (hero, process, contact) is made. Option 2 is
+ * the site's; ?logo=1 previews the frosted one on that page.
  *
- *   Option 1  Frosted: the mark in frosted glass, the neon mark behind it (the default)
+ *   Option 1  Frosted: the mark in frosted glass, the neon mark behind it
  *   Option 2  Tube: the mark IS the neon, a tube down the middle of each band,
- *             encased in a clear glass tube as wide as the band
+ *             encased in a clear glass tube as wide as the band (the site's)
  */
 export interface LogoStyle {
   id: number
@@ -115,40 +98,8 @@ export const LOGO_STYLES: LogoStyle[] = [
   { id: 1, kind: 'frost', name: 'Frost' },
   { id: 2, kind: 'tube', name: 'Tube' },
 ]
-const LOGO_KEY = 'hark-halo:logo'
+export const DEFAULT_LOGO = 2
 
-function pickLogo(): LogoStyle {
-  const byId = (id: number) => LOGO_STYLES.find(l => l.id === id)
-  try {
-    const q = new URLSearchParams(location.search).get('logo')
-    if (q && byId(Number(q))) {
-      localStorage.setItem(LOGO_KEY, q)
-      return byId(Number(q))!
-    }
-    const saved = Number(localStorage.getItem(LOGO_KEY))
-    if (byId(saved)) return byId(saved)!
-  } catch {
-    /* storage blocked: the default */
-  }
-  return LOGO_STYLES[0]
-}
-
-/** the hero logo this page was built with */
-export const LOGO: LogoStyle = typeof window === 'undefined' ? LOGO_STYLES[0] : pickLogo()
-
-export function switchLogo(id: number, progress?: number) {
-  reloadWith('logo', LOGO_KEY, id, progress)
-}
-
-/** where to resume after a lights switch (read once) */
-export function takeResume(): number | null {
-  try {
-    const v = sessionStorage.getItem(RESUME_KEY)
-    if (v === null) return null
-    sessionStorage.removeItem(RESUME_KEY)
-    const p = parseFloat(v)
-    return Number.isFinite(p) ? p : null
-  } catch {
-    return null
-  }
-}
+/** the mark this page was built with */
+export const LOGO: LogoStyle =
+  (typeof window === 'undefined' ? undefined : fromUrl('logo', LOGO_STYLES)) ?? LOGO_STYLES.find(l => l.id === DEFAULT_LOGO)!

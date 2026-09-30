@@ -1,5 +1,7 @@
 import * as THREE from 'three'
-import { G, frostedLogo, neonPath, type FrostedLogo, type NeonPath, closedOutline } from '../../kit/glass'
+import { G, frostedLogo, neonPath, type NeonPath, closedOutline } from '../../kit/glass'
+import { LOGO } from '../../kit/palette'
+import { buildTubeMark, buildTubeNeon } from '../../kit/tube'
 import { logoParts } from '../../logo/logo'
 
 /*
@@ -15,7 +17,11 @@ import { logoParts } from '../../logo/logo'
  *              geometry: curls r 0.15 / 0.054 at (0, ±0.35), (±0.35, 0); bar
  *              edges at x − y = ±0.135, ±0.277), crop marks. Mirrored copy in
  *              the floor.
- *   neon       the kit's neonMark (loop A, loop B, the diamond), drawn in with
+ *   TUBE       (the site's mark, kit/palette LOGO) the mark as neon encased in
+ *              glass tubes (kit/tube): the neon is the tubes' centre lines,
+ *              drawn in and staying in the mark's plane (no halo to become);
+ *              the glass printed round it is the clear tubes.
+ *   neon       (?logo=1) the kit's neonMark (loop A, loop B, the diamond), drawn in with
  *              `draw` and sparked with `pulse`. It starts in the mark's plane
  *              (the working model), then glides back and grows into the
  *              hero's halo behind the glass. Mirrored copy in the floor.
@@ -42,6 +48,9 @@ const DIFFUSE = 1.55
 /** the finished halo: the neon mark this far behind the glass, this much larger (the hero's) */
 export const HALO_Z = -(DEPTH / 2) - 0.2
 export const HALO_SCALE = 1.16
+
+/** the story's mark */
+export const TUBE = LOGO.kind === 'tube'
 
 /** reflect about the floor plane: y → 2·FLOOR_Y − y */
 export const FLOOR_MIRROR = new THREE.Matrix4().makeTranslation(0, 2 * FLOOR_Y, 0).multiply(new THREE.Matrix4().makeScale(1, -1, 1))
@@ -303,11 +312,19 @@ function patchPrint(m: THREE.MeshPhysicalMaterial, u: PrintUniforms, key: string
 }
 
 export interface PrintedMark {
-  logo: FrostedLogo
+  logo: { root: THREE.Group; mark: THREE.Mesh; caps: THREE.MeshPhysicalMaterial; sides: THREE.MeshPhysicalMaterial }
   print: PrintUniforms
+  /** the tube mark's light in its glass walls (per part) and its white rim; empty / null for the frosted mark */
+  walls: THREE.ShaderMaterial[]
+  rim: THREE.ShaderMaterial | null
 }
 
-export function buildGlass(envMap: THREE.Texture | null): PrintedMark {
+export function buildGlass(envMap: THREE.Texture | null, mobile = false): PrintedMark {
+  if (TUBE) {
+    const print: PrintUniforms = { uPrint: { value: -1 }, uHot: { value: 0 }, uHotColor: { value: new THREE.Color(G.ice) } }
+    const tm = buildTubeMark(mobile, envMap, MARK_S, print)
+    return { logo: tm.logo, print, walls: tm.walls, rim: tm.rim }
+  }
   const logo = frostedLogo({ depth: DEPTH, bevel: 0, frost: FROST })
   const { caps, sides } = logo
   // fully frosted, like the hero: satin walls meeting the frosted faces at crisp edges
@@ -331,7 +348,7 @@ export function buildGlass(envMap: THREE.Texture | null): PrintedMark {
   patchPrint(caps, print, 'hark-halo-process-caps-1', true)
   patchPrint(sides, print, 'hark-halo-process-sides-1', false)
   logo.root.scale.setScalar(MARK_S)
-  return { logo, print }
+  return { logo, print, walls: [], rim: null }
 }
 
 // ------------------------------------------------------------------ the print head
@@ -421,6 +438,8 @@ const lerpN = (a: number, b: number, t: number) => a + (b - a) * t
  * Loop A neonA, loop B neonB, the diamond neonC.
  */
 export function buildNeon(isFrameTarget: IsFrame, mirror?: { floorY: number; fade?: number }): Neon {
+  // the tube mark: the neon down the bands' centre lines (the curves match draw / pulse u)
+  if (TUBE) return buildTubeNeon(isFrameTarget, mirror)
   const root = new THREE.Group()
   const lp = logoParts()
   const colors = [G.neonA, G.neonB, G.neonC]
@@ -466,7 +485,7 @@ export interface Spark {
  * glass, a white-hot bead on it. (The tube's own `pulse` brightens the tube
  * with it.) Place it in the neon root's space.
  */
-export function buildSpark(color: THREE.ColorRepresentation, isFrameTarget: IsFrame, size = 0.16): Spark {
+export function buildSpark(color: THREE.ColorRepresentation, isFrameTarget: IsFrame, size = 0.16, transHalo = 5.0): Spark {
   const k = { value: 0 }
   const u = {
     uColor: { value: new THREE.Color(color) },
@@ -514,7 +533,7 @@ export function buildSpark(color: THREE.ColorRepresentation, isFrameTarget: IsFr
     const main = rt === null || isFrameTarget(rt as THREE.WebGLRenderTarget)
     // the frame: a small hot bead; the glass buffer: a broad glow for the frost to spread
     u.uCore.value = main ? 2.4 : 4.0
-    u.uHalo.value = main ? 0.25 : 5.0
+    u.uHalo.value = main ? 0.25 : transHalo
     mat.uniformsNeedUpdate = true
   }
   return { mesh, k }

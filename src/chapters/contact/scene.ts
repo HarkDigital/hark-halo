@@ -1,5 +1,7 @@
 import * as THREE from 'three'
-import { frostedLogo, G, neonMark, type FrostedLogo, type NeonPath } from '../../kit/glass'
+import { frostedLogo, G, neonMark, type NeonPath } from '../../kit/glass'
+import { LOGO } from '../../kit/palette'
+import { buildTubeMark, buildTubeNeon } from '../../kit/tube'
 
 /*
  * THAW — the 3D set for the contact chapter.
@@ -8,7 +10,10 @@ import { frostedLogo, G, neonMark, type FrostedLogo, type NeonPath } from '../..
  *          area beside (landscape) or above (portrait) the contact panel.
  *          1 rig unit = the mark's height.
  *   turn   the mark's slow turntable (yaw / tilt / float) inside the rig.
- *   logo   the super-sharp frosted Hark mark (kit frostedLogo): a straight-
+ *   TUBE   (the site's mark, kit/palette LOGO): the mark as neon encased in
+ *          clear glass tubes (kit/tube), the neon inside the glass; none of
+ *          the frost below applies (the thaw uniforms idle).
+ *   logo   (?logo=1) the super-sharp frosted Hark mark (kit frostedLogo): a straight-
  *          walled slab with sharp edges (no bevel), translucent frosted caps
  *          and polished walls. Its caps material is patched so the
  *          frost can THAW spatially:
@@ -57,10 +62,16 @@ export interface ThawUniforms {
   uRime: { value: number }
 }
 
+/** the story's mark */
+export const TUBE = LOGO.kind === 'tube'
+
 export interface ThawScene {
   rig: THREE.Group
   turn: THREE.Group
-  logo: FrostedLogo
+  logo: { root: THREE.Group; mark: THREE.Mesh; caps: THREE.MeshPhysicalMaterial; sides: THREE.MeshPhysicalMaterial }
+  /** the tube mark's light in its glass walls (per part) and its white rim; empty / null for the frosted mark */
+  walls: THREE.ShaderMaterial[]
+  rim: THREE.ShaderMaterial | null
   /** the halo: the mark in neon behind the glass, per part (loop A, loop B, diamond) */
   neon: NeonPath[][]
   thaw: ThawUniforms
@@ -218,18 +229,33 @@ const SLIT_FRAG = /* glsl */ `
   }
 `
 
-export function buildScene(isFrameTarget: (rt: THREE.WebGLRenderTarget | null) => boolean): ThawScene {
+export function buildScene(isFrameTarget: (rt: THREE.WebGLRenderTarget | null) => boolean, mobile = false, envMap: THREE.Texture | null = null): ThawScene {
   const rig = new THREE.Group()
   const turn = new THREE.Group()
   rig.add(turn)
 
-  // the mark: a straight-walled slab (no bevel, sharp edges), translucent frosted faces
-  const logo = frostedLogo({ depth: 0.23, bevel: 0, frost: FROST })
-  logo.caps.envMapIntensity = 1
-  logo.sides.envMapIntensity = 2
-  turn.add(logo.root)
-  // the halo: the mark bent in neon, mounted just behind the glass (the hero's; it turns with it)
-  const halo = neonMark({ z: -0.23 / 2 - 0.2, scale: 1.16, isFrameTarget })
+  let logo: ThawScene['logo']
+  let halo: { root: THREE.Group; parts: NeonPath[][] }
+  let walls: THREE.ShaderMaterial[] = []
+  let rim: THREE.ShaderMaterial | null = null
+  if (TUBE) {
+    // the mark: neon encased in clear glass tubes (1 rig unit = the mark's height)
+    const tm = buildTubeMark(mobile, envMap, 1)
+    logo = tm.logo
+    walls = tm.walls
+    rim = tm.rim
+    turn.add(tm.pivot)
+    halo = buildTubeNeon(isFrameTarget)
+  } else {
+    // the mark: a straight-walled slab (no bevel, sharp edges), translucent frosted faces
+    const fl = frostedLogo({ depth: 0.23, bevel: 0, frost: FROST })
+    fl.caps.envMapIntensity = 1
+    fl.sides.envMapIntensity = 2
+    logo = fl
+    turn.add(fl.root)
+    // the halo: the mark bent in neon, mounted just behind the glass (the hero's; it turns with it)
+    halo = neonMark({ z: -0.23 / 2 - 0.2, scale: 1.16, isFrameTarget })
+  }
   logo.root.add(halo.root)
 
   const thaw: ThawUniforms = {
@@ -244,7 +270,7 @@ export function buildScene(isFrameTarget: (rt: THREE.WebGLRenderTarget | null) =
     uHaze: { value: 0.11 },
     uRime: { value: 0 },
   }
-  patchThaw(logo.caps, thaw)
+  if (!TUBE) patchThaw(logo.caps, thaw)
 
   // ---- two neon tubes behind the mark (the hero's pair: glacier cyan, ultraviolet)
   const slitU = {
@@ -289,5 +315,5 @@ export function buildScene(isFrameTarget: (rt: THREE.WebGLRenderTarget | null) =
   slits.visible = false
   rig.add(slits)
 
-  return { rig, turn, logo, neon: halo.parts, thaw, slits, slitU }
+  return { rig, turn, logo, walls, rim, neon: halo.parts, thaw, slits, slitU }
 }

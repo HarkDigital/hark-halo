@@ -6,7 +6,7 @@ import { clamp, lerp, segment, smoothstep } from '../../core/math'
 import { nextFrame } from '../../core/yield'
 import { LOGO } from '../../kit/palette'
 import { FLOOR_MIRROR, FLOOR_Y, FROST, MARK_S, THAW_A, THAW_B, buildCard, buildFloor, buildMark, buildNeonMark, buildReflection, refineMark, type HeroSet } from './scene'
-import { buildTubeMark, buildTubeNeon } from './tube'
+import { buildTubeMark, buildTubeNeon } from '../../kit/tube'
 import './hero.css'
 
 /*

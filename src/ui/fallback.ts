@@ -1,7 +1,7 @@
 import { BRAND, CONTACT } from '../content'
 import { CHAPTER_COPY_IDS, buildChapterCopy } from '../core/srContent'
 import { CHAPTERS } from '../chapters/index'
-import { CONCEPT_TAG, WORDMARK, markOutlineSvg, markSvg } from './mark'
+import { logoSvg, markOutlineSvg, markSvg } from './mark'
 import { unmountRotateGate } from './rotate'
 import { releaseInert } from './inert'
 
@@ -79,8 +79,7 @@ export function renderFallback(root: HTMLElement, at?: string) {
   header.id = 'fb-head'
   header.innerHTML = `
     <a class="fb-brand" href="#hero" aria-label="${BRAND.name}, top of page">
-      <span class="fb-tile" aria-hidden="true">${markSvg('fb-tile-svg')}</span>
-      <span class="fb-brand-text" aria-hidden="true">${WORDMARK}${CONCEPT_TAG}</span>
+      <span class="fb-logo" aria-hidden="true">${logoSvg('fb-logo-svg')}</span>
     </a>
     <nav class="fb-nav" aria-label="Primary">
       <a class="fb-link" href="#work">Work</a>
