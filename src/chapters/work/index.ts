@@ -367,7 +367,6 @@ class Work implements Chapter {
     this.listDock = el('div', 'wk-dock wk-dock--list', undefined, stage)
     this.list = el('section', 'wk-list hud-panel hud-panel--strong', undefined, this.listDock)
     const meta = el('div', 'wk-meta', undefined, this.list)
-    el('span', 'wk-num', `${pad(NF + 1)}–${pad(NF + NR)} / ${pad(WORK.length)}`, meta)
     el('span', 'hud-label wk-ind', 'More work', meta)
     const allLive = REST.every(w => !isPreview(w.url))
     const count9 = WORDS[NR] ?? String(NR)
@@ -385,7 +384,7 @@ class Work implements Chapter {
       a.target = '_blank'
       a.rel = 'noopener'
       const pre = isPreview(w.url)
-      a.innerHTML = `<span class="wk-no">${pad(NF + j + 1)}</span><span class="wk-rname">${esc(w.name)}${
+      a.innerHTML = `<span class="wk-rname">${esc(w.name)}${
         pre ? ' <small class="wk-pre">Preview</small>' : ''
       }</span><span class="wk-rind">${esc(w.industry)}</span><span class="wk-arrow" aria-hidden="true">↗</span>`
       this.rows.push(a)
@@ -396,24 +395,10 @@ class Work implements Chapter {
     hello.addEventListener('click', () => window.__hark?.land('contact'))
   }
 
-  /** A tiny top-down map of the drum: the leaf in front sits at the bottom. */
-  private dial(k: number) {
-    const r = 6.2
-    const dots = FEATURED.map((_, i) => {
-      const a = (i - k) * STEP
-      const x = 9 + r * Math.sin(a)
-      const y = 9 + r * Math.cos(a)
-      return i === k ? `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="2.3" class="on"/>` : `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="1.5"/>`
-    }).join('')
-    return `<svg class="wk-dial" viewBox="0 0 18 18" width="18" height="18" aria-hidden="true"><circle cx="9" cy="9" r="${r}" class="ring"/>${dots}</svg>`
-  }
-
   private buildCard(parent: HTMLElement, w: WorkItem, k: number): CardEl {
     const root = el('article', 'wk-card hud-panel hud-panel--strong', undefined, parent)
     const pre = isPreview(w.url)
     const meta = el('div', 'wk-meta', undefined, root)
-    const num = el('span', 'wk-num', undefined, meta)
-    num.innerHTML = `${this.dial(k)}<span>${pad(k + 1)} / ${pad(NF)}</span>`
     el('span', 'hud-label wk-ind', w.industry, meta)
     if (pre) el('span', 'wk-badge', 'Preview', meta)
     const name = rise(el('h3', 'hud-h2 wk-name', undefined, root), emLast(w.name))
