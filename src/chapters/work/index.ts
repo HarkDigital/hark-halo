@@ -3,7 +3,8 @@ import type { CameraPose, Chapter, ChapterContext, Frame } from '../../core/type
 import { el, reveal, rise, setRise } from '../../core/dom'
 import { clamp, ease, lerp, smoothstep } from '../../core/math'
 import { nextFrame } from '../../core/yield'
-import { SECTIONS, WORK, workImage, type WorkItem } from '../../content'
+import { SECTIONS, WORK, portfolioUrl, workImage, type WorkItem } from '../../content'
+import { WORDS, hostOf, isPreview } from '../../kit/work'
 import { G } from '../../kit/glass'
 import { loadScreenshot, whenRevealed } from '../../kit/images'
 import {
@@ -23,7 +24,6 @@ import {
   TILE_H,
   averageColor,
   buildCarousel,
-  isPreview,
   type CarouselSet,
 } from './scene'
 import './work.css'
@@ -96,16 +96,8 @@ const FOV = 30
 const DEG = Math.PI / 180
 const UP = new THREE.Vector3(0, 1, 0)
 
-const WORDS = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve']
 const pad = (n: number) => String(n).padStart(2, '0')
 const esc = (s: string) => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
-const hostOf = (url: string) => {
-  try {
-    return new URL(url).hostname.replace(/^www\./, '')
-  } catch {
-    return url
-  }
-}
 /** wrap an angle to -π..π */
 const wrap = (a: number) => Math.atan2(Math.sin(a), Math.cos(a))
 
@@ -387,6 +379,10 @@ class Work implements Chapter {
     const hello = el('button', 'hud-btn', 'Say hello', cta)
     hello.type = 'button'
     hello.addEventListener('click', () => window.__hark?.land('contact'))
+    // every site, on its own page (src/portfolio)
+    const all = el('a', 'hud-btn hud-btn--ghost wk-all', undefined, cta)
+    all.href = portfolioUrl()
+    all.innerHTML = 'All work <span aria-hidden="true">→</span>'
   }
 
   private buildCard(parent: HTMLElement, w: WorkItem, k: number): CardEl {

@@ -165,7 +165,28 @@ export interface WorkItem {
 
 /** Screenshot for a work item: public/work/<id>.webp (1280×800). */
 export const workImage = (id: string) => `${import.meta.env.BASE_URL}work/${id}.webp`
+/** Its half-size copy: public/work/640/<id>.webp (640×400, made by npm run thumbs). */
+export const workThumb = (id: string) => `${import.meta.env.BASE_URL}work/640/${id}.webp`
 
+/** The Portfolio page (src/portfolio): every site, at <base>portfolio/. */
+export const portfolioUrl = () => `${import.meta.env.BASE_URL}portfolio/`
+
+/** The Portfolio page's own words (everything else on it is the copy above, verbatim). */
+export const PORTFOLIO = {
+  eyebrow: 'Portfolio',
+  title: 'Portfolio · Hark Digital',
+  all: 'All',
+  filterLabel: 'Filter by tag',
+  allWork: 'All work',
+  shotAlt: (name: string) => `Screenshot of the ${name} website`,
+  /** a tag gets a filter chip once this many sites share it */
+  minTag: 2,
+}
+
+/*
+ * To add a site: add it here, drop public/work/<id>.webp (1280×800), run
+ * npm run thumbs. The portfolio's chips, counts, headings and layout follow.
+ */
 export const WORK: WorkItem[] = [
   {
     id: 'clc',

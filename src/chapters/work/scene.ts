@@ -73,13 +73,7 @@ export const HALO_Y = 3.45
 export const HALO_RING_Y = HALO_Y - TILE_H / 2 - 0.075
 
 /** City Line Capital (harktest.com) is a pre-launch build: never signal it as live. */
-export const isPreview = (url: string) => {
-  try {
-    return /(^|\.)harktest\.com$/i.test(new URL(url).hostname)
-  } catch {
-    return false
-  }
-}
+export { isPreview } from '../../kit/work'
 
 const pad = (n: number) => String(n).padStart(2, '0')
 

@@ -1,0 +1,1210 @@
+/* ------------------------------------------------------------------
+   The Portfolio · "The Glass Wall" (src/portfolio). The sites hang as lit
+   panes of glass on the black wall: each on a neon foot that spills a little
+   light onto the wall, its placard beneath in plain type on black. Light only
+   exists where it makes glass glow; type stays white and silver. No
+   backdrop-filter anywhere here (15 panes, a moving lamp behind them), no
+   SVG filters on the panes, no color-mix() (base.css).
+
+   Breakpoints: desktop ≥ 1000px (12 columns), tablet 721–999px (6), phone
+   ≤ 720px (1; the other sites as 2-up tiles). Pointer or touch behaviour is
+   chosen by the pointer, not the width (wall.ts).
+   ------------------------------------------------------------------ */
+
+.pf {
+  --pf-bar-top: calc(var(--ch-y) + var(--ch-h) + 10px);
+  --pf-bar-mt: clamp(16px, 2.4vh, 24px);
+  --pf-rail-h: 44px;
+  --pf-ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (max-width: 720px) {
+  .pf {
+    --pf-bar-top: calc(var(--ch-y) + var(--ch-h) + 4px);
+    --pf-bar-mt: 14px;
+    --pf-rail-h: 38px;
+  }
+}
+.pf [hidden] {
+  display: none !important;
+}
+
+/* the page's layers: the lamp (fixed, z 0) under everything; the content over it */
+.pf-hero,
+.pf-stage,
+.pf .svc-contact,
+.pf .svc-foot {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------------- hero ---------------- */
+.pf-hero {
+  max-width: var(--svc-max);
+  margin: 0 auto;
+  padding: var(--safe-top) var(--gutter) 0;
+}
+.pf-hero .hud-eyebrow {
+  display: flex;
+  width: fit-content;
+  line-height: 17px;
+  margin-bottom: clamp(12px, 1.6vh, 18px);
+}
+.pf-h1.hud-title {
+  font-size: clamp(2.6rem, 4.8vw, 5.4rem);
+  line-height: 0.92;
+}
+@media (max-width: 720px) {
+  .pf-h1.hud-title {
+    font-size: clamp(2.6rem, 12.4vw, 3.6rem);
+    line-height: 0.94;
+  }
+}
+
+/* the count: "15 sites · 6 featured · 9 more" (as the Work chapter's), in the tube or the hero */
+.pf-count {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin: 0;
+  font-family: var(--font-label);
+  font-weight: var(--label-weight);
+  font-size: 11.5px;
+  line-height: 1.5;
+  letter-spacing: 0.077em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+.pf-count i {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--fg);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+}
+.pf-count--hero {
+  display: none;
+  margin-top: 14px;
+}
+.pf-count--rail {
+  flex: none;
+  flex-wrap: nowrap;
+  margin-left: auto;
+  padding: 0 18px;
+  white-space: nowrap;
+}
+.pf-tight .pf-count--hero,
+.pf-norail .pf-count--hero {
+  display: flex;
+}
+.pf-tight .pf-count--rail {
+  display: none;
+}
+@media (max-width: 720px) {
+  .pf-count--hero {
+    display: flex;
+  }
+  .pf-count--rail {
+    display: none;
+  }
+}
+
+/* ---------------- the stage: the rail + the rooms (the rail's sticky range) ---------------- */
+/* (flow-root: the bar's top margin stays inside the stage, so the sentinel at that margin sits
+   exactly where the bar starts to stick; collapsed through, it sat a margin lower and the band
+   came in late) */
+.pf-stage {
+  display: flow-root;
+  max-width: var(--svc-max);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+.pf-sentinel {
+  position: absolute;
+  left: 0;
+  top: var(--pf-bar-mt);
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+/* ---------------- the rail: a glass tube, and the filter ---------------- */
+.pf-bar {
+  position: sticky;
+  top: var(--pf-bar-top);
+  z-index: 40;
+  isolation: isolate;
+  margin-top: var(--pf-bar-mt);
+}
+/* stuck: an opaque band from the top of the view to just under the tube (never a mask, never
+   a backdrop-filter), and a short fade beneath it; the header (z 50) sits above. Solid black:
+   at even .94 a white screenshot scrolling under the logo still reads through it */
+.pf-bar::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  width: 100vw;
+  margin-left: -50vw;
+  top: calc(-1 * var(--pf-bar-top));
+  bottom: -6px;
+  background: var(--fr-grain), #000000;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+.pf-bar::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  width: 100vw;
+  margin-left: -50vw;
+  top: calc(100% + 6px);
+  height: 20px;
+  background: linear-gradient(180deg, #000000, rgba(0, 0, 0, 0));
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+.pf-bar.is-stuck::before,
+.pf-bar.is-stuck::after {
+  opacity: 1;
+}
+.pf-rail {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: var(--pf-rail-h);
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--fr-grain), var(--fr-chip);
+  box-shadow: var(--fr-rim);
+}
+/* the tube's specular line, and its lower refraction */
+.pf-rail::before,
+.pf-rail::after {
+  content: '';
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  height: 1px;
+  pointer-events: none;
+}
+.pf-rail::before {
+  top: 5px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35) 12%, rgba(255, 255, 255, 0.08) 60%, transparent);
+}
+.pf-rail::after {
+  bottom: 5px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06) 12%, rgba(255, 255, 255, 0.02) 60%, transparent);
+}
+.pf-chips {
+  display: flex;
+  align-items: center;
+  flex: none;
+}
+.pf-chip {
+  position: relative;
+  z-index: 1;
+  height: 36px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font-family: var(--font-label);
+  font-weight: 700;
+  font-size: 11.5px;
+  letter-spacing: 0.077em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition:
+    color 0.3s ease,
+    background-color 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+/* a 44px target */
+.pf-chip::after {
+  content: '';
+  position: absolute;
+  inset: -4px 0;
+}
+.pf-chip[aria-pressed='true'] {
+  color: #000000;
+  cursor: default;
+}
+@media (hover: hover) and (pointer: fine) {
+  .pf-chip[aria-pressed='false']:hover {
+    color: var(--fg);
+    background: rgba(255, 255, 255, 0.06);
+  }
+}
+@media (max-width: 720px) {
+  .pf-chip {
+    height: 30px;
+    padding: 0 14px;
+  }
+  .pf-chip::after {
+    inset: -7px 0;
+  }
+}
+
+/* the lit gas under the chosen chip: a white-hot core ringed in the three neons */
+.pf-gas {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 0;
+  width: var(--gw, 0px);
+  transform: translateX(var(--gx, 0px));
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffffff 0%, #eef1f5 60%, #dde2e8 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.9),
+    0 0 8px rgba(var(--neon-a-rgb), 0.55),
+    0 0 18px rgba(var(--neon-b-rgb), 0.35),
+    0 0 34px rgba(var(--neon-c-rgb), 0.25);
+  pointer-events: none;
+}
+.pf-gas.is-placed {
+  transition:
+    transform 0.62s cubic-bezier(0.34, 1.28, 0.64, 1),
+    width 0.62s cubic-bezier(0.34, 1.28, 0.64, 1);
+}
+.pf-gas::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  padding: 2px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--neon-a), var(--neon-b), var(--neon-c));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+}
+.pf-gas::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--neon-a), var(--neon-b), var(--neon-c));
+  filter: blur(10px);
+  opacity: 0.55;
+}
+/* it strikes once as the page arrives (a single stutter: the page's only flicker) */
+.pf-rail.is-in .pf-gas {
+  animation: pf-strike 1.2s linear 0.52s backwards;
+}
+@keyframes pf-strike {
+  0% {
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.9;
+  }
+  16% {
+    opacity: 0.2;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* ---------------- the rooms ---------------- */
+.pf-room {
+  scroll-margin-top: calc(var(--pf-bar-top) + var(--pf-rail-h) + 24px);
+}
+.pf-room--feat {
+  padding-top: clamp(20px, 3.2vh, 32px);
+}
+.pf-room--more {
+  position: relative;
+  margin-top: clamp(96px, 12vh, 160px);
+  padding-top: clamp(40px, 5vh, 64px);
+  border-top: 1px solid var(--line);
+}
+.pf-more-h {
+  margin: 18px 0 0;
+}
+/* the threshold: a neon segment runs along the room's hairline, once. Its track clips it to
+   the room (tall enough for the glow): run out past the edge it would widen the page, and on a
+   phone the layout viewport with it, pushing the header's Menu pill off the screen */
+.pf-sweep {
+  position: absolute;
+  top: -13px;
+  left: 0;
+  right: 0;
+  height: 25px;
+  overflow: hidden;
+  pointer-events: none;
+}
+.pf-sweep > i {
+  position: absolute;
+  top: 12px;
+  left: 0;
+  width: 40%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--neon-a), var(--neon-b), var(--neon-c), transparent);
+  box-shadow: 0 0 10px rgba(var(--neon-b-rgb), 0.7);
+  opacity: 0;
+}
+.pf-room--more > .hud-eyebrow {
+  display: flex;
+  width: fit-content;
+}
+
+/* ---------------- the wall (the hang) ---------------- */
+.pf-wall {
+  display: grid;
+  align-items: start;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pf-item {
+  min-width: 0;
+}
+/* (after .pf-wall's reset, which would cancel it: the heading never sits on the screens) */
+.pf-wall--more {
+  margin-top: clamp(36px, 5vh, 56px);
+}
+@media (min-width: 1000px) {
+  .pf-wall {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: clamp(20px, 1.95vw, 28px);
+  }
+  .pf-wall--feat {
+    row-gap: clamp(72px, 7vw, 112px);
+  }
+  .pf-wall--more {
+    row-gap: clamp(56px, 5.5vw, 88px);
+  }
+  /* featured pairs zigzag 7 + 5, then 5 + 7, hung from one top line; a lone last one centred */
+  .pf-item[data-d='L7'] {
+    grid-column: 1 / span 7;
+  }
+  .pf-item[data-d='R5'] {
+    grid-column: 8 / span 5;
+  }
+  .pf-item[data-d='L5'] {
+    grid-column: 1 / span 5;
+  }
+  .pf-item[data-d='R7'] {
+    grid-column: 6 / span 7;
+  }
+  .pf-item[data-d='C8'] {
+    grid-column: 3 / span 8;
+  }
+  .pf-item--more {
+    grid-column: span 4;
+  }
+}
+@media (min-width: 721px) and (max-width: 999px) {
+  .pf-wall {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    column-gap: 20px;
+  }
+  .pf-wall--feat {
+    row-gap: 64px;
+  }
+  .pf-wall--more {
+    row-gap: 48px;
+  }
+  .pf-item[data-t='wide'] {
+    grid-column: 1 / -1;
+  }
+  .pf-item[data-t='half'],
+  .pf-item--more {
+    grid-column: span 3;
+  }
+  /* an odd count of the other sites leads with one wide (as on phones): no lone half at the end */
+  .pf-item--more[data-p='full'] {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 720px) {
+  .pf-room--feat {
+    padding-top: 26px;
+  }
+  .pf-wall--feat {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 56px;
+  }
+  .pf-wall--more {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px 12px;
+  }
+  .pf-item--more[data-p='full'] {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ---------------- one pane ----------------
+   Before its entrance a pane is not on the wall (wall.ts commits each state as a class:
+   is-up hung, is-plac placard in, is-clear the site sharp, is-hung all done). */
+.pf-hang {
+  position: relative;
+  transform-origin: 50% 100%;
+  opacity: 0;
+}
+.pf-item.is-up .pf-hang {
+  opacity: 1;
+}
+.pf-screen {
+  --rx: 0;
+  --ry: 0;
+  --lift: 0;
+  position: relative;
+  transform: perspective(1400px) rotateX(calc(var(--rx) * 1deg)) rotateY(calc(var(--ry) * 1deg)) translate3d(0, calc(var(--lift) * -8px), 0) scale(calc(1 + var(--lift) * 0.012));
+}
+
+/* the frame: dark glass with a rim light; its thickness a hairline lip on the side turned away
+   (only while the pointer tilts it: a shadow that changed with every scroll frame would repaint
+   the frame each frame on a phone) */
+.pf-bezel {
+  --lip: 0 0 0 0 transparent;
+  position: relative;
+  padding: 7px;
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02) 38%, rgba(255, 255, 255, 0.035)),
+    rgba(16, 17, 20, 0.92);
+  box-shadow:
+    var(--lip),
+    inset 0 1px 0 var(--glass-hi),
+    inset 0 0 0 1px var(--glass-edge),
+    0 30px 70px rgba(0, 0, 0, 0.5);
+  transition: transform 0.12s ease;
+}
+.pf-bezel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.04) 38%, rgba(255, 255, 255, 0.02) 62%, rgba(255, 255, 255, 0.34));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  pointer-events: none;
+}
+/* lit: the frame glows in the site's neon */
+.pf-bezel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 0 0 1px rgba(var(--n-rgb), 0.45),
+    0 0 60px rgba(var(--n-rgb), 0.16);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.pf-item.is-tilt .pf-bezel {
+  --lip: calc(var(--ry) * -0.6px) calc(var(--rx) * 0.6px) 0 0 rgba(255, 255, 255, 0.1);
+}
+/* press: the glass gives a little */
+.pf-screen.is-press .pf-bezel,
+.pf-screen:active .pf-bezel {
+  transform: scale(0.985);
+}
+
+/* the site behind glass (16:10), layers back to front */
+.pf-glass {
+  --tint-rgb: var(--n-rgb);
+  position: relative;
+  aspect-ratio: 16 / 10;
+  border-radius: 10px;
+  overflow: hidden;
+  isolation: isolate;
+  container-type: inline-size;
+  background:
+    radial-gradient(120% 90% at 50% 110%, rgba(var(--n-rgb), 0.16), transparent 60%),
+    rgba(18, 20, 24, 0.95);
+}
+.pf-glass > * {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.pf-frost {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: scale(1.12);
+  filter: blur(12px);
+  opacity: 0;
+  transition: opacity 0.24s ease;
+}
+.pf-frost.is-drawn {
+  opacity: 1;
+}
+.pf-fog {
+  background: var(--fr-grain-strong), rgba(210, 220, 235, 0.07);
+}
+.pf-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 0;
+  clip-path: inset(100% 0 0 0);
+}
+.pf-item.is-clear .pf-img {
+  clip-path: none;
+}
+.pf-item.is-clear .pf-frost,
+.pf-item.is-clear .pf-fog {
+  opacity: 0;
+}
+/* (hidden outright once the fade is over: a fade of opacity alone stays on the compositor) */
+.pf-item.is-thawed .pf-frost,
+.pf-item.is-thawed .pf-fog {
+  visibility: hidden;
+}
+/* leaving (a filter): the site frosts over again */
+.pf-item.is-leaving .pf-frost.is-drawn,
+.pf-item.is-leaving .pf-fog {
+  opacity: 1;
+  visibility: visible;
+}
+/* no screenshot (yet): the site's name on the glass */
+.pf-card {
+  display: none;
+}
+.pf-item.is-nofile .pf-img {
+  visibility: hidden;
+}
+.pf-item.is-nofile .pf-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 8%;
+  text-align: center;
+}
+.pf-card small {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.pf-card b {
+  font-family: var(--font-display);
+  font-weight: 560;
+  font-size: clamp(1.2rem, 4.5cqi, 2.4rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--fg-muted);
+}
+/* the clearing edge: a neon line riding the seam, bottom to top */
+.pf-edge {
+  opacity: 0;
+}
+.pf-edge > i {
+  position: absolute;
+  top: 0;
+  left: -2%;
+  right: -2%;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(var(--n-rgb), 0), rgb(var(--n-rgb)) 10%, #ffffff 50%, rgb(var(--n-rgb)) 90%, rgba(var(--n-rgb), 0));
+  box-shadow:
+    0 0 6px rgba(var(--n-rgb), 0.95),
+    0 0 18px rgba(var(--n-rgb), 0.7),
+    0 0 44px rgba(var(--n-rgb), 0.4);
+}
+.pf-sheen {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 30%),
+    linear-gradient(115deg, transparent 44%, rgba(255, 255, 255, 0.035) 50%, transparent 56%);
+}
+.pf-glare {
+  background:
+    radial-gradient(55% 75% at var(--gx, 50%) var(--gy, 20%), rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 62%),
+    linear-gradient(115deg, rgba(255, 255, 255, 0) 42%, rgba(255, 255, 255, 0.07) 49%, rgba(255, 255, 255, 0) 56%) var(--sx, 50%) 0 / 250% 100% no-repeat;
+  mix-blend-mode: screen;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.pf-dim {
+  background: #000000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.pf-ring {
+  inset: auto;
+  left: var(--px, 50%);
+  top: var(--py, 50%);
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  box-shadow: 0 0 12px rgba(var(--n-rgb), 0.8);
+  opacity: 0;
+}
+
+/* the neon frame: four stacked strokes (halo, glow, tube, core) stand in for a blur */
+.pf-tube {
+  position: absolute;
+  left: 0;
+  top: 0;
+  overflow: visible;
+  pointer-events: none;
+  opacity: 0.2;
+  transition: opacity 0.3s ease;
+}
+.pf-tube path {
+  fill: none;
+  stroke: var(--n);
+  stroke-linecap: round;
+}
+.pf-t-halo path {
+  stroke-width: 9;
+  opacity: 0.14;
+}
+.pf-t-glow path {
+  stroke-width: 4;
+  opacity: 0.38;
+}
+.pf-t-tube path {
+  stroke-width: 2;
+}
+.pf-t-core path {
+  stroke: #ffffff;
+  stroke-width: 0.9;
+  opacity: 0.9;
+}
+.pf-item.is-trace .pf-tube {
+  opacity: 1;
+}
+.pf-item.is-ebb .pf-tube {
+  transition: opacity 0.8s ease;
+}
+
+/* the whole screen opens the site (the pill's twin: out of the tab order and the tree) */
+.pf-hit {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: 16px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* "Preview": a dark-glass tab standing on the frame's top edge, off the screenshot */
+.pf-tab {
+  position: absolute;
+  z-index: 3;
+  bottom: calc(100% - 1px);
+  right: 22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 20px;
+  padding: 0 10px 0 9px;
+  border-radius: 8px 8px 0 0;
+  background: var(--fr-grain), rgba(10, 11, 13, 0.94);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 1px 0 0 rgba(255, 255, 255, 0.12),
+    inset -1px 0 0 rgba(255, 255, 255, 0.12);
+  font-family: var(--font-label);
+  font-weight: 700;
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.066em;
+  text-transform: uppercase;
+  color: var(--fg);
+  pointer-events: none;
+}
+.pf-tab::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgb(var(--n-rgb));
+  box-shadow: 0 0 6px rgb(var(--n-rgb));
+}
+
+/* the foot: a lit tube under the pane (it breathes, out of phase with the others), and the
+   light it spills on the wall. The tube is ::before (its ends taper), the hot light ::after. */
+.pf-foot {
+  position: relative;
+  display: block;
+  height: 3px;
+  margin: 10px 16px 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.pf-item.is-up .pf-foot {
+  opacity: 1;
+}
+.pf-foot::before,
+.pf-foot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 2px;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+.pf-foot::before {
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)) 50% 50% / 80% 1px no-repeat,
+    rgb(var(--n-rgb));
+  box-shadow:
+    0 0 6px rgba(var(--n-rgb), 0.9),
+    0 0 16px rgba(var(--n-rgb), 0.55),
+    0 -4px 22px rgba(var(--n-rgb), 0.3);
+  opacity: 0.8;
+  animation: pf-breathe 6.4s ease-in-out calc(var(--k, 0) * -1.1s) infinite paused;
+}
+.pf-item.is-vis .pf-foot::before {
+  animation-play-state: running;
+}
+@keyframes pf-breathe {
+  0%,
+  100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.92;
+  }
+}
+.pf-foot::after {
+  background: linear-gradient(90deg, rgb(var(--n-rgb)), #ffffff 50%, rgb(var(--n-rgb)));
+  box-shadow:
+    0 0 10px rgba(var(--n-rgb), 1),
+    0 0 30px rgba(var(--n-rgb), 0.75),
+    0 -6px 40px rgba(var(--n-rgb), 0.45);
+  transform: scaleX(0);
+  transform-origin: var(--ox, 50%) 50%;
+  opacity: 0;
+  transition:
+    opacity 0.3s ease,
+    transform 0s linear 0.3s;
+}
+.pf-pool {
+  position: absolute;
+  top: 3px;
+  left: 8%;
+  right: 8%;
+  height: 28px;
+  background: radial-gradient(ellipse 50% 100% at 50% 0%, rgba(var(--tint-rgb), 0.22), rgba(var(--tint-rgb), 0) 100%);
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.pf-item {
+  --tint-rgb: var(--n-rgb);
+}
+
+/* hot (the pointer or focus on it) or lit (touch: nearest the middle of the screen) */
+.pf-item:is(.is-hot, .is-lit) .pf-tube,
+.pf-item:is(.is-hot, .is-lit) .pf-bezel::after {
+  opacity: 1;
+}
+.pf-item:is(.is-hot, .is-lit) .pf-pool {
+  opacity: 1;
+}
+.pf-item:is(.is-hot, .is-lit) .pf-foot::after {
+  transform: scaleX(1);
+  opacity: 1;
+  transition:
+    transform 0.5s var(--svc-ease),
+    opacity 0.15s ease;
+}
+.pf-item.is-lit .pf-tube,
+.pf-item.is-lit .pf-bezel::after,
+.pf-item.is-lit .pf-pool,
+.pf-item.is-lit .pf-foot::after {
+  transition-duration: 0.35s;
+}
+.pf-item.is-hot .pf-glare {
+  opacity: 1;
+}
+.pf-item.is-lit .pf-glare {
+  opacity: 0.6;
+}
+/* touch: the panes lean a little as they pass (3° either side of the middle of the screen),
+   the lit one's glare sliding down the glass; scroll-driven, on the compositor (wall.ts) */
+.pf-touch .pf-screen {
+  animation: pf-lean linear both;
+  animation-timeline: view();
+  animation-range: cover;
+}
+@keyframes pf-lean {
+  from {
+    transform: perspective(1400px) rotateX(3deg);
+  }
+  to {
+    transform: perspective(1400px) rotateX(-3deg);
+  }
+}
+.pf-touch .pf-glare {
+  inset: -40% 0;
+  --gy: 50%;
+  animation: pf-glare-slide linear both;
+  animation-timeline: view();
+  animation-range: cover;
+}
+@keyframes pf-glare-slide {
+  from {
+    transform: translateY(-25%);
+  }
+  to {
+    transform: translateY(25%);
+  }
+}
+
+/* the rest of the wall dims (the placards never do); a quick pass-over doesn't */
+.pf-stage.has-hot .pf-item:not(.is-hot) .pf-dim {
+  opacity: 0.5;
+  transition: opacity 0.45s ease 0.12s;
+}
+.pf-stage.has-hot .pf-item.is-up:not(.is-hot) .pf-foot {
+  opacity: 0.5625;
+  transition: opacity 0.45s ease 0.12s;
+}
+.pf-stage.has-hot .pf-item:not(.is-hot) .pf-pool {
+  opacity: 0.5;
+  transition: opacity 0.45s ease 0.12s;
+}
+
+/* ---------------- the placard: plain type on black, left with its screen ---------------- */
+.pf-plac {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-top: 32px;
+  container-type: inline-size;
+}
+.pf-plac > * {
+  opacity: 0;
+}
+.pf-item.is-plac .pf-plac > * {
+  opacity: 1;
+}
+.pf-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 0;
+}
+.pf-badge {
+  font-family: var(--font-label);
+  font-weight: 700;
+  font-size: 10.5px;
+  line-height: 1.5;
+  letter-spacing: 0.066em;
+  text-transform: uppercase;
+  color: var(--fg);
+  padding: 3px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 999px;
+}
+.pf-name {
+  margin: 10px 0 0;
+  max-width: 100%;
+  font-family: var(--font-display);
+  font-weight: 560;
+  font-size: clamp(1.7rem, 2.6vw, 2.6rem);
+  font-size: clamp(1.7rem, 8.6cqi, 2.6rem);
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+  color: var(--fg);
+  text-wrap: balance;
+}
+.pf-name em {
+  font-style: italic;
+  color: var(--signal);
+  background: var(--accent-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  padding-right: 0.04em;
+}
+.pf-item--more .pf-name {
+  font-size: clamp(1.2rem, 5.2cqi, 1.5rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+.pf-blurb {
+  max-width: 46ch;
+  margin: 12px 0 0;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--fg-muted);
+}
+.pf-item--more .pf-blurb {
+  font-size: 15px;
+}
+.pf-tags {
+  margin-top: 16px;
+}
+.pf-go {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  margin: 18px 0 0;
+}
+.pf-host {
+  color: var(--fg-muted);
+  overflow-wrap: anywhere;
+}
+/* 15 pills over a moving lamp: a solid dark glass, no backdrop-filter */
+.pf-cta.hud-btn--ghost {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.05)),
+    rgba(18, 19, 22, 0.9);
+  -webkit-tap-highlight-color: transparent;
+}
+.pf-item.is-hot .pf-cta.hud-btn--ghost {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 0 0 1px rgba(var(--n-rgb), 0.5);
+}
+/* focus is never hidden under the stuck rail */
+.pf-go .pf-cta,
+.pf-chip {
+  scroll-margin-top: calc(var(--pf-bar-top) + var(--pf-rail-h) + 24px);
+  scroll-margin-bottom: 24px;
+}
+
+/* ---------------- phones ---------------- */
+@media (max-width: 720px) {
+  .pf-bezel {
+    padding: 5px;
+    border-radius: 13px;
+  }
+  .pf-glass {
+    border-radius: 8px;
+  }
+  .pf-hit {
+    border-radius: 13px;
+  }
+  .pf-foot {
+    margin: 8px 12px 0;
+  }
+  .pf-tab {
+    right: 14px;
+    height: 18px;
+  }
+  .pf-plac {
+    margin-top: 26px;
+  }
+  .pf-name {
+    font-size: clamp(1.7rem, 8vw, 2.3rem);
+  }
+  .pf-blurb {
+    font-size: 15px;
+  }
+
+  /* the other sites: 2-up tiles, the whole tile one link (the pill, stretched over it) */
+  .pf-item--more {
+    position: relative;
+  }
+  .pf-item--more .pf-bezel {
+    padding: 4px;
+    border-radius: 11px;
+  }
+  .pf-item--more .pf-glass {
+    border-radius: 7px;
+  }
+  .pf-item--more .pf-card small {
+    font-size: 9.5px;
+  }
+  .pf-item--more .pf-foot {
+    height: 2px;
+    margin: 7px 10px 0;
+  }
+  .pf-item--more .pf-plac {
+    position: static;
+    margin-top: 18px;
+  }
+  .pf-item--more .pf-name {
+    order: 1;
+    margin-top: 8px;
+    font-size: 15.5px;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+  }
+  .pf-item--more .pf-meta {
+    order: 2;
+    margin-top: 6px;
+  }
+  .pf-item--more .pf-meta .hud-label {
+    font-size: 10.5px;
+  }
+  .pf-item--more .pf-go {
+    order: 3;
+    margin: 0;
+  }
+  .pf-item--more :is(.pf-blurb, .pf-tags, .pf-host) {
+    position: absolute !important;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .pf-item--more .pf-cta.hud-btn {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    padding: 0;
+    border-radius: 12px;
+    opacity: 0;
+    transform: none;
+  }
+  .pf-item--more:has(.pf-cta:focus-visible) {
+    border-radius: 12px;
+    outline: 2px solid var(--paper);
+    outline-offset: 3px;
+  }
+}
+@supports not selector(:has(*)) {
+  @media (max-width: 720px) {
+    .pf-item--more .pf-cta.hud-btn:focus-visible {
+      opacity: 1;
+      background: none;
+      box-shadow: 0 0 0 2px var(--paper);
+    }
+  }
+}
+
+/* ---------------- the lamp (desktop pointer): a soft light in the site's colour ---------------- */
+.pf-lamp {
+  --lamp-rgb: 200, 210, 225;
+  position: fixed;
+  z-index: 0;
+  left: 0;
+  top: 0;
+  width: 900px;
+  height: 900px;
+  margin: -450px 0 0 -450px;
+  background-color: rgba(var(--lamp-rgb), 0.09);
+  -webkit-mask-image: radial-gradient(closest-side, #000, rgba(0, 0, 0, 0.45) 45%, transparent);
+  mask-image: radial-gradient(closest-side, #000, rgba(0, 0, 0, 0.45) 45%, transparent);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.6s ease,
+    background-color 0.5s ease;
+}
+.pf-lamp.is-on {
+  opacity: 1;
+  transition:
+    opacity 0.4s ease,
+    background-color 0.5s ease;
+}
+
+/* ---------------- forced colours: outlines and words, no light ---------------- */
+@media (forced-colors: active) {
+  .pf-bezel {
+    border: 1px solid CanvasText;
+  }
+  .pf-tube,
+  .pf-foot,
+  .pf-pool,
+  .pf-lamp,
+  .pf-glare,
+  .pf-dim,
+  .pf-edge,
+  .pf-frost,
+  .pf-fog,
+  .pf-sheen,
+  .pf-gas::before,
+  .pf-gas::after,
+  .pf-bar::after {
+    display: none;
+  }
+  /* the stuck band stays (the screens still scroll under the logo and the chips), minus its grain */
+  .pf-bar::before {
+    background: Canvas;
+  }
+  .pf-img {
+    clip-path: none !important;
+    opacity: 1 !important;
+  }
+  .pf-chip {
+    border: 1px solid ButtonText;
+  }
+  .pf-chip[aria-pressed='true'] {
+    forced-color-adjust: none;
+    border-color: Highlight;
+    background: Highlight;
+    color: HighlightText;
+  }
+  .pf-gas {
+    display: none;
+  }
+  .pf-tab {
+    border: 1px solid CanvasText;
+  }
+}
+
+/* ---------------- print ---------------- */
+@media print {
+  .pf-bar {
+    position: static;
+  }
+  .pf-bar::before,
+  .pf-bar::after,
+  .pf-lamp,
+  .pf-tube,
+  .pf-foot,
+  .pf-pool,
+  .pf-glare,
+  .pf-dim,
+  .pf-edge,
+  .pf-frost,
+  .pf-fog,
+  .pf-ring,
+  .pf-sweep,
+  .pf-tab::before {
+    display: none !important;
+  }
+  .pf-img {
+    clip-path: none !important;
+    opacity: 1 !important;
+  }
+  .pf-hang,
+  .pf-screen,
+  .pf-plac,
+  .pf-plac > * {
+    transform: none !important;
+    opacity: 1 !important;
+  }
+  .pf-item {
+    break-inside: avoid;
+  }
+}

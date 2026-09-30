@@ -1,4 +1,5 @@
-import { BRAND, CONTACT, PROCESS, SECTIONS, SECURITY, SERVICE_CTA, SERVICES, TESTIMONIALS, WORK, serviceUrl } from '../content'
+import { BRAND, CONTACT, PORTFOLIO, PROCESS, SECTIONS, SECURITY, SERVICE_CTA, SERVICES, TESTIMONIALS, WORK, portfolioUrl, serviceUrl } from '../content'
+import { isPreview } from '../kit/work'
 
 /*
  * The accessible layer. Each chapter's copy, as plain linear semantic HTML,
@@ -13,8 +14,6 @@ import { BRAND, CONTACT, PROCESS, SECTIONS, SECURITY, SERVICE_CTA, SERVICES, TES
 
 const esc = (s: string) =>
   s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
-
-const isPreview = (url: string) => /harktest\.com/.test(url)
 
 const ext = (href: string, label: string, anchor?: number) =>
   `<a href="${esc(href)}" target="_blank" rel="noopener"${anchor != null ? ` data-anchor="${anchor}"` : ''}>${esc(label)}<span class="sr-note"> (opens in a new tab)</span></a>`
@@ -39,7 +38,8 @@ const COPY: Record<string, () => string> = {
           isPreview(w.url) ? `Preview ${w.name} (pre-launch build)` : `Visit ${w.name}`,
           i,
         )}</p></li>`,
-    ).join('')}</ul>`,
+    ).join('')}</ul>
+    <p><a href="${esc(portfolioUrl())}">${esc(PORTFOLIO.allWork)}</a></p>`,
 
   services: () => `
     <h2 tabindex="0">${esc(SECTIONS.services.title)}</h2>

@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "shot": "node scripts/shot.mjs",
-    "live-check": "node scripts/live-check.mjs"
+    "live-check": "node scripts/live-check.mjs",
+    "thumbs": "sh scripts/work-thumbs.sh"
   },
   "dependencies": {
     "@fontsource-variable/schibsted-grotesk": "^5.3.0",

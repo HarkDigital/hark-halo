@@ -13,6 +13,24 @@
 const NS = 'http://www.w3.org/2000/svg'
 let uid = 0
 
+/**
+ * The two half-paths of a tube round a w×h box with corner radius r, `inset`
+ * in from its edge: right = top centre → clockwise → bottom centre, left its
+ * mirror. Shared with the Portfolio's screens (src/portfolio/wall.ts).
+ */
+export function framePaths(w: number, h: number, r: number, inset = 0.75): { right: string; left: string } {
+  const x0 = inset
+  const y0 = inset
+  const x1 = w - inset
+  const y1 = h - inset
+  const rr = Math.max(0, r - inset)
+  const mx = w / 2
+  return {
+    right: `M${mx} ${y0}H${x1 - rr}A${rr} ${rr} 0 0 1 ${x1} ${y0 + rr}V${y1 - rr}A${rr} ${rr} 0 0 1 ${x1 - rr} ${y1}H${mx}`,
+    left: `M${mx} ${y0}H${x0 + rr}A${rr} ${rr} 0 0 0 ${x0} ${y0 + rr}V${y1 - rr}A${rr} ${rr} 0 0 0 ${x0 + rr} ${y1}H${mx}`,
+  }
+}
+
 export function mountNeonFrame(card: HTMLElement) {
   const id = `nf${++uid}`
   const svg = document.createElementNS(NS, 'svg')
@@ -47,16 +65,8 @@ export function mountNeonFrame(card: HTMLElement) {
     const h = card.clientHeight
     if (!w || !h) return
     const r = Math.min(parseFloat(getComputedStyle(card).borderTopLeftRadius) || 22, w / 2, h / 2)
-    const i = 0.75 // the tube sits on the card's edge
-    const x0 = i
-    const y0 = i
-    const x1 = w - i
-    const y1 = h - i
-    const rr = Math.max(0, r - i)
-    const mx = w / 2
-    // right half: top centre → clockwise → bottom centre; left half mirrored
-    const right = `M${mx} ${y0}H${x1 - rr}A${rr} ${rr} 0 0 1 ${x1} ${y0 + rr}V${y1 - rr}A${rr} ${rr} 0 0 1 ${x1 - rr} ${y1}H${mx}`
-    const left = `M${mx} ${y0}H${x0 + rr}A${rr} ${rr} 0 0 0 ${x0} ${y0 + rr}V${y1 - rr}A${rr} ${rr} 0 0 0 ${x0 + rr} ${y1}H${mx}`
+    // the tube sits on the card's edge
+    const { right, left } = framePaths(w, h, r, 0.75)
     svg.setAttribute('viewBox', `0 0 ${w} ${h}`)
     svg.setAttribute('width', String(w))
     svg.setAttribute('height', String(h))

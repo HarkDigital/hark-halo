@@ -4,8 +4,8 @@ import { bindServicesSub, servicesMenuSub } from './servicesMenu'
 import { holdInert, releaseInert } from './inert'
 
 /*
- * The phone MENU SHEET (≤ 720px), shared by the story (ui/chrome.ts) and every
- * service page (service/main.ts). A "Menu" pill opens a full-screen black
+ * The phone MENU SHEET (≤ 720px), shared by the story (ui/chrome.ts), every
+ * service page and the Portfolio (page/shell.ts). A "Menu" pill opens a full-screen black
  * frosted sheet, a real modal dialog (focus trap, Escape, the layers behind
  * it inert with a fallback, focus back to Menu on close): the sections as big
  * plain names (Services opens the eleven service pages beneath it; the
@@ -34,6 +34,8 @@ export interface MenuRow {
   go?: boolean
   /** lit as the section you are in */
   now?: boolean
+  /** what the lit row is to the page: 'location' (a section of it, the default) or 'page' (this page) */
+  current?: 'page' | 'location'
 }
 
 const MENU_QUERY = '(max-width: 720px)'
@@ -51,7 +53,7 @@ export function menuRowHtml(r: MenuRow, i: number, current?: string): string {
   const more = r.id === 'services'
   const now = r.now ? ' is-now' : ''
   // as the story's update() marks the chapter you are on (ui/chrome.ts)
-  const cur = r.now ? ' aria-current="location"' : ''
+  const cur = r.now ? ` aria-current="${r.current ?? 'location'}"` : ''
   const go = r.go ? ` data-go="${r.id}"` : ''
   return `<li style="--i:${i}"${more ? ' class="ch-ml-li--more"' : ''}><a class="ch-ml${now}" href="${r.href}"${go}${cur}><span class="ch-ml-name">${esc(r.name)}</span></a>${more ? servicesMenuSub(current) : ''}</li>`
 }
