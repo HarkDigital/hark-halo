@@ -67,7 +67,7 @@ const COPY: Record<string, () => string> = {
 
   process: () => `
     <p>How it works</p>
-    <h2 tabindex="0">We listen first. Then we build.</h2>
+    <h2 tabindex="0">First we listen. Then we build.</h2>
     <ol>${PROCESS.map((p, i) => `<li><h3>${stop('process', i, p.title)}</h3><p>${esc(p.text)}</p></li>`).join('')}</ol>`,
 
   contact: () => `

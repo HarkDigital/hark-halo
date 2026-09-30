@@ -7,7 +7,7 @@ import './service.css'
 
 import { installPrintPolyfills } from '../ui/polyfills'
 import { applyLightsCss } from '../kit/palette'
-import { BRAND, CONTACT, CONTACT_FORM, SERVICES, SITE } from '../content'
+import { BRAND, CONTACT, CONTACT_FORM, SERVICES } from '../content'
 import { createContactForm } from '../ui/contactForm'
 import { mountNeonFrame } from './neonFrame'
 import { logoSvg } from '../ui/mark'
@@ -69,7 +69,7 @@ function render(i: number) {
   const reduced = REDUCED_MOTION
 
   document.documentElement.classList.add('is-svc')
-  document.title = `${page.title} · Hark Digital · ${SITE.name}`
+  document.title = `${page.title} · Hark Digital`
 
   // ---------------------------------------------------------------- top
   // the Menu sheet's sections lead back into the story (Services to this service's plate)
@@ -236,7 +236,7 @@ function render(i: number) {
 
     <section class="svc-sec svc-process" aria-labelledby="svc-process-h">
       <p class="hud-eyebrow svc-rv" data-rv="wipe">How it works</p>
-      <h2 class="hud-h2 svc-h2 svc-rv" data-words id="svc-process-h">We listen first. Then we <em>build.</em></h2>
+      <h2 class="hud-h2 svc-h2 svc-rv" data-words id="svc-process-h">First we listen. Then we <em>build.</em></h2>
       <ol class="svc-steps">${steps}</ol>
     </section>
 

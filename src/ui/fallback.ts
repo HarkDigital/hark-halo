@@ -32,7 +32,8 @@ export function noteChapter(id: string) {
   liveChapter = id
 }
 
-const pad = (n: number) => String(n).padStart(2, '0')
+/** each section's label: its plain name (no number, no chapter nickname); Security reads as its headline */
+const KICKER: Record<string, string> = { shield: 'Hacked?' }
 
 export function renderFallback(root: HTMLElement, at?: string) {
   document.documentElement.classList.add('no-webgl')
@@ -86,7 +87,7 @@ export function renderFallback(root: HTMLElement, at?: string) {
   root.classList.add('fb')
   const order = CHAPTERS.map(c => c.id).filter(id => CHAPTER_COPY_IDS.includes(id))
   for (const id of CHAPTER_COPY_IDS) if (!order.includes(id)) order.push(id)
-  order.forEach((id, i) => {
+  order.forEach(id => {
     const copy = buildChapterCopy(id, true)
     if (!copy) return
     // heading Tab stops only drive the live story
@@ -97,7 +98,6 @@ export function renderFallback(root: HTMLElement, at?: string) {
       span.textContent = a.textContent
       a.replaceWith(span)
     })
-    const label = CHAPTERS.find(c => c.id === id)?.label ?? ''
     const sec = document.createElement('section')
     sec.className = `fb-sec fb-sec--${id}`
     sec.id = id
@@ -109,7 +109,7 @@ export function renderFallback(root: HTMLElement, at?: string) {
     const kicker = document.createElement('p')
     kicker.className = 'fb-k'
     kicker.setAttribute('aria-hidden', 'true')
-    kicker.innerHTML = `<span class="fb-k-n">${pad(i + 1)}</span><i></i><span class="fb-k-l">${label}</span><span class="fb-k-b">${sectionName(id)}</span>`
+    kicker.textContent = KICKER[id] ?? sectionName(id)
     sec.append(kicker, copy)
     root.appendChild(sec)
   })

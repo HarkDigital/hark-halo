@@ -41,7 +41,7 @@ function servicePages(): Plugin {
       if (!fs.existsSync(src)) return
       const html = fs.readFileSync(src, 'utf8')
       for (const p of SERVICE_PAGES) {
-        const title = `${p.title} · Hark Digital · Halo`
+        const title = `${p.title} · Hark Digital`
         const desc = SERVICE_CONTENT[p.slug]?.metaDescription ?? p.lede
         const url = `${ORIGIN}${base}services/${p.slug}/`
         const page = html

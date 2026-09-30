@@ -12,7 +12,7 @@ import { LOGO } from '../kit/palette'
  * shared with src/core/srContent.ts and the chrome's business names.
  */
 export const CHAPTERS: ChapterDef[] = [
-  { id: 'hero', label: 'Halo', length: 2.6, landing: 0, intro: 0.02, load: () => import('./hero/index') },
+  { id: 'hero', label: 'Hark Digital', length: 2.6, landing: 0, intro: 0.02, load: () => import('./hero/index') },
   // (arrives through the tube segue: the hero powers down into a line of neon, services powers up from it)
   { id: 'services', label: 'Etched', length: 3.8, landing: 0.12, intro: 0.12, segue: 'tube', load: () => import('./services/index') },
   { id: 'process', label: 'Assembly', length: 2.2, landing: 0.17, intro: 0.12, load: () => import('./process/index') },

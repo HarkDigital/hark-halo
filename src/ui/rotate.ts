@@ -1,5 +1,4 @@
 import { holdInert, releaseInert } from './inert'
-import { SITE } from '../content'
 
 /*
  * Phone-landscape suggestion: a frosted glass card on black over the (paused)
@@ -78,7 +77,7 @@ export function mountRotateGate(onChange?: (shown: boolean) => void) {
       <div class="rot-art" aria-hidden="true">${PHONE}</div>
       <div class="rot-text">
         <h2 class="rot-title" id="rot-title">Turn your phone <em>upright</em></h2>
-        <p class="rot-sub" id="rot-sub">${SITE.name} is framed for portrait.</p>
+        <p class="rot-sub" id="rot-sub">Our website is framed for portrait.</p>
         <p class="rot-actions"><button class="hud-btn hud-btn--ghost rot-go" type="button">Continue anyway</button></p>
       </div>
     </div>
@@ -115,7 +114,7 @@ export function mountRotateGate(onChange?: (shown: boolean) => void) {
       }, 260)
       // a live region only speaks when its text changes after it is shown
       window.setTimeout(() => {
-        if (on) live.textContent = `Turn your phone upright. ${SITE.name} is framed for portrait.`
+        if (on) live.textContent = 'Turn your phone upright.'
       }, 60)
     } else {
       releaseInert('rotate')

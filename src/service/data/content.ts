@@ -379,7 +379,7 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
     faqs: [
       {
         q: 'My website was hacked, what should I do first?',
-        a: 'Do not delete anything yet, the evidence helps find the entry point. Change your hosting and admin passwords from a clean device, take a backup of the current (infected) state, and get professional help fast. Email mike@hark.digital with "EMERGENCY" in the subject and we will triage quickly.',
+        a: 'Do not delete anything yet, the evidence helps find the entry point. Change your hosting and admin passwords from a clean device, take a backup of the current (infected) state, and get professional help fast. Email info@hark.digital with "EMERGENCY" in the subject and we will triage quickly.',
       },
       {
         q: 'How much does hacked website cleanup cost?',

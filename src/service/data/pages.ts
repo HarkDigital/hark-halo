@@ -327,7 +327,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
       name: 'Barbara Barber',
       company: 'CrossFit Off The Grid',
     },
-    cta: 'Hacked right now? Skip the form. Email mike@hark.digital with "EMERGENCY" in the subject.',
+    cta: 'Hacked right now? Skip the form. Email info@hark.digital with "EMERGENCY" in the subject.',
   },
   {
     slug: 'security',

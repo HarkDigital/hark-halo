@@ -63,17 +63,17 @@ export function createContactForm(o: ContactFormOpts = {}): HTMLElement {
       <div class="cf-row">
         <p class="cf-field">
           <label class="cf-label" for="${id}-name">Name *</label>
-          <input class="cf-input" id="${id}-name" name="name" required autocomplete="name" placeholder="Jane Doe" />
+          <input class="cf-input" id="${id}-name" name="name" required autocomplete="name" placeholder="Your Name" />
         </p>
         <p class="cf-field">
           <label class="cf-label" for="${id}-email">Email *</label>
-          <input class="cf-input" id="${id}-email" name="email" type="email" required autocomplete="email" placeholder="jane@company.com" />
+          <input class="cf-input" id="${id}-email" name="email" type="email" required autocomplete="email" placeholder="your@email.com" />
         </p>
       </div>
       <div class="cf-row">
         <p class="cf-field">
           <label class="cf-label" for="${id}-company">Company</label>
-          <input class="cf-input" id="${id}-company" name="company" autocomplete="organization" placeholder="Optional" />
+          <input class="cf-input" id="${id}-company" name="company" autocomplete="organization" placeholder="Your Organization" />
         </p>
         <p class="cf-field">
           <label class="cf-label" for="${id}-service">What do you need?</label>

@@ -29,7 +29,7 @@ import {
 import './process.css'
 
 /*
- * ASSEMBLY — "We listen first. Then we build."
+ * ASSEMBLY — "First we listen. Then we build."
  *
  * The process literally builds the Hark mark, one step at a time, front-on
  * and centred in the black room over the mirror floor:
@@ -259,7 +259,7 @@ export default function create(): Chapter {
       const stage = ctx.stage
       headEl = el('div', 'pr-head', undefined, stage)
       el('p', 'hud-eyebrow', 'How it works', headEl)
-      headline = rise(el('h2', 'hud-h2 pr-headline', undefined, headEl), 'We listen first. <em>Then we build.</em>')
+      headline = rise(el('h2', 'hud-h2 pr-headline', undefined, headEl), 'First we listen. <em>Then we build.</em>')
 
       cardEl = el('div', 'pr-card hud-panel hud-panel--strong', undefined, stage)
       const steps = el('div', 'pr-steps', undefined, cardEl)

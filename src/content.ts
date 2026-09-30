@@ -41,7 +41,7 @@ export const OTHER_CONCEPTS = CONCEPTS.filter(c => c.slug !== SITE.slug)
 export const BRAND = {
   name: 'Hark Digital Design',
   short: 'Hark.Digital',
-  email: 'mike@hark.digital',
+  email: 'info@hark.digital',
   tagline: 'Make the internet listen.',
   locale: 'Philadelphia · Everywhere · est. 2016',
   manifesto:
@@ -403,7 +403,7 @@ export const SECURITY = {
   title: 'Hacked? Breathe.',
   body: 'We find the breach, clean the infection, restore your site, and lock the door behind us. Then we keep watch, hardening, monitoring, and backups, so it never happens again.',
   cta: 'Emergency cleanup →',
-  href: 'mailto:mike@hark.digital?subject=Emergency%3A%20my%20site%20was%20hacked',
+  href: 'mailto:info@hark.digital?subject=Emergency%3A%20my%20site%20was%20hacked',
   /** the fix, step by step (the sign does each as it's ticked off) */
   fixEyebrow: 'How we fix it',
   fixTitle: 'Four steps. <em>No panic.</em>',
@@ -451,6 +451,6 @@ export const CONTACT_FORM = {
 export const CONTACT = {
   eyebrow: 'Start a project',
   title: 'Say hello.',
-  body: 'Tell us what you are building, fixing, or dreaming up. New project, a site that got hacked, or eyes in the sky, we read every message and reply like a human.',
-  href: 'mailto:mike@hark.digital?subject=New%20project',
+  body: 'Tell us what you are building, fixing, or dreaming up.',
+  href: 'mailto:info@hark.digital?subject=New%20project',
 }
