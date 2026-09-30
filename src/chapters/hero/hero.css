@@ -1,34 +1,5 @@
 /* HERO — "Frost". Everything scoped under .stage-hero. Minimal copy, lots of black. */
 
-/* ---------------- intro: eyebrow, manifesto, scroll hint (lower left) ---------------- */
-.stage-hero .hf-intro {
-  position: absolute;
-  left: var(--gutter);
-  bottom: var(--safe-bottom);
-  width: min(400px, 36vw);
-  display: grid;
-  gap: 16px;
-}
-.stage-hero .hf-intro > * {
-  opacity: 0;
-  filter: blur(8px);
-  transform: translate3d(0, 8px, 0);
-  transition:
-    opacity 0.8s ease,
-    filter 1.1s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.stage-hero .hf-intro.is-in > * {
-  opacity: 1;
-  filter: none;
-  transform: none;
-}
-.stage-hero .hf-intro.is-in > :nth-child(2) {
-  transition-delay: 0.14s;
-}
-.stage-hero .hf-intro.is-in > :nth-child(3) {
-  transition-delay: 0.34s;
-}
 .stage-hero .hf-manifesto {
   color: rgba(246, 247, 249, 0.8);
   max-width: 36ch;
@@ -70,7 +41,8 @@
   }
 }
 
-/* ---------------- payoff: tagline + CTAs (left, vertically centred) ---------------- */
+/* ---------------- the headline block, first thing seen: headline, manifesto, CTAs,
+   scroll hint (left, vertically centred; under the mark on portrait) ---------------- */
 .stage-hero .hf-payoff {
   position: absolute;
   top: var(--safe-top);
@@ -85,8 +57,32 @@
 }
 .stage-hero .hf-payoff-inner {
   display: grid;
-  gap: 30px;
+  gap: 24px;
   justify-items: start;
+}
+/* everything under the headline comes into focus after it, one by one */
+.stage-hero .hf-payoff-inner > :not(.hf-title) {
+  opacity: 0;
+  filter: blur(8px);
+  transform: translate3d(0, 8px, 0);
+  transition:
+    opacity 0.8s ease,
+    filter 1.1s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.stage-hero .hf-payoff.is-in .hf-payoff-inner > :not(.hf-title) {
+  opacity: 1;
+  filter: none;
+  transform: none;
+}
+.stage-hero .hf-payoff.is-in .hf-payoff-inner > :nth-child(2) {
+  transition-delay: 0.25s;
+}
+.stage-hero .hf-payoff.is-in .hf-payoff-inner > :nth-child(3) {
+  transition-delay: 0.4s;
+}
+.stage-hero .hf-payoff.is-in .hf-payoff-inner > :nth-child(4) {
+  transition-delay: 0.6s;
 }
 .stage-hero .hf-title {
   font-size: clamp(3rem, 7.2vw, 7.6rem);
@@ -100,19 +96,13 @@
 
 /* ---------------- portrait: the mark above, copy below ---------------- */
 @media (max-aspect-ratio: 1/1) {
-  .stage-hero .hf-intro {
-    right: var(--gutter);
-    width: auto;
-    max-width: 560px;
-    gap: 14px;
-  }
   .stage-hero .hf-payoff {
     right: var(--gutter);
     width: auto;
     justify-content: flex-end;
   }
   .stage-hero .hf-payoff-inner {
-    gap: 22px;
+    gap: 16px;
   }
   .stage-hero .hf-title {
     font-size: clamp(2.6rem, 11.5vw, 6rem);
@@ -131,10 +121,6 @@
 
 /* short landscape phones: thin bands, compact copy */
 @media (orientation: landscape) and (max-height: 500px) {
-  .stage-hero .hf-intro {
-    gap: 10px;
-    width: min(340px, 42vw);
-  }
   .stage-hero .hf-manifesto {
     font-size: 13.5px;
     line-height: 1.5;

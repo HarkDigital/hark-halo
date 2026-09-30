@@ -104,26 +104,6 @@
   box-shadow: 0 0 12px var(--et-neon);
   pointer-events: none;
 }
-.stage-services .et-head {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin: 0;
-}
-.stage-services .et-cur {
-  color: var(--fg);
-  font-variant-numeric: tabular-nums;
-}
-.stage-services .et-of {
-  color: var(--fg-muted);
-  white-space: pre;
-}
-.stage-services .et-rule {
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0));
-}
-
 /* all eleven share one grid cell, so the card never jumps */
 .stage-services .et-stack {
   display: grid;
@@ -214,7 +194,7 @@
   border-radius: 4px;
 }
 
-/* 01–11: a row of small frosted keys; the lit one carries a polished bar */
+/* one dot per service (no numbers); the lit one stretches into a neon bar */
 .stage-services .et-keys {
   display: grid;
   grid-template-columns: repeat(11, minmax(0, 1fr));
@@ -233,47 +213,30 @@
   border: 0;
   border-radius: 999px;
   background: none;
-  font-family: var(--font-label);
-  font-size: 10.5px;
-  font-weight: var(--label-weight);
-  letter-spacing: 0.011em;
-  font-variant-numeric: tabular-nums;
-  color: var(--fg-faint);
   cursor: pointer;
-  transition:
-    color 0.3s ease,
-    background 0.4s ease,
-    box-shadow 0.4s ease;
 }
 .stage-services .et-key::after {
   content: '';
   position: absolute;
-  left: 30%;
-  right: 30%;
-  bottom: 3px;
-  height: 1px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.2), #ffffff, rgba(255, 255, 255, 0.2));
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.7);
-  opacity: 0;
-  transform: scaleX(0.3);
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.34);
   transition:
-    opacity 0.3s ease,
-    transform 0.6s var(--et-ease);
+    width 0.5s var(--et-ease),
+    margin 0.5s var(--et-ease),
+    background 0.3s ease,
+    box-shadow 0.3s ease;
 }
-.stage-services .et-key:hover {
-  color: var(--fg);
-  background: rgba(255, 255, 255, 0.06);
-}
-.stage-services .et-key.is-on {
-  color: var(--fg);
-  background: rgba(255, 255, 255, 0.09);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.24),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+.stage-services .et-key:hover::after {
+  background: rgba(255, 255, 255, 0.75);
 }
 .stage-services .et-key.is-on::after {
-  opacity: 1;
-  transform: none;
+  width: 18px;
+  margin-left: -9px;
   background: var(--et-neon);
   box-shadow: 0 0 8px var(--et-neon);
 }
@@ -355,8 +318,6 @@
   }
   .stage-services .et-key {
     min-height: 28px;
-    font-size: 10px;
-    letter-spacing: 0;
   }
 }
 /* short phones: keep the column visible — tighter type, tags live in the copy layer */
@@ -386,9 +347,6 @@
     padding: 12px 16px 8px;
     border-radius: 16px;
   }
-  .stage-services .et-head {
-    display: none;
-  }
   .stage-services .et-item {
     gap: 6px;
   }
@@ -411,8 +369,6 @@
   }
   .stage-services .et-key {
     min-height: 24px;
-    font-size: 9.5px;
-    letter-spacing: 0;
   }
   .stage-services .et-intro {
     gap: 12px;

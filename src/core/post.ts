@@ -4,6 +4,7 @@ import { Pass, FullScreenQuad } from 'three/addons/postprocessing/Pass.js'
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js'
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js'
+import { ACTIVE } from '../kit/palette'
 
 /*
  * Post-processing for Hark Frost: Scene (render + NaN guard) → Bloom →
@@ -24,6 +25,11 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js'
  *    the whole frame is fogged (hiding the swap); after it the fog clears from
  *    the centre outward like breath evaporating off cold glass. uCutSide says
  *    which half. A few tiny clear 'droplet' spots sparkle in the fog.
+ *  - THE TUBE SEGUE (uSegue, a chapter's `segue: 'tube'`): instead of the fog,
+ *    the picture powers down like an old tube set: it squashes into one
+ *    white-hot line with a neon glow (the lights, a → b → c), the line pulls in
+ *    to a point, the point goes out; the next chapter powers up the same way
+ *    in reverse. Driven by uTransition alone (scroll-linear, both sides).
  *
  * Keep the Post API (params / resetParams / setSize / render / compileAsync /
  * setFadeTone / cutSide) and the uTransition / uFade / uFlash / uGlitch uniforms.
@@ -45,6 +51,10 @@ const FinalShader = {
     uFade: { value: 0 },
     uFrost: { value: 0 },
     uFog: { value: new THREE.Color('#9aa2ad') },
+    uSegue: { value: 0 },
+    uNeonA: { value: new THREE.Color(ACTIVE.a) },
+    uNeonB: { value: new THREE.Color(ACTIVE.b) },
+    uNeonC: { value: new THREE.Color(ACTIVE.c) },
     uFadeColor: { value: new THREE.Color('#000000') },
   },
   vertexShader: /* glsl */ `
@@ -56,6 +66,8 @@ const FinalShader = {
     uniform float uTime, uDpr, uTransition, uCutSide, uGlitch, uAberration, uGrain, uVignette, uFlash, uFade, uFrost;
     uniform vec2 uResolution;
     uniform vec3 uFog, uFadeColor;
+    uniform float uSegue;
+    uniform vec3 uNeonA, uNeonB, uNeonC;
     varying vec2 vUv;
 
     float hash(vec2 p) { vec3 p3 = fract(vec3(p.xyx) * .1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
@@ -79,6 +91,39 @@ const FinalShader = {
       return acc / 10.0;
     }
 
+    vec3 neonAt(float x) {
+      return x < 0.5 ? mix(uNeonA, uNeonB, x * 2.0) : mix(uNeonB, uNeonC, x * 2.0 - 1.0);
+    }
+    // THE TUBE SEGUE (t: 0 far from the boundary … 1 at it; the incoming chapter plays it backwards)
+    vec3 tubeSegue(vec2 uv, float t) {
+      float sy = 1.0 - smoothstep(0.0, 0.58, t);      // the picture squashes into a line
+      float sx = 1.0 - smoothstep(0.6, 0.9, t);       // the line pulls in to a point
+      float off = smoothstep(0.9, 1.0, t);            // the point goes out
+      vec2 q = uv - 0.5;
+      float hy = max(sy * 0.5, 0.5 / uResolution.y);
+      float hx = sx * 0.5;
+      vec3 outc = vec3(0.0);
+      if (abs(q.y) <= hy && abs(q.x) <= hx) {
+        vec2 s = vec2(0.5 + q.x / max(sx, 1e-4), 0.5 + q.y / max(sy, 1e-4));
+        // squeezed light gets brighter as the band thins
+        outc = texture2D(tDiffuse, clamp(s, 0.001, 0.999)).rgb * (1.0 + 2.5 * (1.0 - sy)) * (1.0 - off);
+      }
+      // the line of light it squeezes into: white-hot, a neon glow in the lights' colours
+      float thin = smoothstep(0.22, 0.58, t) * (1.0 - off);
+      float dy = abs(q.y) * uResolution.y / uDpr;
+      float ends = 1.0 - smoothstep(hx - 0.01, hx + 0.03, abs(q.x));
+      vec3 neon = neonAt(clamp(0.5 + q.x / max(sx, 0.08), 0.0, 1.0));
+      float core = exp(-(dy * dy) / 1.8);
+      float glow = exp(-(dy * dy) / 260.0) + 0.35 * exp(-(dy * dy) / 4200.0);
+      outc += (vec3(1.0) * core * 1.3 + neon * glow) * ends * thin;
+      // the last point of light
+      float aspect = uResolution.x / max(uResolution.y, 1.0);
+      float rp = length(vec2(q.x * aspect, q.y)) * uResolution.y / uDpr;
+      float pt = smoothstep(0.72, 0.9, t) * (1.0 - off);
+      outc += (vec3(1.0) * exp(-(rp * rp) / 30.0) * 1.4 + neonAt(0.5) * exp(-(rp * rp) / 2400.0)) * pt;
+      return outc;
+    }
+
     void main() {
       vec2 uv = vUv;
       vec2 c = uv - 0.5;
@@ -96,7 +141,9 @@ const FinalShader = {
       float t = clamp(uTransition, 0.0, 1.0);
       // ---- THE BREATH CUT: a noise-edged fog front
       float fogMask = 0.0;
-      if (t >= 0.82) fogMask = 1.0;   // fully fogged: no front to shape
+      if (uSegue > 0.5) {
+        if (t > 0.001) col = tubeSegue(uv, t);
+      } else if (t >= 0.82) fogMask = 1.0;   // fully fogged: no front to shape
       else if (t > 0.001) {
         float aspect = uResolution.x / max(uResolution.y, 1.0);
         vec2 pc = vec2(c.x * aspect, c.y);
@@ -257,6 +304,8 @@ export class Post {
   transition = 0
   /** -1 while approaching a chapter boundary, +1 after it (engine-driven) */
   cutSide = 1
+  /** 1 while the boundary in play arrives through the tube segue (engine-driven) */
+  segue = 0
   fade = 0
   private lastFlashAt = -1e9
   private flashLive = false
@@ -369,6 +418,7 @@ export class Post {
     u.uFlash.value = c.flash
     u.uFrost.value = c.frost
     u.uCutSide.value = this.cutSide
+    u.uSegue.value = this.segue
     u.uFade.value = this.fade
     this.composer.render(dt)
   }

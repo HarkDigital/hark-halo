@@ -629,14 +629,6 @@ body.svc {
 .svc-idx a[aria-current='page'] {
   color: var(--fg);
 }
-.svc-idx a[aria-current='page'] .svc-idx-n {
-  color: var(--neon-a);
-  text-shadow: 0 0 10px rgba(var(--neon-a-rgb), 0.7);
-}
-.svc-idx-n {
-  color: var(--fg-faint);
-  font-variant-numeric: tabular-nums;
-}
 .svc-foot-row {
   display: flex;
   flex-wrap: wrap;
@@ -819,9 +811,9 @@ body.svc {
   .svc-pn-a:hover .svc-pn-t::after {
     transform: none;
   }
-  /* the services index: the number lights in the neon */
-  .svc-idx a:hover .svc-idx-n {
+  /* the services index: the name lights in the neon */
+  .svc-idx a:hover {
     color: var(--neon-a);
-    text-shadow: 0 0 10px var(--neon-a);
+    text-shadow: 0 0 10px rgba(var(--neon-a-rgb), 0.6);
   }
 }

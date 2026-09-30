@@ -31,6 +31,8 @@ export interface EngineState {
 
 /** Scroll distance (in vh) on each side of a cut where the glitch ramps. */
 const CUT_WINDOW = 0.18
+/** A 'tube' segue (ChapterDef.segue) plays over a longer stretch each side: it is watched, not hidden. */
+const SEGUE_WINDOW = 0.38
 /** Render-pixel budget: 4K/5K windows would otherwise push 15+ MP through bloom. */
 const PIXEL_BUDGET = 6e6
 /** device pixels of three's glass (transmission) buffer on desktop; it only ever shrinks with the frame */
@@ -711,18 +713,24 @@ export class Engine {
     // glitch ramps up approaching any internal cut and back down after it
     let d = Infinity
     let side = 1
+    let near = 1
     for (let i = 1; i < this.slots.length; i++) {
       const dd = scrollVh - this.slots[i].start
       if (Math.abs(dd) < d) {
         d = Math.abs(dd)
         side = dd < 0 ? -1 : 1
+        near = i
       }
     }
-    const tr = clamp(1 - d / CUT_WINDOW)
-    const scrollCut = tr * tr * (3 - 2 * tr)
+    const segue = this.slots[near]?.def.segue === 'tube'
+    const tr = clamp(1 - d / (segue ? SEGUE_WINDOW : CUT_WINDOW))
+    // (the tube segue runs linear in scroll: its own phases shape it)
+    const scrollCut = segue ? tr : tr * tr * (3 - 2 * tr)
     const cut = Math.max(scrollCut, fx)
     // which side of the cut we're on (fog forms, then clears)
     this.post.cutSide = fx > scrollCut && this.jump ? (this.jump.swapped ? 1 : -1) : side
+    // the tube segue only for a scroll through that boundary (a nav jump keeps the fog)
+    this.post.segue = segue && scrollCut >= fx ? 1 : 0
     // cut budget (WCAG 2.3.1): while boundaries come fast (a quick scroll or
     // a cut peaked < 0.5 s ago) hold the transition so they merge into one
     // continuous sheet instead of a train of full-frame dips
@@ -732,7 +740,8 @@ export class Engine {
     const rapid = now - this.cutPeakAt < 500 || Math.abs(f.velocity) > 3
     const cutOut = rapid ? Math.max(cut, this.cutHold) : cut
     // the chapter's DOM copy fades while the cut covers the frame; CSS reads --cut
-    const cutCss = Math.round(cutOut * 50) / 50
+    // (through the tube segue it stays gone until the picture has nearly powered up)
+    const cutCss = Math.round(Math.min(1, cutOut * (this.post.segue ? 3 : 1)) * 50) / 50
     if (cutCss !== this.cutCss) {
       this.cutCss = cutCss
       this.stages.style.setProperty('--cut', String(cutCss))

@@ -38,7 +38,6 @@ export class Hud {
   private introTitle: HTMLElement
   private col: HTMLElement
   private card: HTMLElement
-  private cur: HTMLElement
   private items: { root: HTMLElement; title: HTMLElement }[] = []
   private keys: HTMLButtonElement[] = []
   private probeTop: HTMLElement
@@ -54,17 +53,12 @@ export class Hud {
   ) {
     /* intro */
     this.intro = el('div', 'et-intro', undefined, stage)
-    el('p', 'hud-eyebrow et-intro-eyebrow', `${SECTIONS.services.eyebrow} · 01–${pad(SERVICES.length)}`, this.intro)
+    el('p', 'hud-eyebrow et-intro-eyebrow', SECTIONS.services.eyebrow, this.intro)
     this.introTitle = rise(el('h2', 'hud-title et-intro-title', undefined, this.intro), 'Eleven ways to be <em>heard.</em>')
 
     /* the card */
     this.col = el('div', 'et-col', undefined, stage)
     this.card = el('div', 'et-card hud-panel hud-panel--strong', undefined, this.col)
-    const head = el('p', 'hud-label et-head', undefined, this.card)
-    const count = el('span', 'et-count', undefined, head)
-    this.cur = el('span', 'et-cur', '01', count)
-    el('span', 'et-of', ` / ${pad(SERVICES.length)}`, count)
-    el('span', 'et-rule', undefined, head)
     const stack = el('div', 'et-stack', undefined, this.card)
     for (const s of SERVICES) {
       const root = el('div', 'et-item', undefined, stack)
@@ -79,11 +73,12 @@ export class Hud {
       this.items.push({ root, title })
     }
     const keys = el('div', 'et-keys', undefined, this.card)
+    // one dot per service (no numbers): named for assistive tech and on hover
     SERVICES.forEach((s, k) => {
-      const b = el('button', 'et-key', s.num, keys)
+      const b = el('button', 'et-key', undefined, keys)
       b.type = 'button'
       b.title = s.title
-      b.setAttribute('aria-label', `${s.num} ${s.title}`)
+      b.setAttribute('aria-label', s.title)
       b.addEventListener('click', () => onKey(k))
       this.keys.push(b)
     })
@@ -126,7 +121,6 @@ export class Hud {
         setOn(it.root, on)
         setRise(it.title, on)
       })
-      if (cardOn) this.cur.textContent = SERVICES[shown].num
     }
     if (key !== this.key) {
       this.key = key

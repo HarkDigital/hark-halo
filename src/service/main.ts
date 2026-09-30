@@ -11,6 +11,7 @@ import { BRAND, CONTACT, CONTACT_FORM, SERVICES, SITE } from '../content'
 import { createContactForm } from '../ui/contactForm'
 import { mountNeonFrame } from './neonFrame'
 import { logoSvg } from '../ui/mark'
+import { bindServicesMenu, servicesMenuItem } from '../ui/servicesMenu'
 import { SERVICE_PAGES } from './data/pages'
 import { SERVICE_CONTENT } from './data/content'
 import { REDUCED_MOTION } from '../kit/motion'
@@ -76,14 +77,16 @@ function render(i: number) {
       </a>
       <nav class="svc-nav ch-chip" aria-label="Primary">
         <ul class="ch-links">
+          ${servicesMenuItem(`<a class="ch-link is-active" href="${back}">Services</a>`, page.slug)}
           <li><a class="ch-link" href="${BASE}#work">Work</a></li>
-          <li><a class="ch-link is-active" href="${back}">Services</a></li>
           <li><a class="ch-link" href="${BASE}#contact">Contact</a></li>
         </ul>
         <a class="hud-btn ch-cta" href="#svc-contact">Start a project</a>
       </nav>
       <a class="svc-back-chip ch-chip" href="${back}"><span aria-hidden="true">←</span> All services</a>
     </header>`
+
+  bindServicesMenu(document.getElementById('svc-top')!)
 
   // ---------------------------------------------------------------- body
   const headline = `${esc(page.headline)}${page.headlineAccent ? ` <em>${esc(page.headlineAccent)}</em>` : ''}`
@@ -155,7 +158,7 @@ function render(i: number) {
     : ''
   const index11 = SERVICE_PAGES.map(
     p =>
-      `<li><a href="${serviceHref(p.slug)}"${p.slug === page.slug ? ' aria-current="page"' : ''}><span class="svc-idx-n" aria-hidden="true">${esc(p.num)}</span>${esc(p.title)}</a></li>`,
+      `<li><a href="${serviceHref(p.slug)}"${p.slug === page.slug ? ' aria-current="page"' : ''}>${esc(p.title)}</a></li>`,
   ).join('')
   const year = new Date().getFullYear()
 
@@ -165,7 +168,7 @@ function render(i: number) {
       <div class="svc-neon-css" aria-hidden="true"><i></i><i></i></div>
       <div class="svc-hero-scrim" aria-hidden="true"></div>
       <div class="svc-hero-copy">
-        <p class="hud-eyebrow svc-rv">${esc(page.num)} / ${pad(SERVICE_PAGES.length)} · ${esc(page.title)}</p>
+        <p class="hud-eyebrow svc-rv">${esc(page.title)}</p>
         <h1 class="hud-title svc-h1 svc-rv${long > 30 ? ' is-long' : ''}" id="svc-h1">${headline}</h1>
         <p class="hud-body svc-lede svc-rv">${esc(page.lede)}</p>
         ${svc ? `<ul class="hud-tags svc-tags svc-rv" aria-label="Includes">${svc.tags.map(t => `<li class="hud-tag">${esc(t)}</li>`).join('')}</ul>` : ''}
@@ -213,10 +216,6 @@ function render(i: number) {
             <p class="hud-eyebrow">${esc(CONTACT.eyebrow)}</p>
             <h2 class="hud-title svc-contact-t" id="svc-contact-h">Say <em>hello.</em></h2>
             <p class="hud-body">${esc(CONTACT.body)}</p>
-            <div class="svc-ctas">
-              <a class="hud-btn hud-btn--ghost" href="${esc(CONTACT.href)}">${esc(BRAND.email)} <span aria-hidden="true">→</span></a>
-              <button class="hud-btn hud-btn--ghost svc-copy" type="button">Copy email</button>
-            </div>
           </div>
           <div class="svc-contact-form"></div>
         </div>
@@ -238,18 +237,6 @@ function render(i: number) {
   const cardEl = document.querySelector<HTMLElement>('.svc-contact-card')!
   document.querySelector('.svc-contact-form')!.append(createContactForm({ service: CONTACT_FORM.services.find(s => s === page.title) }))
   mountNeonFrame(cardEl)
-
-  // copy email
-  const copy = document.querySelector<HTMLButtonElement>('.svc-copy')!
-  copy.addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText(BRAND.email)
-      copy.textContent = 'Copied'
-    } catch {
-      copy.textContent = BRAND.email
-    }
-    setTimeout(() => (copy.textContent = 'Copy email'), 1800)
-  })
 
   // reveals: in on scroll, once (instantly under reduced motion)
   const rv = [...document.querySelectorAll<HTMLElement>('.svc-rv')]

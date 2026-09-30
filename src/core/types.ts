@@ -107,5 +107,12 @@ export interface ChapterDef {
   landing?: number
   /** Local progress where the section headline shows (heading Tab stop lands here). */
   intro?: number
+  /**
+   * How the story arrives at this chapter from the one before. Default: the
+   * breath cut (fog). 'tube': the frame powers down into a line of neon light,
+   * then a point (an old tube set switching off), and this chapter powers up
+   * from it, over a longer window (SEGUE_WINDOW).
+   */
+  segue?: 'tube'
   load: () => Promise<{ default: ChapterFactory }>
 }

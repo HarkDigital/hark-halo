@@ -3,6 +3,7 @@ import type { Frame } from '../core/types'
 import type { Sound } from './sound'
 import { BRAND } from '../content'
 import { logoSvg, markOutlineSvg } from './mark'
+import { bindServicesMenu, servicesMenuItem } from './servicesMenu'
 import { holdInert, releaseInert } from './inert'
 import { mountRotateGate } from './rotate'
 import { bindScene, holdScene, releaseScene } from './scene'
@@ -54,7 +55,7 @@ const BUSINESS: Record<string, string> = {
   process: 'Process',
   contact: 'Contact',
 }
-const NAV = ['work', 'services', 'contact']
+const NAV = ['services', 'work', 'contact']
 const MENU_QUERY = '(max-width: 720px)'
 const READ_LABEL = 'Read as a page'
 /** the static page (main.ts renders the fallback for ?read; it scrolls to the #chapter) */
@@ -83,8 +84,12 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
 
   const brandInner = `<span class="ch-logo" aria-hidden="true">${logoSvg('ch-logo-svg')}</span>`
 
+  // (Services carries the dropdown of the eleven service pages)
   const links = NAV.filter(id => indexOf(id) >= 0)
-    .map(id => `<li><a class="ch-link" href="#${id}" data-go="${id}">${biz(id)}</a></li>`)
+    .map(id => {
+      const a = `<a class="ch-link" href="#${id}" data-go="${id}">${biz(id)}</a>`
+      return id === 'services' ? servicesMenuItem(a) : `<li>${a}</li>`
+    })
     .join('')
 
   const pips = slots
@@ -155,6 +160,7 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
 
   const $ = <T extends Element = HTMLElement>(s: string) => root.querySelector<T>(s)!
   const chr = $('.chr')
+  bindServicesMenu(root)
   const top = $('.ch-top')
   const bottom = $('.ch-bottom')
   const menu = $('.ch-menu')

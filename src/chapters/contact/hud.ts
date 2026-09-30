@@ -1,20 +1,18 @@
 import { el, rise } from '../../core/dom'
-import { BRAND, CONTACT, OTHER_CONCEPTS } from '../../content'
+import { BRAND, CONTACT } from '../../content'
 
 /*
  * The contact panel: one frosted glass card on black (left on landscape,
- * along the bottom on portrait). The address is the big primary action, a
- * frosted Copy pill beside it, the sister concepts, Back to top and the
- * colophon.
+ * along the bottom on portrait): the headline, the body, "Send a message"
+ * (the form), Back to top and the colophon. (No address or Copy pill, no
+ * sister concepts: the owner's call, Sep 2026.)
  *
  * Layout is MEASURED (on resize / font load / size change, never per frame)
  * so the mark can sit in whatever space the card leaves: `art` is that free
  * rectangle in CSS px. Short screens step the card down through fit levels
  * until it leaves the mark enough room:
  *   fit-1..3  type and spacing step down
- *   fit-4     'Other concepts' folds behind a disclosure in the footer row and
- *             the colophon line drops (both are in the copy layer and ?read)
- *   fit-5     the Other-concepts block goes entirely (never while it is open)
+ *   fit-4     the colophon line drops (it is in the copy layer and ?read)
  */
 
 export interface Rect {
@@ -30,15 +28,11 @@ export interface Hud {
   wrap: HTMLElement
   panel: HTMLElement
   title: HTMLElement
-  mail: HTMLAnchorElement
-  copyBtn: HTMLButtonElement
   dirty: boolean
-  /** performance.now() of the last successful copy (drives a soft glint on the mark) */
+  /** performance.now() of the last copy (none now: kept for the mark's glint, never fires) */
   copiedAt: number
-  /** the pointer / focus is on the address or the copy button */
+  /** the pointer / focus is on "Send a message" (the halo swells) */
   hover: boolean
-  /** the compact card's 'Other concepts' disclosure is open */
-  moreOpen: boolean
 }
 
 export interface HudLayout {
@@ -52,60 +46,12 @@ export interface HudLayout {
   band: Rect
 }
 
-const ICON_MAIL =
-  '<svg class="ct-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="5.5" width="18" height="13" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="m4.6 7.4 7.4 5.5 7.4-5.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-
 /**
  * Portrait layout (card along the bottom, mark above). Short landscape phones
  * keep the side-by-side layout with a compact card. Keep in sync with
  * contact.css.
  */
 export const PORTRAIT_QUERY = '(max-width: 767px) and (orientation: portrait), (max-width: 767px) and (min-height: 501px), (max-aspect-ratio: 9/10)'
-
-/** Copy text: async Clipboard API first, then a hidden-textarea fallback. */
-export async function copyText(text: string) {
-  try {
-    if (navigator.clipboard && window.isSecureContext) {
-      await navigator.clipboard.writeText(text)
-      return true
-    }
-  } catch {
-    /* denied or unsupported: fall through */
-  }
-  const ta = document.createElement('textarea')
-  ta.value = text
-  ta.setAttribute('readonly', '')
-  ta.setAttribute('aria-hidden', 'true')
-  ta.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none;'
-  const active = document.activeElement as HTMLElement | null
-  document.body.appendChild(ta)
-  ta.select()
-  ta.setSelectionRange(0, text.length)
-  let ok = false
-  try {
-    ok = document.execCommand('copy')
-  } catch {
-    ok = false
-  }
-  ta.remove()
-  active?.focus?.({ preventScroll: true })
-  return ok
-}
-
-/** A polite live region OUTSIDE the aria-hidden stage, so the copy result is announced. */
-function liveRegion() {
-  const id = 'ct-copy-live'
-  let node = document.getElementById(id)
-  if (!node) {
-    node = document.createElement('p')
-    node.id = id
-    node.className = 'sr-only'
-    node.setAttribute('role', 'status')
-    node.setAttribute('aria-live', 'polite')
-    document.body.appendChild(node)
-  }
-  return node
-}
 
 export function buildHud(stage: HTMLElement): Hud {
   const probe = el('div', 'ct-probe', undefined, stage)
@@ -119,48 +65,15 @@ export function buildHud(stage: HTMLElement): Hud {
   const title = rise(el('h2', 'hud-title ct-title', undefined, panel), `${words.join(' ')} <em>${last}</em>`)
   el('p', 'hud-body ct-body', CONTACT.body, panel)
 
-  // the form (ui/formDialog): the primary action; the address and Copy beside it
+  // the form (ui/formDialog): the one action
   const formBtn = el('button', 'hud-btn ct-form', undefined, panel)
   formBtn.type = 'button'
   formBtn.setAttribute('data-contact-form', '')
   formBtn.innerHTML = 'Send a message <span class="ct-go" aria-hidden="true">→</span>'
 
-  const cta = el('div', 'ct-cta', undefined, panel)
-  const mail = el('a', 'hud-btn hud-btn--ghost ct-mail', undefined, cta)
-  mail.href = CONTACT.href
-  mail.innerHTML = `${ICON_MAIL}<span class="ct-mail-addr"></span><span class="ct-go" aria-hidden="true">→</span>`
-  mail.querySelector('.ct-mail-addr')!.textContent = BRAND.email
-
-  const copyBtn = el('button', 'hud-btn hud-btn--ghost ct-copy', undefined, cta)
-  copyBtn.type = 'button'
-  copyBtn.setAttribute('aria-label', `Copy email address ${BRAND.email}`)
-  copyBtn.innerHTML =
-    '<span class="ct-copy-idle">Copy<span class="ct-copy-more"> email</span></span><span class="ct-copy-done" aria-hidden="true">Copied</span><span class="ct-copy-fail" aria-hidden="true">Copy failed</span>'
-
   el('hr', 'hud-rule ct-rule', undefined, panel)
 
-  const more = el('div', 'ct-more', undefined, panel)
-  el('p', 'hud-label ct-more-label', 'Other concepts', more)
-  const list = el('ul', 'ct-links', undefined, more)
-  list.id = 'ct-links'
-  for (const c of OTHER_CONCEPTS) {
-    const li = el('li', '', undefined, list)
-    const a = el('a', 'ct-link', undefined, li)
-    a.href = c.url
-    a.target = '_blank'
-    a.rel = 'noopener'
-    el('span', '', c.name, a)
-    el('span', 'ct-arr', '↗', a).setAttribute('aria-hidden', 'true')
-  }
-
   const foot = el('div', 'ct-foot', undefined, panel)
-  // compact cards (fit-4): 'Other concepts' folds into this toggle beside Back to top
-  const moreBtn = el('button', 'ct-top ct-more-btn', undefined, foot)
-  moreBtn.type = 'button'
-  moreBtn.setAttribute('aria-expanded', 'false')
-  moreBtn.setAttribute('aria-controls', list.id)
-  el('span', '', 'Other concepts', moreBtn)
-  el('span', 'ct-arr ct-more-arr', '+', moreBtn).setAttribute('aria-hidden', 'true')
   const top = el('button', 'ct-top', undefined, foot)
   top.type = 'button'
   el('span', '', 'Back to top', top)
@@ -179,38 +92,14 @@ export function buildHud(stage: HTMLElement): Hud {
     el('span', 'ct-nw', p, legal)
   })
 
-  const hud: Hud = { stage, probe, wrap, panel, title, mail, copyBtn, dirty: true, copiedAt: -1e9, hover: false, moreOpen: false }
-
-  moreBtn.addEventListener('click', () => {
-    hud.moreOpen = !hud.moreOpen
-    more.classList.toggle('is-open', hud.moreOpen)
-    moreBtn.setAttribute('aria-expanded', String(hud.moreOpen))
-    hud.dirty = true
-  })
+  const hud: Hud = { stage, probe, wrap, panel, title, dirty: true, copiedAt: -1e9, hover: false }
 
   const on = () => (hud.hover = true)
   const off = () => (hud.hover = false)
-  for (const n of [mail, copyBtn]) {
-    n.addEventListener('pointerenter', on)
-    n.addEventListener('pointerleave', off)
-    n.addEventListener('focus', on)
-    n.addEventListener('blur', off)
-  }
-
-  const live = liveRegion()
-  let resetT = 0
-  copyBtn.addEventListener('click', async () => {
-    const ok = await copyText(BRAND.email)
-    window.clearTimeout(resetT)
-    copyBtn.classList.toggle('is-copied', ok)
-    copyBtn.classList.toggle('is-failed', !ok)
-    if (ok) hud.copiedAt = performance.now()
-    live.textContent = ok ? `Copied ${BRAND.email} to the clipboard.` : `Copy failed. The address is ${BRAND.email}.`
-    resetT = window.setTimeout(() => {
-      copyBtn.classList.remove('is-copied', 'is-failed')
-      live.textContent = ''
-    }, 1900)
-  })
+  formBtn.addEventListener('pointerenter', on)
+  formBtn.addEventListener('pointerleave', off)
+  formBtn.addEventListener('focus', on)
+  formBtn.addEventListener('blur', off)
 
   const dirty = () => (hud.dirty = true)
   if (typeof ResizeObserver !== 'undefined') {
@@ -223,7 +112,7 @@ export function buildHud(stage: HTMLElement): Hud {
   return hud
 }
 
-const FIT = ['ct-fit-1', 'ct-fit-2', 'ct-fit-3', 'ct-fit-4', 'ct-fit-5'] as const
+const FIT = ['ct-fit-1', 'ct-fit-2', 'ct-fit-3', 'ct-fit-4'] as const
 
 /** Bottom of the chrome's brand lockup (CSS px), or -1 when it isn't there. */
 function brandBottom() {
@@ -244,11 +133,7 @@ export function measureHud(hud: Hud, W: number, H: number, allowFit = true): Hud
   // it (the payoff must stay big, so phones fold the card before it grows past this)
   const limit = portrait ? bandH * (H < 720 ? 0.6 : 0.62) : bandH
   if (allowFit) {
-    for (let i = 0; i < FIT.length && hud.panel.offsetHeight > limit; i++) {
-      // an open disclosure is the visitor's choice: never fold it away under them
-      if (FIT[i] === 'ct-fit-5' && hud.moreOpen) break
-      stage.classList.add(FIT[i])
-    }
+    for (let i = 0; i < FIT.length && hud.panel.offsetHeight > limit; i++) stage.classList.add(FIT[i])
   }
 
   // offset* ignore the reveal transform, so the measure is stable mid-reveal

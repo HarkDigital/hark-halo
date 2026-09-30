@@ -1,4 +1,4 @@
-import { BRAND, CONTACT, OTHER_CONCEPTS, PROCESS, SECTIONS, SECURITY, SERVICE_CTA, SERVICES, TESTIMONIALS, WORK, serviceUrl } from '../content'
+import { BRAND, CONTACT, PROCESS, SECTIONS, SECURITY, SERVICE_CTA, SERVICES, TESTIMONIALS, WORK, serviceUrl } from '../content'
 
 /*
  * The accessible layer. Each chapter's copy, as plain linear semantic HTML,
@@ -74,8 +74,6 @@ const COPY: Record<string, () => string> = {
     <h2 tabindex="0">${esc(CONTACT.title)}</h2>
     <p>${esc(CONTACT.body)}</p>
     <p><button type="button" data-contact-form>Send a message</button></p>
-    <p>Write to: <a href="${esc(CONTACT.href)}">${esc(BRAND.email)}</a> <button type="button" data-copy-email>Copy email address</button> <span data-copy-status aria-live="polite"></span></p>
-    <p>Other concepts: ${OTHER_CONCEPTS.map(c => ext(c.url, c.name)).join(' · ')}</p>
     <p>© ${new Date().getFullYear()} ${esc(BRAND.name)} · ${esc(BRAND.locale)}</p>
     <p><a href="#hero" data-land="hero">Back to top</a></p>`,
 }
@@ -111,34 +109,7 @@ export function buildChapterCopy(id: string, visible = false): HTMLElement | nul
       if (at != null) hark.land(section.id, true, at)
     }),
   )
-  div.querySelectorAll<HTMLButtonElement>('[data-copy-email]').forEach(btn =>
-    btn.addEventListener('click', async () => {
-      const status = div.querySelector<HTMLElement>('[data-copy-status]')
-      let ok = false
-      try {
-        await navigator.clipboard.writeText(BRAND.email)
-        ok = true
-      } catch {
-        const ta = document.createElement('textarea')
-        ta.value = BRAND.email
-        ta.setAttribute('readonly', '')
-        ta.style.position = 'fixed'
-        ta.style.opacity = '0'
-        document.body.appendChild(ta)
-        ta.select()
-        try {
-          ok = document.execCommand('copy')
-        } catch {
-          ok = false
-        }
-        ta.remove()
-      }
-      if (status) {
-        status.textContent = ok ? 'Copied' : `Copy failed — the address is ${BRAND.email}`
-        window.setTimeout(() => (status.textContent = ''), 2200)
-      }
-    }),
-  )
+
   return div
 }
 

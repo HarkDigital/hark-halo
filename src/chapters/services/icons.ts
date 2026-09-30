@@ -262,20 +262,12 @@ export function buildAtlas(cellW: number, cellH: number, weight = 1): Atlas {
         poly(g, [[cx, cy + sy * L], [cx, cy], [cx + sx * L, cy]])
       }
 
-      // ---- the plate number, top left, and the name, bottom left (R)
+      // ---- the name, bottom left (R); no numbers on the plates
       g.textBaseline = 'alphabetic'
       g.textAlign = 'left'
-      g.fillStyle = 'rgb(235,0,0)'
-      g.font = `700 ${Math.round(6.4 * u)}px ${label}`
-      spaced(g, svc.num, m + 3.2 * u, m + 9.6 * u, 0.2 * u)
-      const numW = [...svc.num].reduce((w, ch) => w + g.measureText(ch).width + 0.2 * u, 0)
       g.fillStyle = 'rgb(200,0,0)'
       g.font = `700 ${Math.round(3.5 * u)}px ${label}`
       spaced(g, svc.title.toUpperCase(), m + 3.2 * u, cellH - m - 2.6 * u, 0.36 * u)
-      // "/ 11" next to the number, fainter
-      g.fillStyle = 'rgb(120,0,0)'
-      g.font = `700 ${Math.round(3.5 * u)}px ${label}`
-      spaced(g, `/ ${String(n).padStart(2, '0')}`, m + 3.2 * u + numW + 2.2 * u, m + 9.6 * u, 0.3 * u)
 
       // ---- the icon: a soft glow pass (G), then the crisp line (R)
       const gs = (cellH * 0.44) / 100 // icon box ≈ 44% of the cell height

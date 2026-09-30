@@ -12,11 +12,12 @@ import { LOGO } from '../kit/palette'
  * shared with src/core/srContent.ts and the chrome's business names.
  */
 export const CHAPTERS: ChapterDef[] = [
-  { id: 'hero', label: 'Halo', length: 2.6, landing: 0, intro: 0.8, load: () => import('./hero/index') },
-  { id: 'work', label: 'Carousel', length: 7.0, landing: 0.12, intro: 0.06, load: () => import('./work/index') },
-  { id: 'services', label: 'Etched', length: 3.8, landing: 0.08, intro: 0.06, load: () => import('./services/index') },
-  { id: 'voices', label: 'Voiceprint', length: 3.2, landing: 0.08, intro: 0.06, load: () => import('./voices/index') },
-  { id: 'shield', label: 'Short circuit', length: 3.0, landing: 0.33, intro: 0.33, load: () => import('./shield/index') },
+  { id: 'hero', label: 'Halo', length: 2.6, landing: 0, intro: 0.02, load: () => import('./hero/index') },
+  // (arrives through the tube segue: the hero powers down into a line of neon, services powers up from it)
+  { id: 'services', label: 'Etched', length: 3.8, landing: 0.12, intro: 0.12, segue: 'tube', load: () => import('./services/index') },
   { id: 'process', label: 'Assembly', length: 2.2, landing: 0.17, intro: 0.12, load: () => import('./process/index') },
+  { id: 'work', label: 'Carousel', length: 7.0, landing: 0.12, intro: 0.06, load: () => import('./work/index') },
+  { id: 'voices', label: 'Voiceprint', length: 6.0, landing: 0.08, intro: 0.06, load: () => import('./voices/index') },
+  { id: 'shield', label: 'Short circuit', length: 3.0, landing: 0.33, intro: 0.33, load: () => import('./shield/index') },
   { id: 'contact', label: LOGO.kind === 'tube' ? 'Afterglow' : 'Thaw', length: 1.5, landing: 0.3, intro: 0.3, load: () => import('./contact/index') },
 ]

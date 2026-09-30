@@ -58,21 +58,43 @@
 .stage-shield .sh-step + .sh-step {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
-/* the step running: a line of light fills under it as the sign does it */
+/* the step running: a NEON TUBE under it fills with light as the sign does it — a
+   clear glass sleeve along the row, the gas inside it white-hot down the middle,
+   the lights' colours at its walls, glowing (the site's neon-in-glass) */
+.stage-shield .sh-step::before,
 .stage-shield .sh-step::after {
   content: '';
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 1px;
-  background: linear-gradient(90deg, var(--neon-a), var(--neon-b));
-  box-shadow: 0 0 8px var(--neon-a);
-  transform: scaleX(var(--p));
-  transform-origin: left center;
   opacity: 0;
   transition: opacity 0.3s ease;
+  pointer-events: none;
 }
+.stage-shield .sh-step::before {
+  left: 0;
+  right: 0;
+  bottom: -5px;
+  height: 9px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.02) 60%, rgba(255, 255, 255, 0.06));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+.stage-shield .sh-step::after {
+  left: 3px;
+  bottom: -2px;
+  width: calc((100% - 6px) * var(--p));
+  height: 3px;
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0) 5%, rgba(255, 255, 255, 0.95) 50%, rgba(255, 255, 255, 0) 95%),
+    linear-gradient(90deg, var(--neon-a), var(--neon-b));
+  box-shadow:
+    0 0 4px rgba(var(--neon-a-rgb, 255, 255, 255), 0.95),
+    0 0 12px rgba(var(--neon-a-rgb, 255, 255, 255), 0.6),
+    0 0 26px rgba(var(--neon-b-rgb, 255, 255, 255), 0.35);
+}
+.stage-shield .sh-step.is-on::before,
 .stage-shield .sh-step.is-on::after {
   opacity: 1;
 }

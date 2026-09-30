@@ -302,11 +302,14 @@ export default function create(): Chapter {
       const m = hud.metrics()
       const colCY = -((N - 1) / 2 - f) * SP
       const cy = lerp(colCY, 0, near)
-      const hw = lerp(TILE_W * 0.52, TILE_W * 0.56, near)
-      const hh = lerp(((N - 1) / 2) * SP + 0.3, TILE_H / 2 + SP + PART * 0.55, near)
+      // (portrait: frame the plate in view itself, its neighbours cropped at the edges, so it
+      // fills the width above the card; landscape keeps a neighbour either side in frame)
+      const tall = frame.height > frame.width
+      const hw = lerp(TILE_W * 0.52, TILE_W * (tall ? 0.53 : 0.56), near)
+      const hh = lerp(((N - 1) / 2) * SP + 0.3, tall ? TILE_H / 2 + 0.14 : TILE_H / 2 + SP + PART * 0.55, near)
       const hd = lerp(0.35, 0.45, near)
       // at the ends of the column, frame the plate a little off-centre toward the empty end
-      const bias = near * 0.16 * (1 - 2 * clamp(f / (N - 1)))
+      const bias = tall ? 0 : near * 0.16 * (1 - 2 * clamp(f / (N - 1)))
       const push = 1 + 0.06 * (1 - glide(local / 0.07)) - 0.05 * louvreOut
       computePose(frame, m, cy, hw, hh, hd, bias, push, lerp(colCY, 0, open))
 

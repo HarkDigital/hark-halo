@@ -14,9 +14,11 @@ import './hero.css'
  * frosted glass, lit from behind by a light card and two neon tubes,
  * floating over a black mirror floor.
  *
- *   0.00–0.10  INTRO   the mark large, centred-right, a slight three-quarter;
- *                      a slow turntable sway (±12°) and a soft sheen along
- *                      the bevels every ~8 s. After the loader (time-based,
+ *   0.00–0.10  INTRO   the headline first: "Make the internet listen.", the
+ *                      manifesto, the two CTAs and the scroll hint on the
+ *                      left; the mark right of centre (upper half on
+ *                      portrait), front-on-ish, a slow turntable sway (±5°)
+ *                      and a soft sheen along the bevels every ~8 s. After the loader (time-based,
  *                      ~1.8 s): the backlight fades up from black, the frost
  *                      lights from the centre outward, the two neon tubes
  *                      strike one after the other (a single stutter each; a
@@ -28,12 +30,11 @@ import './hero.css'
  *                      along a light strip behind the glass: razor sharp in
  *                      the window, a soft frosted bar outside it, a
  *                      crystalline melt front at its edge.
- *   0.56–0.93  PAYOFF  pull back; the mark settles right of centre (upper
- *                      half on portrait), front-on-ish; tagline + CTAs.
- *   0.93–1.00  OUT     the camera drifts into the frosted face as the breath
- *                      cut fogs the frame. Calm (reduced motion / Motion
- *                      off): the camera holds the payoff pose and the
- *                      engine's cut fades through black.
+ *   0.56–0.86  SETTLE  pull back; the mark alone, centred and square to you.
+ *   0.86–1.00  SEGUE   the neon surges and the camera eases in while the
+ *                      engine's TUBE SEGUE (services arrives with `segue:
+ *                      'tube'`) squashes the picture into one line of neon,
+ *                      then a point: services powers up out of it.
  *
  * Every pose derives from `local`; frame.time only drives the sway and the
  * light sweep (none under reduced motion; frozen with Motion off); the reveal
@@ -84,14 +85,16 @@ interface Fit {
   /** mark width as a fraction of the viewport width */
   wf: number
 }
-const FIT: Record<'land' | 'port', Record<'intro' | 'pay', Fit>> = {
+const FIT: Record<'land' | 'port', Record<'intro' | 'end', Fit>> = {
   land: {
-    intro: { sx: 0.3, sy: 0.07, hf: 0.6, wf: 0.42 },
-    pay: { sx: 0.42, sy: 0.05, hf: 0.5, wf: 0.34 },
+    // beside the headline block
+    intro: { sx: 0.42, sy: 0.05, hf: 0.5, wf: 0.34 },
+    // alone, centred: the picture the segue squashes into a line
+    end: { sx: 0, sy: 0.02, hf: 0.6, wf: 0.6 },
   },
   port: {
-    intro: { sx: 0, sy: 0.3, hf: 0.4, wf: 0.8 },
-    pay: { sx: 0, sy: 0.36, hf: 0.34, wf: 0.72 },
+    intro: { sx: 0, sy: 0.42, hf: 0.3, wf: 0.66 },
+    end: { sx: 0, sy: 0.05, hf: 0.42, wf: 0.84 },
   },
 }
 
@@ -102,7 +105,6 @@ export default function create(): Chapter {
   let mobile = false
 
   // DOM
-  let intro: HTMLElement
   let payoff: HTMLElement
   let title: HTMLElement
 
@@ -145,15 +147,15 @@ export default function create(): Chapter {
   const buildKeys = (portrait: boolean, aspect: number, markAspect: number) => {
     const F = portrait ? FIT.port : FIT.land
     const dIntro = Math.log(fitDist(F.intro, 30, aspect, markAspect))
-    const dPay = Math.log(fitDist(F.pay, 30, aspect, markAspect))
+    const dEnd = Math.log(fitDist(F.end, 30, aspect, markAspect))
     // close-ups back off a little on narrow screens
     const m = portrait ? Math.log(1.35) : 0
     const k = (at: number, hold: boolean, v: number[]) => ({ at, hold, v })
     keys.length = 0
     keys.push(
-      // intro: the mark at a slight three-quarter, a touch below eye level
-      k(0.0, true, [0, 0, 0, 0.0, 0.07, dIntro, 30, F.intro.sx, F.intro.sy, -0.3, 0]),
-      k(0.075, true, [0, 0, 0, 0.0, 0.07, dIntro, 30, F.intro.sx, F.intro.sy, -0.3, 0]),
+      // intro: beside the headline, front-on-ish, a touch below eye level
+      k(0.0, true, [0, 0, 0, 0.0, 0.065, dIntro, 30, F.intro.sx, F.intro.sy, -0.2, 0]),
+      k(0.075, true, [0, 0, 0, 0.0, 0.065, dIntro, 30, F.intro.sx, F.intro.sy, -0.2, 0]),
       // 01 polished edge: grazing along the upper loop's bevel from above-left
       k(0.2, false, [U(-0.12), U(0.3), U(0.06), -0.7, 0.26, Math.log(2.6) + m, 26, 0, 0, -0.12, 0.02]),
       // …gliding along the top of the mark to the right
@@ -162,11 +164,11 @@ export default function create(): Chapter {
       k(0.42, false, [U(0.22), U(-0.04), U(0.06), 0.16, 0.04, Math.log(2.6) + m, 28, 0, 0, 0.04, 0]),
       // 03 thaw: the centre of the face, a clear window gliding over it
       k(0.52, false, [U(0.14), U(-0.13), U(0.06), -0.06, 0.02, Math.log(2.3) + m, 28, 0, 0, -0.04, 0]),
-      // payoff: pulled back, right of centre (upper half on portrait), front-on-ish
-      k(0.65, true, [0, 0, 0, 0.0, 0.065, dPay, 30, F.pay.sx, F.pay.sy, -0.2, 0]),
-      k(0.925, true, [0, 0, 0, 0.0, 0.065, dPay, 30, F.pay.sx, F.pay.sy, -0.2, 0]),
-      // out: into the frosted face
-      k(1.0, false, [U(0.08), U(0.08), 0, 0.0, 0.03, Math.log(0.9), 30, 0.05, 0.04, -0.06, 0]),
+      // settle: pulled back, the mark alone, centred and square to you
+      k(0.65, true, [0, 0, 0, 0.0, 0.04, dEnd, 30, F.end.sx, F.end.sy, 0, 0]),
+      k(0.86, true, [0, 0, 0, 0.0, 0.04, dEnd, 30, F.end.sx, F.end.sy, 0, 0]),
+      // segue: easing in while the picture powers down into a line of neon
+      k(1.0, false, [0, 0, 0, 0.0, 0.03, dEnd + Math.log(0.84), 30, F.end.sx, F.end.sy, 0, 0]),
     )
     // Catmull-Rom tangents (per unit local); zero at holds and at the ends
     tang.length = 0
@@ -258,16 +260,11 @@ export default function create(): Chapter {
       group.add(set.card, set.floor, set.pivot, set.reflection, haloRefl.root)
 
       // ---- DOM
-      intro = el('div', 'hf-intro', undefined, ctx.stage)
-      el('p', 'hud-eyebrow', MICROCOPY.signalEyebrow, intro)
-      el('p', 'hud-body hf-manifesto', BRAND.manifesto, intro)
-      const hint = el('p', 'hud-label hf-hint', undefined, intro)
-      el('span', 'hf-hint-line', undefined, hint).setAttribute('aria-hidden', 'true')
-      el('span', '', MICROCOPY.scrollHint, hint)
-
+      // the headline first, the manifesto, the CTAs and the scroll hint under it
       payoff = el('div', 'hf-payoff', undefined, ctx.stage)
       const inner = el('div', 'hf-payoff-inner', undefined, payoff)
       title = rise(el('h1', 'hud-title hf-title', undefined, inner), 'Make the internet <em>listen.</em>')
+      el('p', 'hud-body hf-manifesto', BRAND.manifesto, inner)
       const ctas = el('div', 'hf-ctas', undefined, inner)
       const see = el('button', 'hud-btn', 'See the work', ctas)
       see.type = 'button'
@@ -279,6 +276,9 @@ export default function create(): Chapter {
         e.preventDefault()
         window.__hark.land('contact')
       })
+      const hint = el('p', 'hud-label hf-hint', undefined, inner)
+      el('span', 'hf-hint-line', undefined, hint).setAttribute('aria-hidden', 'true')
+      el('span', '', MICROCOPY.scrollHint, hint)
 
       const onReveal = () => {
         if (revealAt < 0) revealAt = now()
@@ -325,10 +325,12 @@ export default function create(): Chapter {
         keyH = frame.height
         buildKeys(portrait, aspect, s.markAspect)
       }
-      sample(still ? Math.min(local, 0.925) : local)
+      sample(still ? Math.min(local, 0.86) : local)
       const macro = smoothstep(0.08, 0.2, local) * (1 - smoothstep(0.52, 0.64, local))
       const payW = smoothstep(0.56, 0.66, local)
-      const outW = smoothstep(0.925, 1, local)
+      const outW = smoothstep(0.86, 1, local)
+      // the segue: the neon surges as the picture powers down
+      const surge = smoothstep(0.84, 0.96, local)
       const dist = Math.exp(val[LD])
       fov = val[FOV]
       const tanV = Math.tan(THREE.MathUtils.degToRad(fov / 2))
@@ -456,7 +458,7 @@ export default function create(): Chapter {
       const current = TUBE ? Math.sin(Math.PI * curP) : 0
       for (let i = 0; i < s.neon.length; i++) {
         for (const n of s.neon[i]) {
-          n.on.value = rNeon[i] * (1 - 0.5 * outW)
+          n.on.value = rNeon[i] * (1 + 0.6 * surge)
           if (TUBE) {
             n.k.main.tube = 3.2
             n.k.main.glow = 0.2
@@ -482,14 +484,14 @@ export default function create(): Chapter {
         }
         const w = s.walls[i]
         if (w) {
-          w.uniforms.uOn.value = rNeon[i] * (1 - 0.5 * outW)
+          w.uniforms.uOn.value = rNeon[i] * (1 + 0.6 * surge)
           w.uniforms.uK.value = 0.42 * lerp(1, 0.8, macro)
         }
       }
       // the reflection: the room's view only (the glass never sees it), dimmer
       for (let i = 0; i < s.neonRefl.parts.length; i++) {
         for (const n of s.neonRefl.parts[i]) {
-          n.on.value = rNeon[i] * (1 - 0.5 * outW) * (portrait ? (TUBE ? 0.05 : 0.12) : 1)
+          n.on.value = rNeon[i] * (portrait ? (TUBE ? 0.05 : 0.12) : 1)
           n.k.main.tube = 0.9
           n.k.main.glow = 0.3
           n.k.trans.tube = 0
@@ -537,14 +539,13 @@ export default function create(): Chapter {
       pp.bloomThreshold = 1.6
       pp.vignette = 0.62
       pp.grain = 0.016
-      pp.frost = still ? 0 : 0.2 * smoothstep(0.955, 1, local)
+      pp.frost = 0
 
       // ---- DOM
-      reveal(intro, 1 - smoothstep(0.06, 0.1, local))
-      intro.classList.toggle('is-in', revealAt >= 0 && since > (reduced ? 0 : 0.6))
-      reveal(payoff, smoothstep(0.6, 0.66, local) * (1 - smoothstep(0.93, 0.965, local)), 0)
-      // the headline and its CTAs leave together (with the payoff's fade)
-      setRise(title, local > 0.61 && local < 0.965)
+      // the headline block: in with the reveal, out as the camera travels in
+      reveal(payoff, 1 - smoothstep(0.06, 0.1, local), 0)
+      payoff.classList.toggle('is-in', revealAt >= 0 && since > (reduced ? 0 : 0.5))
+      setRise(title, revealAt >= 0 && since > (reduced ? 0 : 0.2) && local < 0.1)
     },
 
     camera(_local: number, _frame: Frame, out: CameraPose) {
