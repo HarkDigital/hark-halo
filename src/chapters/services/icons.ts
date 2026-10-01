@@ -224,6 +224,13 @@ function spaced(g: Ctx, text: string, x: number, y: number, track: number) {
   }
 }
 
+/** the width `spaced` draws `text` at */
+function spacedWidth(g: Ctx, text: string, track: number) {
+  let w = -track
+  for (const ch of text) w += g.measureText(ch).width + track
+  return w
+}
+
 export const COLS = 3
 export const ROWS = Math.ceil(SERVICES.length / COLS)
 
@@ -235,9 +242,11 @@ export interface Atlas {
   draw: () => void
   /**
    * the Learn More pill, the same in every cell, as fractions of the cell
-   * (y down): centre x, y and half extents w, h (a capsule: radius = h)
+   * (y down): centre x, y and half extents w, h (a capsule: radius = h); `clear`
+   * (in cell heights) is the frost left clear between it and the face's right and
+   * bottom edges: its halo must fade out within that
    */
-  pill: { x: number; y: number; w: number; h: number }
+  pill: { x: number; y: number; w: number; h: number; clear: number }
   /** uv rectangle of cell i: [u0, v0, u1, v1] (v up, CanvasTexture flipY) */
   rect: (i: number) => [number, number, number, number]
 }
@@ -254,7 +263,7 @@ export function buildAtlas(cellW: number, cellH: number, weight = 1): Atlas {
   const g = canvas.getContext('2d')!
   // the labels: the site grotesk, bold (no monospace anywhere)
   const label = "'Schibsted Grotesk Variable', 'Schibsted Grotesk', system-ui, sans-serif"
-  const pill = { x: 0.8, y: 0.9, w: 0.15, h: 0.06 }
+  const pill = { x: 0.8, y: 0.86, w: 0.15, h: 0.06, clear: 0.07 }
 
   const draw = () => {
     g.globalCompositeOperation = 'source-over'
@@ -272,43 +281,65 @@ export function buildAtlas(cellW: number, cellH: number, weight = 1): Atlas {
       g.translate(ox, oy)
       const u = cellH / 100 // layout unit: 1% of the cell height
 
-      // ---- registration marks: hairline corners (R); the button takes the bottom right
-      g.strokeStyle = 'rgb(150,0,0)'
-      g.lineWidth = Math.max(1, 0.32 * u * weight)
-      g.lineCap = 'butt'
+      // ---- the bottom row: the name (left) and the button (right), level. The button
+      // sits `clear` in from the face's right and bottom edges, the room its halo (deck.ts)
+      // needs to fade out before an edge on every side; the row, and the bottom-left mark
+      // the name is registered to, sit that much higher than the top marks
       const m = 6.5 * u
       const L = 5 * u
-      for (const [cx, cy, sx, sy] of [
-        [m, m, 1, 1],
-        [cellW - m, m, -1, 1],
-        [m, cellH - m, 1, -1],
-      ]) {
-        poly(g, [[cx, cy + sy * L], [cx, cy], [cx + sx * L, cy]])
-      }
-
-      // ---- the name, bottom left (R); no numbers on the plates
-      g.textBaseline = 'alphabetic'
-      g.textAlign = 'left'
-      g.fillStyle = 'rgb(200,0,0)'
-      g.font = `700 ${Math.round(3.5 * u)}px ${label}`
-      spaced(g, svc.title.toUpperCase(), m + 3.2 * u, cellH - m - 2.6 * u, 0.36 * u)
-
-      // ---- the button, bottom right, level with the name, like the site's white pill
-      // buttons: a soft bloom of the pill in the frost (G), and its words and arrow (B),
-      // bold, as the stencil the face shader lays over the lit pill it draws
+      const clear = 7.2 * u
       g.font = `700 ${Math.round(5.3 * u)}px ${label}`
       const words = 'Learn More'
       const tw = g.measureText(words).width
       const aw = 3.9 * u // the arrow
       const bh = 12.6 * u
       const bw = 5.4 * u + tw + 2.7 * u + aw + 5.0 * u
-      const bx = cellW - m - 1.6 * u - bw
-      const cy = cellH - m - 3.9 * u // the name's middle
+      const bx = cellW - clear - bw
+      const cy = cellH - clear - bh / 2 // the row's middle
       const by = cy - bh / 2
       pill.x = (bx + bw / 2) / cellW
       pill.y = cy / cellH
       pill.w = bw / 2 / cellW
       pill.h = bh / 2 / cellH
+      pill.clear = clear / cellH
+      // the name: big tracked caps, cap height centred on the row
+      const nameSize = Math.round(5 * u)
+      g.font = `700 ${nameSize}px ${label}`
+      const capH = g.measureText('H').actualBoundingBoxAscent || 0.7 * nameSize
+      const nx = m + 3.2 * u
+      const markY = cy + capH / 2 + 2.6 * u
+
+      // ---- registration marks: hairline corners (R); the button takes the bottom right
+      g.strokeStyle = 'rgb(150,0,0)'
+      g.lineWidth = Math.max(1, 0.32 * u * weight)
+      g.lineCap = 'butt'
+      for (const [mx, my, sx, sy] of [
+        [m, m, 1, 1],
+        [cellW - m, m, -1, 1],
+        [m, markY, 1, -1],
+      ]) {
+        poly(g, [[mx, my + sy * L], [mx, my], [mx + sx * L, my]])
+      }
+
+      // ---- the name, bottom left (R); no numbers on the plates. The longest names
+      // shrink to end clear of the button and its halo; the rest are all one size
+      g.textBaseline = 'alphabetic'
+      g.textAlign = 'left'
+      g.fillStyle = 'rgb(200,0,0)'
+      const name = svc.title.toUpperCase()
+      const room = bx - 8 * u - nx
+      let size = nameSize
+      const nw = spacedWidth(g, name, 0.09 * size)
+      if (nw > room) {
+        size = nameSize * (room / nw)
+        g.font = `700 ${size.toFixed(2)}px ${label}`
+      }
+      spaced(g, name, nx, cy + (capH * size) / nameSize / 2, 0.09 * size)
+
+      // ---- the button, like the site's white pill buttons: a soft bloom of the pill in
+      // the frost (G), and its words and arrow (B), bold, as the stencil the face shader
+      // lays over the lit pill it draws
+      g.font = `700 ${Math.round(5.3 * u)}px ${label}`
       g.fillStyle = 'rgb(0,90,0)'
       g.shadowColor = 'rgb(0,200,0)'
       g.shadowBlur = 4 * u

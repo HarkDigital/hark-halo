@@ -80,13 +80,13 @@ const PLATE_VERT = /* glsl */ `
  *
  *   uBtn   x: the pill's light (0 … ~0.8), y: hover (0 … 1)
  *   uPill  the capsule in plate units: centre xy, half extents zw (radius = w)
- *   uHalf  the face's half extents (plate units)
+ *   uHalo  how far out from the pill its halo reaches (plate units): x idle, y hover
  */
 const FACE_FRAG = /* glsl */ `
   uniform sampler2D uMap;
   uniform vec3 uColor;
   uniform float uBright, uSweep, uSweepAmt;
-  uniform vec2 uBtn, uHalf;
+  uniform vec2 uBtn, uHalo;
   uniform vec4 uPill;
   varying vec2 vUv;
   varying vec2 vP;
@@ -113,12 +113,14 @@ const FACE_FRAG = /* glsl */ `
     float core = uBtn.x * (0.95 + 0.17 * hov) + 0.12 * sw;
     float rim = exp(-max(-d, 0.0) / 0.0045) * (0.06 * on + 0.2 * hov + 0.25 * sw);
     vec3 body = min(vec3(core) + tint * rim, vec3(0.84)) * (1.0 - ink);
-    // the halo: light spilling round the pill onto the frost (wider on hover); it lies
-    // OVER the frost a little rather than adding to it (the sum stays under the bloom
-    // threshold too), and fades before the face's own edges so it never ends in a line
-    vec2 e = uHalf - abs(vP);
-    float amp = min(0.08 * on + 0.4 * hov + 0.25 * sw, 0.55);
-    float hs = exp(-max(d, 0.0) / (0.014 + 0.012 * hov)) * smoothstep(0.0, 0.04, min(e.x, e.y));
+    // the halo: light spilling round the pill onto the frost, the same on every side and
+    // wider on hover; it lies OVER the frost a little rather than adding to it (the sum
+    // stays under the bloom threshold too). It comes to nothing, value and slope, uHalo
+    // out from the pill, and the atlas leaves more clear frost than that between the pill
+    // and the face's edges, so it fades out all round and never meets an edge
+    float amp = min(0.08 * on + 0.44 * hov + 0.25 * sw, 0.6);
+    float hx = clamp(max(d, 0.0) / mix(uHalo.x, uHalo.y, clamp(hov, 0.0, 1.0)), 0.0, 1.0);
+    float hs = pow(1.0 - hx, 2.5);
     vec3 col = lines + inside * body + (1.0 - inside) * tint * amp * hs;
     float lit = smoothstep(0.0, 0.3, uBtn.x);
     float a = inside * mix(0.8, 0.93, ink) * lit + (1.0 - inside) * 0.9 * amp * hs;
@@ -216,9 +218,14 @@ export function buildDeck(mobile: boolean, envMap: THREE.Texture | null): Deck {
   tex.magFilter = THREE.LinearFilter
   // the Learn More pill in plate units (shared by every face; it moves when the font lands)
   const pillU = { value: new THREE.Vector4() }
+  // …and how far its halo reaches (idle, hover): within the clear frost the atlas leaves
+  // between the pill and the face's edges, so the halo has faded out before an edge
+  const haloU = { value: new THREE.Vector2() }
   const placePill = () => {
     const p = atlas.pill
     pillU.value.set((p.x - 0.5) * pw, (0.5 - p.y) * ph, p.w * pw, p.h * ph)
+    const reach = 0.95 * p.clear * ph
+    haloU.value.set(0.55 * reach, reach)
   }
   placePill()
   const redraw = () => {
@@ -262,7 +269,7 @@ export function buildDeck(mobile: boolean, envMap: THREE.Texture | null): Deck {
         uSweepAmt: { value: 0 },
         uBtn: { value: new THREE.Vector2() },
         uPill: pillU,
-        uHalf: { value: new THREE.Vector2(pw / 2, ph / 2) },
+        uHalo: haloU,
       },
       vertexShader: PLATE_VERT,
       fragmentShader: FACE_FRAG,
