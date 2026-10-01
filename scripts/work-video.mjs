@@ -1,7 +1,7 @@
 // A portfolio site's preview video: a smooth scroll down its homepage.
 //
 //   node scripts/work-video.mjs --id=jomar --url=https://jomarcorp.com/ [--hide=".cookie,#popup"]
-//                               [--w=1600] [--travel=3500] [--scrub] [--keep]
+//                               [--w=1600] [--travel=3500] [--scrub[=tile]] [--keep]
 //
 // Records --w × 0.625·w frames (default 1280×800) while scrolling the real page (fixed headers stay
 // put, vh units stay true): a 0.8 s hold on the hero, an eased scroll of up to
@@ -43,6 +43,10 @@ const DEFAULT_HIDE = [
   '#hark-wpe-cookie-consent', '.pum-overlay', '#moove_gdpr_cookie_info_bar', '.cmplz-cookiebanner',
   '#wm-ipp-base', '#wm-ipp', '#donato', '.wm-ipp-base',
 ].join(',')
+// Frames are full-range sRGB JPEGs: encode limited-range BT.601 and tag it fully
+// (primaries, transfer, matrix). Untagged, Chrome guesses BT.709 for HD sizes (800+
+// lines), and its software decoder reads full range as limited: grey purples, crushed blacks.
+const COLOR = 'in_range=pc:out_range=tv:in_color_matrix=bt601:out_color_matrix=bt601,setparams=range=tv:colorspace=smpte170m:color_primaries=smpte170m:color_trc=smpte170m'
 const ease = t => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 
 fs.rmSync(tmp, { recursive: true, force: true })
@@ -90,20 +94,28 @@ try {
 
 execFileSync('ffmpeg', [
   '-y', '-loglevel', 'error', '-framerate', String(FPS), '-i', path.join(tmp, 'f%04d.jpg'),
-  '-vf', 'scale=800:500:flags=lanczos', '-c:v', 'libx264', '-preset', 'slower', '-crf', '31',
+  '-vf', `scale=800:500:flags=lanczos:${COLOR}`, '-c:v', 'libx264', '-preset', 'slower', '-crf', '31',
   '-pix_fmt', 'yuv420p', '-movflags', '+faststart', '-an', out,
 ])
 console.log(`[${args.id}] ${path.relative(root, out)} (${Math.round(fs.statSync(out).size / 1024)} KB)`)
-// --scrub: also an all-keyframe copy for scroll-scrubbing (the story's Work carousel sets
-// currentTime from the scroll; every frame a keyframe, so each seek decodes one frame)
+// --scrub[=leaf|tile]: also copies for scroll-scrubbing (the story's Work carousel sets
+// currentTime from the scroll), at the widths its still is drawn at: a featured leaf
+// (default) 1280 on desktop and 800 on phones (scrub/m/), a halo tile 720 and 480. A
+// keyframe every 12 frames (half a second): a seek decodes at most 11 frames, and at
+// CRF 25 the scroll stays sharp (~2.5–4 MB for a desktop leaf).
 if (args.scrub) {
-  const scrub = path.join(root, 'public', 'work', 'video', 'scrub', `${args.id}.mp4`)
-  fs.mkdirSync(path.dirname(scrub), { recursive: true })
-  execFileSync('ffmpeg', [
-    '-y', '-loglevel', 'error', '-framerate', String(FPS), '-i', path.join(tmp, 'f%04d.jpg'),
-    '-vf', 'scale=800:500:flags=lanczos', '-c:v', 'libx264', '-preset', 'slower', '-crf', '32',
-    '-g', '1', '-keyint_min', '1', '-bf', '0', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', '-an', scrub,
-  ])
-  console.log(`[${args.id}] ${path.relative(root, scrub)} (${Math.round(fs.statSync(scrub).size / 1024)} KB)`)
+  const tile = args.scrub === 'tile'
+  for (const [dir, sw] of [['scrub', tile ? 720 : 1280], ['scrub/m', tile ? 480 : 800]]) {
+    const sh = Math.round(sw * 0.625)
+    const scrub = path.join(root, 'public', 'work', 'video', dir, `${args.id}.mp4`)
+    fs.mkdirSync(path.dirname(scrub), { recursive: true })
+    execFileSync('ffmpeg', [
+      '-y', '-loglevel', 'error', '-framerate', String(FPS), '-i', path.join(tmp, 'f%04d.jpg'),
+      '-vf', `scale=${sw}:${sh}:flags=lanczos:${COLOR}`, '-c:v', 'libx264', '-preset', 'slower', '-crf', '25',
+      '-g', '12', '-keyint_min', '12', '-bf', '0', '-level', '3.2',
+      '-pix_fmt', 'yuv420p', '-movflags', '+faststart', '-an', scrub,
+    ])
+    console.log(`[${args.id}] ${path.relative(root, scrub)} (${Math.round(fs.statSync(scrub).size / 1024)} KB)`)
+  }
 }
 if (!args.keep) fs.rmSync(tmp, { recursive: true, force: true })

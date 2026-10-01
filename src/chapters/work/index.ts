@@ -370,7 +370,7 @@ class Work implements Chapter {
     }
     const print = (u: FaceUniforms, id: string, featured: boolean, stillW: number, hold: [number, number], look: number, frameAt: (l: number) => number): Print => ({
       u,
-      s: this.scrubOn ? new Scrub(scrubUrl(id), hooks) : null,
+      s: this.scrubOn ? new Scrub(scrubUrl(id, this.mobile), hooks) : null,
       still: null,
       placeholder: u.uShot.value,
       stillW,
@@ -889,7 +889,8 @@ class Work implements Chapter {
   /**
    * One download at a time: what is needed now, then what is coming either
    * way, then the featured in order (leaf 01's from the reveal, where the nav
-   * lands; the rest once the story is at or beside this chapter).
+   * lands; the rest once the story is at or beside this chapter), then the
+   * halo's tiles in order (so a slower connection has them before their rows).
    */
   private pumpFetch() {
     if (!this.scrubOn || this.fetching) return
@@ -899,7 +900,7 @@ class Work implements Chapter {
     this.prints.forEach((p, i) => {
       if (p.s!.state !== 'idle') return
       const d = holdDist(l, p)
-      const key = d <= p.look ? d : p.featured && (this.warm || (i === 0 && this.revealed)) ? 1 + i : Infinity
+      const key = d <= p.look ? d : p.featured && (this.warm || (i === 0 && this.revealed)) ? 1 + i : this.warm ? 100 + i : Infinity
       if (key < bestKey) {
         bestKey = key
         best = p

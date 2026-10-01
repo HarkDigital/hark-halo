@@ -5,7 +5,9 @@ import * as THREE from 'three'
  * scroll picks (the Work carousel's leaves and tiles).
  *
  * The videos (public/work/video/scrub/<id>.mp4, scripts/work-video.mjs
- * --scrub) are 7 s at 24 fps, every frame a keyframe, no audio: a 0.8 s hold
+ * --scrub) are 7 s at 24 fps, no audio, a keyframe every 12 frames (a seek
+ * decodes at most 11), 1280×800 for a leaf and 720×450 for a tile (800 / 480
+ * on phones), limited-range BT.601, fully tagged: a 0.8 s hold
  * on the site's hero, an eased 5.4 s scroll down its homepage, a 0.8 s hold.
  * The chapter says which frame it wants (from `local`, so scrolling back
  * plays it back); this file gets that frame onto the GPU without janking:
@@ -51,8 +53,8 @@ let vfcQuiet = false
 
 /**
  * Whether this device should scrub videos at all: not with Data Saver on or on
- * a slow connection (each featured site's video is ~1.3 MB), and only where an
- * H.264 (High, level 3.0: what scripts/work-video.mjs writes) MP4 can play.
+ * a slow connection (a featured site's video is ~2.5–4 MB on desktop, a tile's ~1 MB), and
+ * only where an H.264 (High, level 3.2: what scripts/work-video.mjs writes) MP4 can play.
  * Everything else keeps the stills.
  */
 export function scrubAllowed(): boolean {
@@ -61,7 +63,7 @@ export function scrubAllowed(): boolean {
   if (c?.saveData) return false
   if (c?.effectiveType && /(^|-)(2g|3g)$/.test(c.effectiveType)) return false
   try {
-    return document.createElement('video').canPlayType('video/mp4; codecs="avc1.64001E"') !== ''
+    return document.createElement('video').canPlayType('video/mp4; codecs="avc1.640020"') !== ''
   } catch {
     return false
   }
@@ -372,5 +374,9 @@ export class Scrub {
   }
 }
 
-/** A site's scrub video: public/work/video/scrub/<id>.mp4 (scripts/work-video.mjs --scrub). */
-export const scrubUrl = (id: string) => `${import.meta.env.BASE_URL}work/video/scrub/${id}.mp4`
+/**
+ * A site's scrub video (scripts/work-video.mjs --scrub): public/work/video/scrub/<id>.mp4,
+ * or on phones scrub/m/<id>.mp4, sized to the smaller stills they draw (800 / 480 wide:
+ * the phone canvas renders a leaf about 485 px wide, so more is only download).
+ */
+export const scrubUrl = (id: string, small = false) => `${import.meta.env.BASE_URL}work/video/scrub/${small ? 'm/' : ''}${id}.mp4`
