@@ -1,12 +1,13 @@
 import * as THREE from 'three'
 import type { CameraPose, Chapter, ChapterContext, Frame } from '../../core/types'
-import { el, rise, setRise } from '../../core/dom'
+import { el, rise } from '../../core/dom'
 import { clamp, smoothstep } from '../../core/math'
 import { nextFrame } from '../../core/yield'
 import { G } from '../../kit/glass'
 import { SECTIONS, TESTIMONIALS } from '../../content'
 import { buildFloor, buildPane, buildWire, setWireRadius, type Pane, type Wire } from './scene'
 import { SPEECH_SAMPLES } from './voiceprint'
+import { WordScrub, riseEase, wordRamp } from './scrub'
 import './voices.css'
 
 /*
@@ -20,14 +21,28 @@ import './voices.css'
  * speaker small beneath it; scrolling to the next voice morphs the tube into
  * the next speaker's print and shifts its colour (cyan → violet → magenta …).
  *
- *   0.00–0.12  intro: the line lies flat and dark: “They talk.” (0.012). It
- *              catches (0.036–0.056) and lights up: “We Listen.” (0.044);
- *              settled 0.06 (heading) and 0.08 (landing), clear of the cut
+ *   0.00–0.12  intro: the line lies flat and dark: “They talk.” rises in
+ *              (0.014–0.036). It catches (0.036–0.056) and lights up: “We
+ *              Listen.” (0.040–0.058); settled 0.06 (heading) and 0.08
+ *              (landing), clear of the cut; both leave 0.097–0.117
  *   0.12–0.93  eight voices (0.101 each): hold (the quote, the live line; a
  *              soft playhead reads along the voice as you scroll) → around
  *              each boundary (±0.021) the line quiets, drifts and re-forms as
  *              the next voice while the quote swaps
  *   0.93–1.00  the last voice finishes: the line settles flat for the cut
+ *
+ * The words are scrubbed by scroll, not played on a timer (scrub.ts): within
+ * each voice's span (fractions of it, the re-forms at either end ≈ 0.21 each)
+ *   0.03–0.42  the quote rises in word by word, in reading order (fully in
+ *              ~36% into the hold, so it's read while the visitor scrolls on)
+ *   0.30–0.47  the speaker, then the company, follow it in
+ *   0.79–0.97  as the line starts to re-form, the words leave, last first
+ *              (the last voice leaves with the line settling, 0.926–0.948)
+ * so scrolling back plays it all in reverse, and into a voice from below its
+ * words come back in reading order. Calm (Motion off / reduced motion): each
+ * voice is set whole and swaps with a quick scroll-driven fade. A fast pass (a
+ * pip landing runs the whole chapter in ~1 s, or a fling) fades the words out
+ * whole until the scroll slows, so the quotes don't strobe past (GATE_*).
  *
  * The pane is locked to the DOM card the quote is set in: the camera looks
  * square-on at it, and every layout the pane is rebuilt to the card's size.
@@ -41,9 +56,13 @@ const SPAN = (B1 - B0) / N
 const HYST = 0.004
 /** the line re-forms over ±MORPH (local) around each boundary between voices */
 const MORPH = 0.021
-/** intro beats */
-const TITLE_A = 0.012
-const TITLE_B = 0.044
+/** intro beats: each title line's words rise in over [A0, A1]; both leave over TITLE_OUT */
+const TITLE_A0 = 0.014
+const TITLE_A1 = 0.036
+const TITLE_B0 = 0.04
+const TITLE_B1 = 0.058
+const TITLE_OUT0 = B0 - 0.023
+const TITLE_OUT1 = B0 - 0.003
 const IGN_A = 0.036
 const IGN_B = 0.056
 /** the stutter as the gas catches */
@@ -53,6 +72,32 @@ const TALK_B = B0 - 0.004
 /** out beat: the voice finishes */
 const OUT_A = B1 + 0.004
 const OUT_B = 0.975
+
+/** each voice's words, in fractions of its span (see the header) */
+const QUOTE_IN0 = 0.03
+const QUOTE_IN1 = 0.42
+const CREDIT_IN0 = 0.3
+const CREDIT_IN1 = 0.47
+const WORDS_OUT0 = 0.79
+const WORDS_OUT1 = 0.97
+/** the last voice leaves with the line settling flat (local) */
+const LAST_OUT0 = B1 - 0.004
+const LAST_OUT1 = B1 + 0.018
+/** calm: how quickly a whole voice fades in / out (fraction of its span) */
+const CALM_FADE = 0.08
+/**
+ * Fast passes keep the words down. A pip landing runs the whole chapter in
+ * ~1 s (up to ~13 vh/s), a fling as fast: scrubbed straight from local, every
+ * quote would flick past for a frame or two. Above GATE_LO vh/s (|frame.velocity|,
+ * already damped) the words dim, gone by GATE_HI (about where the engine's own
+ * fling dim is full), and they come back over GATE_RISE s only once the scroll
+ * is under GATE_LO again, so a landing's tail doesn't flash the voice it slows
+ * past. Reading-speed scrolls (wheel, trackpad: ≲ 1 vh/s, ~1.6 voices a second)
+ * never touch it, so there the words stay a pure function of local.
+ */
+const GATE_LO = 2
+const GATE_HI = 4
+const GATE_RISE = 0.3
 
 /** the band at the foot of the pane the line runs through (fraction of the card's height) */
 const BAND = 0.3
@@ -115,9 +160,14 @@ export default function create(): Chapter {
   let titleA: HTMLElement
   let titleB: HTMLElement
   let title: HTMLElement
-  const voices: { root: HTMLElement; parts: HTMLElement[] }[] = []
+  /** each voice's words: the quote's first (`quote` of them), then the speaker's */
+  const voices: { root: HTMLElement; scrub: WordScrub; quote: number }[] = []
+  let titleScrubA: WordScrub
+  let titleScrubB: WordScrub
   let shown = -2 // -2 fresh, -1 intro, 0..N-1 voice, N out
   let deferShow = 0
+  /** the speed gate over every word group, 0..1 (-1: set it from the next frame's speed) */
+  let gate = -1
   const lay: Layout = { w: 0, h: 0, portrait: false, x0: 0, y0: 0, x1: 1, y1: 1, band: 0, ok: false }
   let fitW = -1
   let fitH = -1
@@ -141,6 +191,8 @@ export default function create(): Chapter {
     titleA = rise(el('span', 'vx-t1', undefined, title), m ? m[1] : SECTIONS.voices.title)
     title.appendChild(document.createTextNode(' '))
     titleB = rise(el('span', 'vx-t2', undefined, title), m ? `<em>${m[2]}</em>` : '')
+    titleScrubA = new WordScrub(titleA, [titleA])
+    titleScrubB = new WordScrub(titleB, [titleB])
 
     const stack = el('div', 'vx-voices', undefined, body)
     TESTIMONIALS.forEach(t => {
@@ -149,7 +201,8 @@ export default function create(): Chapter {
       const credit = el('figcaption', 'vx-credit', undefined, root)
       const name = rise(el('span', 'vx-name', undefined, credit), t.name)
       const co = rise(el('span', 'vx-co', undefined, credit), t.company)
-      voices.push({ root, parts: [q, name, co] })
+      const scrub = new WordScrub(root, [q, name, co])
+      voices.push({ root, scrub, quote: q.querySelectorAll('.rise-w').length })
     })
     el('div', 'vx-band', undefined, card)
 
@@ -204,19 +257,86 @@ export default function create(): Chapter {
     card.style.setProperty('--vx-fs', `${Math.floor(lo * 4) / 4}px`)
   }
 
-  function setVoice(i: number, on: boolean) {
-    const v = voices[i]
-    if (!v) return
-    v.root.classList.toggle('is-on', on)
-    for (const p of v.parts) setRise(p, on)
-  }
-
   function sinkAll() {
-    for (let i = 0; i < N; i++) setVoice(i, false)
-    setRise(titleA, false)
-    setRise(titleB, false)
+    for (const v of voices) v.scrub.clear()
+    titleScrubA.clear()
+    titleScrubB.clear()
     card.classList.remove('is-intro', 'is-voice')
     shown = -2
+  }
+
+  /** the speed gate: drops at once with speed, recovers only once the scroll is slow again */
+  function stepGate(frame: Frame) {
+    const speed = Math.abs(frame.velocity)
+    const drop = 1 - smoothstep(GATE_LO, GATE_HI, speed)
+    if (gate < 0 || drop < gate) gate = drop
+    else if (speed < GATE_LO && gate < 1) gate = Math.min(1, gate + frame.dt / GATE_RISE)
+    return gate * gate * (3 - 2 * gate)
+  }
+
+  /**
+   * Every word's reveal from `local` alone (forward and back alike). Calm:
+   * no movement — whole lines, faded in and out by scroll. `g` (the speed
+   * gate) only fades whole groups, on top.
+   */
+  function scrubWords(local: number, calm: boolean, g: number) {
+    /* the intro title: “They talk.”, then “We Listen.”; they leave last word first */
+    const nA = titleScrubA.count
+    const nB = titleScrubB.count
+    if (local >= TITLE_OUT1) {
+      titleScrubA.clear()
+      titleScrubB.clear()
+    } else if (calm) {
+      const out = 1 - smoothstep(TITLE_OUT0 + 0.003, TITLE_OUT1 - 0.003, local)
+      const oA = Math.min(smoothstep(TITLE_A0, TITLE_A0 + 0.016, local), out)
+      const oB = Math.min(smoothstep(TITLE_B0, TITLE_B0 + 0.014, local), out)
+      for (let k = 0; k < nA; k++) titleScrubA.set(k, oA > 0 ? 1 : 0)
+      for (let k = 0; k < nB; k++) titleScrubB.set(k, oB > 0 ? 1 : 0)
+      titleScrubA.fade(oA * g)
+      titleScrubB.fade(oB * g)
+    } else {
+      const n = nA + nB
+      for (let k = 0; k < nA; k++) {
+        const into = wordRamp(local, TITLE_A0, TITLE_A1, k, nA)
+        const out = wordRamp(local, TITLE_OUT0, TITLE_OUT1, n - 1 - k, n)
+        titleScrubA.set(k, riseEase(Math.min(into, 1 - out)))
+      }
+      for (let k = 0; k < nB; k++) {
+        const into = wordRamp(local, TITLE_B0, TITLE_B1, k, nB)
+        const out = wordRamp(local, TITLE_OUT0, TITLE_OUT1, nB - 1 - k, n)
+        titleScrubB.set(k, riseEase(Math.min(into, 1 - out)))
+      }
+      titleScrubA.fade(g)
+      titleScrubB.fade(g)
+    }
+
+    /* the voices: each one's words through its own span */
+    const at = (local - B0) / SPAN
+    for (let i = 0; i < N; i++) {
+      const v = voices[i]
+      const ph = at - i
+      const last = i === N - 1
+      const o0 = last ? (LAST_OUT0 - B0) / SPAN - i : WORDS_OUT0
+      const o1 = last ? (LAST_OUT1 - B0) / SPAN - i : WORDS_OUT1
+      if (ph <= QUOTE_IN0 || ph >= o1) {
+        v.scrub.clear()
+        continue
+      }
+      const n = v.scrub.count
+      if (calm) {
+        const o = Math.min(smoothstep(QUOTE_IN0, QUOTE_IN0 + CALM_FADE, ph), 1 - smoothstep(o1 - CALM_FADE, o1, ph))
+        for (let k = 0; k < n; k++) v.scrub.set(k, o > 0 ? 1 : 0)
+        v.scrub.fade(o * g)
+        continue
+      }
+      const nq = v.quote
+      for (let k = 0; k < n; k++) {
+        const into = k < nq ? wordRamp(ph, QUOTE_IN0, QUOTE_IN1, k, nq) : wordRamp(ph, CREDIT_IN0, CREDIT_IN1, k - nq, n - nq)
+        const out = wordRamp(ph, o0, o1, n - 1 - k, n)
+        v.scrub.set(k, riseEase(Math.min(into, 1 - out)))
+      }
+      v.scrub.fade(g)
+    }
   }
 
   function wantAt(local: number) {
@@ -229,15 +349,14 @@ export default function create(): Chapter {
     return want
   }
 
+  /** the meta line (count, ticks) follows the voice in view; the words are scrubbed (scrubWords) */
   function show(next: number) {
     if (next === shown) return
-    if (shown >= 0 && shown < N) setVoice(shown, false)
     shown = next
     const isVoice = next >= 0 && next < N
     card.classList.toggle('is-voice', isVoice)
     card.classList.toggle('is-intro', next === -1)
     if (isVoice) {
-      setVoice(next, true)
       count.innerHTML = `<b>${String(next + 1).padStart(2, '0')}</b> / ${String(N).padStart(2, '0')}`
       ticks.forEach((d, i) => {
         d.classList.toggle('is-on', i === next)
@@ -320,6 +439,7 @@ export default function create(): Chapter {
 
     onEnter() {
       sinkAll()
+      gate = -1
       deferShow = 1
       measure()
     },
@@ -397,13 +517,14 @@ export default function create(): Chapter {
       post.grain = 0.02
 
       /* ---- DOM ---- */
+      // the words: every frame, straight from local (writes only what changed)
+      // (a fast pass — a pip landing, a fling — fades them out whole: stepGate)
+      scrubWords(local, calm || document.documentElement.classList.contains('motion-off'), stepGate(frame))
       if (deferShow > 0) {
         deferShow--
         return
       }
       show(wantAt(local))
-      setRise(titleA, shown === -1 && local > TITLE_A)
-      setRise(titleB, shown === -1 && local > TITLE_B)
     },
 
     camera(_local: number, frame: Frame, out: CameraPose) {

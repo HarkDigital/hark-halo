@@ -170,7 +170,7 @@ Engine facts:
 | id | Content | Typical length (vh) / landing |
 |---|---|---|
 | hero | BRAND.tagline, manifesto, CTAs "See the work" → `land('work')`, "Start a project" → `land('contact')` | 2.6 / 0 |
-| work | SECTIONS.work; 6 featured WORK items with screenshots, then "Nine more, all live." + Say hello | 3.8 / 0.12 |
+| work | SECTIONS.work; 6 featured WORK items (scroll-scrubbed site videos), then the nine more as rows + Say hello | 3.8 / 0.12 |
 | services | SECTIONS.services; 11 SERVICES (title, blurb, tags), 01–11 index | 3.6–4.4 / 0.08 |
 | voices | SECTIONS.voices; 8 TESTIMONIALS, one at a time, comfortable dwell | 3.0–3.4 / 0.05–0.08 |
 | shield | SECURITY (eyebrow, "Hacked? Breathe.", body, CTA) + the 24/7 stat | 1.6–1.9 / 0.45 |

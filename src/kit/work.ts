@@ -1,4 +1,4 @@
-import { BRAND, SECTIONS, WORK, type WorkItem } from '../content'
+import { BRAND, PORTFOLIO_MORE, SECTIONS, WORK, type WorkItem } from '../content'
 
 /*
  * WORK helpers without three.js: shared by the story's Work chapter
@@ -8,11 +8,9 @@ import { BRAND, SECTIONS, WORK, type WorkItem } from '../content'
  * the copy, so none of them pulls in the 3D.
  */
 
-/** counts in words, as the chapter says them ("Nine more, all live."); beyond Twelve, numerals */
+/** counts in words ("Nine", "Twelve"); beyond Twelve, numerals */
 export const WORDS = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve']
 export const countWord = (n: number) => WORDS[n] ?? String(n)
-
-const esc = (s: string) => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
 
 /** a pre-launch build (City Line Capital on harktest.com): "Pre-launch build" under its button, never "live" */
 export const isPreview = (url: string) => {
@@ -32,8 +30,16 @@ export const hostOf = (url: string) => {
   }
 }
 
+/**
+ * The Portfolio's sites, in page order (the story's Work chapter reads WORK alone): WORK, then
+ * the portfolio-only client sites (content.ts PORTFOLIO_MORE). A site's place here is its neon
+ * on the Portfolio, so WORK's keep theirs and the rest carry on after them
+ * (marked pure: the story imports this file too, and never shows the portfolio-only sites. The
+ * service pages count it for Web Design's stat and copy, service/data/*.ts)
+ */
+export const PORTFOLIO_WORK: readonly WorkItem[] = /* @__PURE__ */ WORK.concat(PORTFOLIO_MORE)
 
-/** each site's neon, by its place in WORK: a, b, c, a, b, c… (the active lights' three tubes) */
+/** each site's neon, by its place in WORK (the Portfolio: PORTFOLIO_WORK): a, b, c, a, b, c… (the active lights' three tubes) */
 export type NeonKey = 'a' | 'b' | 'c'
 export const neonKey = (i: number): NeonKey => (['a', 'b', 'c'] as const)[((i % 3) + 3) % 3]
 
@@ -53,7 +59,8 @@ export interface TagChip {
 /**
  * The Portfolio's filter chips (after "All"): the tags at least `minTag` sites
  * share, leaving out any tag every site carries (it would filter nothing), by
- * count and then by first appearance. Today: SEO, Software.
+ * count and then by first appearance. The Portfolio's (from PORTFOLIO_WORK), today: SEO,
+ * Events, Ecommerce, Software, Booking, Online Ordering, Donations.
  */
 export function tagChips(work: readonly WorkItem[], minTag: number): TagChip[] {
   const seen = new Map<string, TagChip>()
@@ -67,7 +74,7 @@ export function tagChips(work: readonly WorkItem[], minTag: number): TagChip[] {
   return [...seen.values()].filter(c => c.count < work.length && c.count >= minTag).sort((a, b) => b.count - a.count)
 }
 
-/** "15 sites", "3 featured", "12 more" (a zero part is left out; one site is "1 site") */
+/** "67 sites", "3 featured", "64 more" (a zero part is left out; one site is "1 site") */
 export function countParts(o: { total: number; featured: number; more: number }): string[] {
   const parts = [`${o.total} ${o.total === 1 ? 'site' : 'sites'}`]
   if (o.featured) parts.push(`${o.featured} featured`)
@@ -75,16 +82,10 @@ export function countParts(o: { total: number; featured: number; more: number })
   return parts
 }
 
-/** the other sites' heading: "Twelve more, <em>all live.</em>", or "{Word} <em>more.</em>" if one is a preview */
-export function moreTitleHtml(items: readonly WorkItem[]): string {
-  const word = esc(countWord(items.length))
-  return items.every(w => !isPreview(w.url)) ? `${word} more, <em>all live.</em>` : `${word} <em>more.</em>`
-}
-
 /**
  * The Portfolio's PROMINENT sites: the first PORTFOLIO_LEAD featured ones, in WORK
  * order, each hung on a row of its own with its placard beside it. Every other site
- * hangs in the "More work" grid below, in WORK order.
+ * (PORTFOLIO_WORK) hangs in the grid below them ("More work"), in that order.
  * The story's Work chapter still shows every featured site: this split is the
  * Portfolio's alone (its page, its wall, its counts, its description and preload).
  * On the Portfolio, "featured" (the counts, the classes) means these.
@@ -97,11 +98,11 @@ export function portfolioSplit<T extends WorkItem>(work: readonly T[]): { lead: 
 }
 
 /**
- * The Portfolio's meta description (and og:description), from WORK:
- * "Built to be heard. Selected work by Hark Digital Design: City Line Capital,
- * ComTec Systems, Atlas Real Estate, and twelve more."
+ * The Portfolio's meta description (and og:description), from its client sites
+ * (PORTFOLIO_WORK): "Built to be heard. Selected work by Hark Digital Design: City
+ * Line Capital, ComTec Systems, Atlas Real Estate, and 64 more."
  */
-export function portfolioDescription(work: readonly WorkItem[] = WORK): string {
+export function portfolioDescription(work: readonly WorkItem[] = PORTFOLIO_WORK): string {
   const { lead, rest } = portfolioSplit(work)
   const names = lead.map(w => w.name)
   const intro = `${SECTIONS.work.title} ${SECTIONS.work.eyebrow} by ${BRAND.name}`

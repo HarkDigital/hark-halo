@@ -1,6 +1,9 @@
 // Copied verbatim from the classic 2026 site (site-v2/src/data/servicePages.ts): the
 // service pages. Frost renders its own page per service (src/service/*); `scene` picks
 // the hero art (src/service/scenes, the classic scenes in neon); `relatedTags` is unused here.
+// Web Design's stat is counted: the Portfolio's client sites (kit/work.ts PORTFOLIO_WORK).
+
+import { PORTFOLIO_WORK } from '../../kit/work'
 
 export interface ServicePageData {
   slug: string
@@ -94,7 +97,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
       { title: 'Build', text: 'Modern frameworks, accessible markup, and speed as a feature.' },
       { title: 'Launch & teach', text: 'We go live, then teach your team to run it. Support doesn’t end at launch.' },
     ],
-    stat: { value: '15', label: 'Live sites in the portfolio right now, from dentists to global manufacturers' },
+    stat: { value: String(PORTFOLIO_WORK.length), label: 'Live sites in the portfolio right now, from dentists to global manufacturers' },
     relatedTags: ['Web Design'],
     quote: {
       text: 'Mike has exceptional technical ability but at his core he is an artist. He brilliantly created a clean, concise and modern website that has significantly bolstered our business.',

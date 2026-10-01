@@ -3,14 +3,16 @@
    panes of glass on the black wall: each on a neon foot that spills a little
    light onto the wall, its placard beneath in plain type on black. Light only
    exists where it makes glass glow; type stays white and silver. No
-   backdrop-filter anywhere here (15 panes, a moving lamp behind them), no
+   backdrop-filter anywhere here (dozens of panes, a moving lamp behind them), no
    SVG filters on the panes, no color-mix() (base.css).
 
    Breakpoints: desktop ≥ 1000px, tablet 721–999px, phone ≤ 720px. The three
    prominent sites hang one to a row, the screen beside its placard (desktop
    7fr + 5fr, tablet 58fr + 42fr; sides alternating by data-d), stacked on
-   phones. The other sites: desktop 12 columns (three to a row), tablet 6
-   (two), phone 2-up tiles. kit/work.ts screenSizes mirrors these widths.
+   phones. The other sites, in a grid that carries straight on under them (no
+   heading, no hairline: the rows' own spacing, --pf-rows): desktop 12 columns
+   (three to a row), tablet 6 (two), phone 2-up tiles. kit/work.ts screenSizes
+   mirrors these widths.
    Pointer or touch behaviour is chosen by the pointer, not the width (wall.ts).
    ------------------------------------------------------------------ */
 
@@ -18,6 +20,18 @@
   --pf-bar-mt: clamp(16px, 2.4vh, 24px);
   --pf-rail-h: 44px;
   --pf-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  /* the space between the prominent rows, and so between the last of them and the grid */
+  --pf-rows: 64px;
+}
+@media (min-width: 721px) {
+  .pf {
+    --pf-rows: 80px;
+  }
+}
+@media (min-width: 1000px) {
+  .pf {
+    --pf-rows: clamp(104px, 9.4vw, 152px);
+  }
 }
 @media (max-width: 720px) {
   .pf {
@@ -105,6 +119,53 @@
   bottom: 5px;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06) 12%, rgba(255, 255, 255, 0.02) 60%, transparent);
 }
+/* the chips, and the gas under the chosen one, in one box that scrolls sideways where they don't
+   fit in the tube (.is-scroll, rail.ts: phones). The box reaches past the tube, --pf-spill top
+   and bottom and --pf-spill-x at the ends (inside the page's gutter), so the gas's glow keeps its
+   room once the box clips: at the ends it fades out instead of stopping at an edge, and the
+   chips that run on past an end fade out inside the tube (.is-l, .is-r; rail.ts scrolls the
+   chosen chip, and one focused by keyboard, in clear of them). The box itself takes no pointer
+   (it overhangs the headline); the chips do */
+.pf-scroll {
+  --pf-spill: 28px;
+  --pf-spill-x: 12px;
+  --l0: 0px;
+  --l1: var(--pf-spill-x);
+  --r0: 0px;
+  --r1: var(--pf-spill-x);
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 0 1 auto;
+  min-width: 0;
+  margin: calc(var(--pf-spill) * -1) calc(-4px - var(--pf-spill-x));
+  padding: var(--pf-spill) 0;
+  pointer-events: none;
+}
+.pf-scroll .pf-chips {
+  padding: 0 calc(4px + var(--pf-spill-x));
+  pointer-events: auto;
+}
+.pf-rail.is-scroll .pf-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0) var(--l0), #000000 var(--l1), #000000 calc(100% - var(--r1)), rgba(0, 0, 0, 0) calc(100% - var(--r0)));
+  mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0) var(--l0), #000000 var(--l1), #000000 calc(100% - var(--r1)), rgba(0, 0, 0, 0) calc(100% - var(--r0)));
+}
+.pf-rail.is-scroll .pf-scroll::-webkit-scrollbar {
+  display: none;
+}
+.pf-rail.is-l .pf-scroll {
+  --l0: calc(var(--pf-spill-x) + 4px);
+  --l1: calc(var(--pf-spill-x) + 40px);
+}
+.pf-rail.is-r .pf-scroll {
+  --r0: calc(var(--pf-spill-x) + 4px);
+  --r1: calc(var(--pf-spill-x) + 40px);
+}
 .pf-chips {
   display: flex;
   align-items: center;
@@ -159,8 +220,8 @@
 /* the lit gas under the chosen chip: a white-hot core ringed in the three neons */
 .pf-gas {
   position: absolute;
-  top: 4px;
-  bottom: 4px;
+  top: var(--pf-spill);
+  bottom: var(--pf-spill);
   left: 0;
   width: var(--gw, 0px);
   transform: translateX(var(--gx, 0px));
@@ -226,43 +287,18 @@
 }
 
 /* ---------------- the rooms ---------------- */
-.pf-room--feat {
+/* the grid carries straight on under the prominent rows, at their own spacing (no heading: the
+   section is named for screen readers alone). With no prominent site left above it (a filter,
+   .is-solo, rail.ts) it follows the rail as the prominent room would */
+.pf-room--feat,
+.pf-room--more.is-solo {
   padding-top: clamp(32px, 4.4vh, 52px);
 }
 .pf-room--more {
-  position: relative;
-  margin-top: clamp(96px, 12vh, 160px);
-  padding-top: clamp(40px, 5vh, 64px);
-  border-top: 1px solid var(--line);
+  margin-top: var(--pf-rows);
 }
-.pf-more-h {
-  margin: 18px 0 0;
-}
-/* the threshold: a neon segment runs along the room's hairline, once. Its track clips it to
-   the room (tall enough for the glow): run out past the edge it would widen the page, and on a
-   phone the layout viewport with it, pushing the header's Menu pill off the screen */
-.pf-sweep {
-  position: absolute;
-  top: -13px;
-  left: 0;
-  right: 0;
-  height: 25px;
-  overflow: hidden;
-  pointer-events: none;
-}
-.pf-sweep > i {
-  position: absolute;
-  top: 12px;
-  left: 0;
-  width: 40%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--neon-a), var(--neon-b), var(--neon-c), transparent);
-  box-shadow: 0 0 10px rgba(var(--neon-b-rgb), 0.7);
-  opacity: 0;
-}
-.pf-room--more > .hud-eyebrow {
-  display: flex;
-  width: fit-content;
+.pf-room--more.is-solo {
+  margin-top: 0;
 }
 
 /* ---------------- the wall (the hang) ---------------- */
@@ -276,18 +312,13 @@
 .pf-item {
   min-width: 0;
 }
-/* (after .pf-wall's reset, which would cancel it: the heading never sits on the screens) */
-.pf-wall--more {
-  margin-top: clamp(36px, 5vh, 56px);
-}
-
 /* the prominent sites: one to a row (never two side by side), the screen beside its placard,
    both centred on the row's middle line. data-d (wall.ts, by visible index) picks the screen's
    side: L, R, L… Grid placement only: the DOM, and so reading and tab order, stays screen then
    placard. Phones stack them: screen, then placard */
 .pf-wall--feat {
   grid-template-columns: minmax(0, 1fr);
-  row-gap: 64px;
+  row-gap: var(--pf-rows);
 }
 @media (min-width: 721px) {
   .pf-item--feat .pf-art {
@@ -314,9 +345,6 @@
   .pf-item--feat[data-d='R'] .pf-plac {
     grid-column: 1;
   }
-  .pf-wall--feat {
-    row-gap: 80px;
-  }
 }
 @media (min-width: 1000px) {
   .pf-item--feat .pf-art {
@@ -325,9 +353,6 @@
   }
   .pf-item--feat[data-d='R'] .pf-art {
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-  }
-  .pf-wall--feat {
-    row-gap: clamp(104px, 9.4vw, 152px);
   }
 }
 
@@ -358,7 +383,8 @@
   }
 }
 @media (max-width: 720px) {
-  .pf-room--feat {
+  .pf-room--feat,
+  .pf-room--more.is-solo {
     padding-top: 26px;
   }
   .pf-wall--more {
@@ -503,6 +529,33 @@
 .pf-item.is-leaving .pf-fog {
   opacity: 1;
   visibility: visible;
+}
+/* the preview (preview.ts): a film of the site over its screenshot, made only when it first plays.
+   Clear until a frame is really on the glass (no black flash), then in; out to the still when it
+   stops (preview.ts FADE). Its own corners: Safari doesn't always clip a playing video to the
+   glass's rounded overflow */
+.pf-vid {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 0;
+  border-radius: inherit;
+  background: transparent;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.pf-vid.is-on {
+  opacity: 1;
+  transition-duration: 0.45s;
+}
+/* leaving (a filter): gone with the screenshot; never over a name card */
+.pf-item.is-leaving .pf-vid {
+  opacity: 0;
+  transition: opacity 0.16s ease-in;
+}
+.pf-item.is-nofile .pf-vid {
+  display: none;
 }
 /* no screenshot (yet): the site's name on the glass */
 .pf-card {
@@ -867,7 +920,7 @@
   color: var(--fg-muted);
   overflow-wrap: anywhere;
 }
-/* 15 pills over a moving lamp: a solid dark glass, no backdrop-filter */
+/* dozens of pills over a moving lamp: a solid dark glass, no backdrop-filter */
 .pf-cta.hud-btn--ghost {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
@@ -1058,6 +1111,7 @@
 
 /* ---------------- print ---------------- */
 @media print {
+  .pf-vid,
   .pf-lamp,
   .pf-tube,
   .pf-foot,
@@ -1067,8 +1121,7 @@
   .pf-edge,
   .pf-frost,
   .pf-fog,
-  .pf-ring,
-  .pf-sweep {
+  .pf-ring {
     display: none !important;
   }
   .pf-img {

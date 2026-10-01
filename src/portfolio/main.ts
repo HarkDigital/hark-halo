@@ -7,8 +7,8 @@ import './portfolio.css'
 
 import { installPrintPolyfills } from '../ui/polyfills'
 import { applyLightsCss } from '../kit/palette'
-import { PORTFOLIO, SECTIONS, WORK } from '../content'
-import { moreTitleHtml, portfolioSplit, tagChips, tagSlug } from '../kit/work'
+import { PORTFOLIO, SECTIONS, type WorkItem } from '../content'
+import { PORTFOLIO_WORK, portfolioSplit, tagChips, tagSlug } from '../kit/work'
 import { bindReveals, contactHtml, footerHtml, mountContact, mountTop, type Current } from '../page/shell'
 import { itemHtml } from './items'
 import { mountWall } from './wall'
@@ -16,8 +16,10 @@ import { mountRail } from './rail'
 
 /*
  * THE PORTFOLIO — every site, at <base>portfolio/ (portfolio.html; the build
- * writes dist/portfolio/index.html with its description generated from WORK
- * and the lead screenshot preloaded, vite.config.ts).
+ * writes dist/portfolio/index.html with its description generated from its
+ * client sites and the lead screenshot preloaded, vite.config.ts). Every site:
+ * WORK (the story's 15), then the portfolio-only client sites (content.ts
+ * PORTFOLIO_MORE; in page order kit/work.ts PORTFOLIO_WORK).
  *
  * "The Glass Wall": the sites hang as lit panes of glass on the black wall
  * (wall.ts), under a glass tube that filters them by tag (rail.ts). No
@@ -28,12 +30,15 @@ import { mountRail } from './rail'
  *   hero       "Portfolio", "Built to be heard." (the Work chapter's own title)
  *   stage      the rail (it scrolls with the page), the three prominent sites (the
  *              first three featured, kit/work.ts portfolioSplit: one to a row, the
- *              screen beside its placard, sides alternating), then "More work": every
- *              other site, three to a band (2-up tiles on phones)
+ *              screen beside its placard, sides alternating), then the grid ("More
+ *              work", named for screen readers only: no heading, it follows the rows
+ *              straight on): every other site (WORK's rest, then PORTFOLIO_MORE), three
+ *              to a band (2-up tiles on phones)
  *   contact    "Say hello." and the form (no service chosen), the footer
  *
- * Every word is the site's own copy (content.ts WORK, SECTIONS.work, CONTACT)
- * but for the page's few new strings (content.ts PORTFOLIO). ?tag=<slug>
+ * Every word is the site's own copy (content.ts WORK, PORTFOLIO_MORE,
+ * SECTIONS.work, CONTACT) but for the page's few new strings (content.ts
+ * PORTFOLIO). The filter's chips are the tags its sites share (kit/work.ts tagChips). ?tag=<slug>
  * opens it filtered (and is kept up to date as the filter changes).
  */
 
@@ -49,7 +54,7 @@ const current: Current = { kind: 'portfolio' }
 mountTop({ current })
 
 // ---------------------------------------------------------------- the filter this page opens with
-const chips = tagChips(WORK, PORTFOLIO.minTag)
+const chips = tagChips(PORTFOLIO_WORK, PORTFOLIO.minTag)
 const params = new URLSearchParams(location.search)
 const asked = params.has('tag') ? tagSlug(params.get('tag') ?? '') : ''
 const initial = chips.some(c => c.slug === asked) ? asked : ''
@@ -60,13 +65,15 @@ if (params.has('tag') && !initial) {
   history.replaceState(history.state, '', u)
 }
 const initialTag = chips.find(c => c.slug === initial)?.tag
-const match = (w: (typeof WORK)[number]) => !initialTag || w.tags.includes(initialTag)
+const match = (w: WorkItem) => !initialTag || w.tags.includes(initialTag)
 
 // ---------------------------------------------------------------- the page
-// (on this page "featured" is the prominent few; the story's Work chapter shows every featured site)
-const split = portfolioSplit(WORK)
-const featured = split.lead.map(w => ({ w, i: WORK.indexOf(w) }))
-const rest = split.rest.map(w => ({ w, i: WORK.indexOf(w) }))
+// (on this page "featured" is the prominent few; the story's Work chapter shows every featured site.
+// Each site's place on the page is its neon: WORK's keep theirs, the rest carry on after them)
+const split = portfolioSplit(PORTFOLIO_WORK)
+const at = (w: WorkItem) => ({ w, i: PORTFOLIO_WORK.indexOf(w) })
+const featured = split.lead.map(at)
+const rest = split.rest.map(at)
 const title = SECTIONS.work.title
 const cut = title.lastIndexOf(' ')
 const h1 = cut > 0 ? `${esc(title.slice(0, cut))} <em>${esc(title.slice(cut + 1))}</em>` : `<em>${esc(title)}</em>`
@@ -80,7 +87,7 @@ document.getElementById('main')!.innerHTML = `
       <h1 class="hud-title pf-h1 svc-rv" data-words id="pf-h1">${h1}</h1>
     </section>
     ${
-      WORK.length
+      PORTFOLIO_WORK.length
         ? `
     <div class="pf-stage">
       ${
@@ -88,8 +95,10 @@ document.getElementById('main')!.innerHTML = `
           ? `
       <div class="pf-bar">
         <div class="pf-rail svc-rv" style="--d:3">
-          <i class="pf-gas" aria-hidden="true"></i>
-          <div class="pf-chips" role="group" aria-label="${esc(PORTFOLIO.filterLabel)}">${chipsHtml}</div>
+          <div class="pf-scroll">
+            <i class="pf-gas" aria-hidden="true"></i>
+            <div class="pf-chips" role="group" aria-label="${esc(PORTFOLIO.filterLabel)}">${chipsHtml}</div>
+          </div>
         </div>
         <p class="sr-only" aria-live="polite" id="pf-live"></p>
       </div>`
@@ -106,10 +115,7 @@ document.getElementById('main')!.innerHTML = `
       ${
         rest.length
           ? `
-      <section class="pf-room pf-room--more" aria-labelledby="pf-more-h">
-        <i class="pf-sweep" aria-hidden="true"><i></i></i>
-        <p class="hud-eyebrow svc-rv" data-rv="wipe">More work</p>
-        <h2 class="hud-h2 pf-more-h svc-rv" data-words id="pf-more-h">${moreTitleHtml(rest.map(x => x.w))}</h2>
+      <section class="pf-room pf-room--more" aria-label="${esc(PORTFOLIO.moreLabel)}">
         <ul class="pf-wall pf-wall--more">${rest.map(x => itemHtml(x.w, x.i, 'more')).join('')}</ul>
       </section>`
           : ''
@@ -125,7 +131,7 @@ mountContact()
 
 const stage = document.querySelector<HTMLElement>('.pf-stage')
 if (stage) {
-  const wall = mountWall({ stage, work: WORK, match })
-  mountRail({ wall, stage, work: WORK, chips, initial })
+  const wall = mountWall({ stage, work: PORTFOLIO_WORK, match })
+  mountRail({ wall, stage, work: PORTFOLIO_WORK, chips, initial })
 }
 bindReveals()

@@ -1,22 +1,26 @@
 import type { WorkItem } from '../content'
-import { countParts, moreTitleHtml, type TagChip } from '../kit/work'
+import { countParts, type TagChip } from '../kit/work'
 import { REDUCED_MOTION } from '../kit/motion'
-import { rise } from '../core/rise'
 import type { Item, Wall } from './wall'
 
 /*
  * THE RAIL: a clear glass tube as wide as the wall, under the headline. It is
  * the filter: lit gas (white-hot, ringed in the three neons) sits under the
  * chosen tag and slides to the next one. It is never pinned: it sits above the
- * wall and scrolls away with the page like the rest of the content.
+ * wall and scrolls away with the page like the rest of the content. Where the
+ * chips don't fit (phones) they scroll sideways inside the tube (.is-scroll; the
+ * gas rides with them, the tube's ends fade where there is more to see), and the
+ * chosen one is brought into view.
  *
  * filterTo(slug), ~750ms, interruptible. The page never scrolls: the chips are
  * where the visitor left them (above the wall, which changes below them).
  *   0–200ms   the sites that don't match frost over and step back
  *   200ms     they leave the wall; the rest take their new places (FLIP: one
  *             uniform scale per screen, every screen is 16:10; placards only
- *             translate, or fade in where a prominent row changed sides), the More room's heading and the URL
- *             (?tag=, replaceState) update, the result ("5 sites, 2 featured, 3 more")
+ *             translate, or fade in where a prominent row changed sides), the rooms
+ *             (a room the filter empties goes; with no prominent site left the grid
+ *             follows the rail straight on, .is-solo) and the URL (?tag=,
+ *             replaceState) update, the result ("7 sites, 1 featured, 6 more")
  *             is announced once to screen readers (no count is shown)
  *   220ms     the newcomers in view come in (the quick entrance)
  *   760ms     the stage lets go of its held height
@@ -30,10 +34,9 @@ export function mountRail(o: { wall: Wall; stage: HTMLElement; work: readonly Wo
   const rail = stage.querySelector<HTMLElement>('.pf-rail')
   const gas = stage.querySelector<HTMLElement>('.pf-gas')
   const live = document.getElementById('pf-live')
+  const scroller = stage.querySelector<HTMLElement>('.pf-scroll')
   const feat = stage.querySelector<HTMLElement>('.pf-room--feat')
   const more = stage.querySelector<HTMLElement>('.pf-room--more')
-  const moreEye = more?.querySelector<HTMLElement>('.hud-eyebrow')
-  const moreH = more?.querySelector<HTMLElement>('.pf-more-h')
   const chips = [...stage.querySelectorAll<HTMLButtonElement>('.pf-chip')]
   let slug = o.initial
   const matches = (w: WorkItem) => !slug || w.tags.some(t => o.chips.find(c => c.slug === slug)?.tag === t)
@@ -43,51 +46,86 @@ export function mountRail(o: { wall: Wall; stage: HTMLElement; work: readonly Wo
     const vis = wall.visible()
     const f = vis.filter(it => it.feat).length
     if (announce && live) live.textContent = countParts({ total: vis.length, featured: f, more: vis.length - f }).join(', ')
-    const rest = vis.filter(it => !it.feat)
     if (feat) feat.hidden = !f
-    if (more && moreEye && moreH) {
-      more.hidden = !rest.length
-      // no featured site: the room follows the rail straight on, unheaded
-      const solo = !f
-      moreEye.hidden = solo
-      moreH.hidden = solo || rest.length < 2
-      if (moreH.hidden) {
-        more.removeAttribute('aria-labelledby')
-        more.setAttribute('aria-label', 'More work')
-      } else {
-        more.removeAttribute('aria-label')
-        more.setAttribute('aria-labelledby', 'pf-more-h')
-        const html = moreTitleHtml(rest.map(it => it.w))
-        if (moreH.dataset.html !== html) {
-          moreH.dataset.html = html
-          // on load it is written plain (the page's reveals bring it in); after a filter, at once
-          if (announce) {
-            rise(moreH, html)
-            moreH.classList.add('is-in')
-          } else moreH.innerHTML = html
-        }
-      }
+    if (more) {
+      more.hidden = f === vis.length
+      // no prominent site left above it: the grid follows the rail straight on, as the rows would
+      more.classList.toggle('is-solo', !f)
     }
   }
 
-  // ------------------------------------------------------------ the gas
+  // ------------------------------------------------------------ the gas, and the chips' sideways scroll
+  const pressed = () => chips.find(c => c.getAttribute('aria-pressed') === 'true') ?? chips[0]
   const placeGas = (slide: boolean) => {
     if (!rail || !gas) return
-    const on = chips.find(c => c.getAttribute('aria-pressed') === 'true') ?? chips[0]
+    const on = pressed()
     if (!on) return
     if (slide && !REDUCED_MOTION) {
       gas.style.willChange = 'transform'
       gas.addEventListener('transitionend', () => (gas.style.willChange = ''), { once: true })
     }
+    // (the chips' offsetParent is the scroller, the gas's containing block: one frame for both)
     gas.style.setProperty('--gx', `${on.offsetLeft}px`)
     gas.style.setProperty('--gw', `${on.offsetWidth}px`)
+  }
+  /** the tube's ends fade where the chips run on past them */
+  const fades = () => {
+    if (!rail || !scroller) return
+    const x = scroller.scrollLeft
+    rail.classList.toggle('is-l', x > 1)
+    rail.classList.toggle('is-r', x + scroller.clientWidth < scroller.scrollWidth - 1)
+  }
+  /** chips wider than the tube: they scroll inside it (the class clips them to it) */
+  const fit = () => {
+    if (!rail || !scroller) return
+    rail.classList.toggle('is-scroll', scroller.scrollWidth > scroller.clientWidth + 1)
+    fades()
+  }
+  /** the chosen chip (or the one focused by keyboard) into view, inside the tube only (the page never scrolls) */
+  const reveal = (smooth: boolean, on: HTMLElement | undefined = pressed()) => {
+    if (!scroller || !on || !rail?.classList.contains('is-scroll')) return
+    // (clear of the tube's faded end: portfolio.css --pf-spill-x + 40px)
+    const pad = 56
+    const l = on.offsetLeft - pad
+    const r = on.offsetLeft + on.offsetWidth + pad
+    const x = scroller.scrollLeft
+    const to = l < x ? l : r > x + scroller.clientWidth ? r - scroller.clientWidth : x
+    if (Math.abs(to - x) > 0.5) scroller.scrollTo({ left: Math.max(0, to), behavior: smooth && !REDUCED_MOTION ? 'smooth' : 'auto' })
+  }
+  /** focused by keyboard (Safari before 15.4 has no :focus-visible; it never focuses a clicked button) */
+  const focusVisible = (el: Element) => {
+    try {
+      return el.matches(':focus-visible')
+    } catch {
+      return true
+    }
   }
   const press = () => chips.forEach(c => c.setAttribute('aria-pressed', String((c.dataset.tag ?? '') === slug)))
 
   if (rail) {
-    new ResizeObserver(() => placeGas(false)).observe(rail)
-    void document.fonts?.ready.then(() => placeGas(false))
+    // (a resize can turn the sideways scroll on: a phone turned upright, a window narrowed. The
+    // chosen chip is brought back into view; the tube's width changing is no scroll of the visitor's)
+    new ResizeObserver(() => {
+      fit()
+      placeGas(false)
+      reveal(false)
+    }).observe(rail)
+    void document.fonts?.ready.then(() => {
+      fit()
+      placeGas(false)
+      reveal(false)
+    })
   }
+  scroller?.addEventListener('scroll', fades, { passive: true })
+  // a chip focused by keyboard comes in clear of the faded ends. (The browser's own focus scroll
+  // leaves a chip that is partly in view where it is, under the fade; scroll-margin can't help.)
+  // After that scroll, a frame on; never for a click's focus (a chip moving under the pointer
+  // between press and release would lose the click; a click reveals its chip anyway)
+  scroller?.addEventListener('focusin', e => {
+    const c = (e.target as Element | null)?.closest<HTMLElement>('.pf-chip')
+    if (!c || !focusVisible(c)) return
+    requestAnimationFrame(() => document.activeElement === c && reveal(true, c))
+  })
 
   // ------------------------------------------------------------ filter
   interface Step {
@@ -129,9 +167,12 @@ export function mountRail(o: { wall: Wall; stage: HTMLElement; work: readonly Wo
     slug = tag && o.work.some(w => w.tags.includes(tag)) ? next : ''
     press()
     placeGas(true)
+    reveal(true)
 
     const s: Swap = { timers: [], anims: [], steps: [] }
     swap = s
+    // (a preview playing on a pane that is about to leave or move: frozen and faded first)
+    wall.still()
     wall.finishAll()
     const vis = wall.visible()
     const y0 = scrollY
@@ -220,7 +261,9 @@ export function mountRail(o: { wall: Wall; stage: HTMLElement; work: readonly Wo
   // the page as it loads: the filter from ?tag= already applied (no animation, no announcement)
   press()
   writeState(false)
+  fit()
   placeGas(false)
+  reveal(false)
   requestAnimationFrame(() => requestAnimationFrame(() => gas?.classList.add('is-placed')))
 
   return { filterTo }

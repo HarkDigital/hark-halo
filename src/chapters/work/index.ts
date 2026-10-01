@@ -4,9 +4,10 @@ import { el, reveal, rise, setRise } from '../../core/dom'
 import { clamp, ease, lerp, smoothstep } from '../../core/math'
 import { nextFrame } from '../../core/yield'
 import { SECTIONS, WORK, portfolioUrl, workImage, type WorkItem } from '../../content'
-import { WORDS, hostOf, isPreview } from '../../kit/work'
+import { hostOf, isPreview } from '../../kit/work'
 import { G } from '../../kit/glass'
 import { loadScreenshot, whenRevealed } from '../../kit/images'
+import { SCRUB_LAST, Scrub, scrubAllowed, scrubUrl, type ScrubHooks } from './scrub'
 import {
   HALO_N,
   HALO_R,
@@ -25,6 +26,7 @@ import {
   averageColor,
   buildCarousel,
   type CarouselSet,
+  type FaceUniforms,
 } from './scene'
 import './work.css'
 
@@ -39,15 +41,27 @@ import './work.css'
  * diffused into soft colour and their feet glowing with the neon behind
  * them. A frosted card names the leaf in front. After the sixth, the ring
  * lifts through the drum and opens above it into a HALO: nine smaller tiles
- * hang on it and turn, one step per row of "Nine more, all live."
+ * hang on it and turn, one step per row of the list beside it (the other
+ * nine sites, 'Say hello', 'All work').
+ *
+ * Each site on the glass is its scroll video (scrub.ts), and the story's
+ * scroll scrolls it: the leaf in front, once it has cleared, scrolls its
+ * site's homepage down from the hero across 30–94% of its item (the video's
+ * own holds rest it on the hero first and at the foot of the page before the
+ * drum turns on); a tile scrolls across 10–90% of its row. A site still to
+ * come shows its first frame (its still screenshot until its video is up);
+ * one gone by keeps its last, so scrolling back plays each one back from where
+ * it stopped. Stills stay with Data Saver, slow connections and devices that
+ * can't play the videos.
  *
  *   0.000–0.100  intro: "Built to be heard." — a high three-quarter view, the
  *                drum turning (headline settled from ~0.035)
  *   0.074–0.118  the camera comes down to eye level; leaf 01 arrives and clears
- *   0.100–0.760  six items (0.11 each): turn 0–30% of an item, card 26–97%;
- *                nav lands at 0.12 on leaf 01 with its card settled
+ *   0.100–0.760  six items (0.11 each): turn 0–30% of an item, card 26–97%,
+ *                site scrolls 30–94%; nav lands at 0.12 on leaf 01 with its
+ *                card settled
  *   0.758–0.800  the ring lifts and opens into the halo; the camera cranes up
- *   0.800–0.955  "Nine more, all live." — the halo steps round with the rows
+ *   0.800–0.955  the other nine: the halo steps round with the rows
  *   0.955–1.000  out: pull back, everything frosts
  *
  * Everything derives from `local`; frame.time only drives the neon's faint
@@ -76,7 +90,29 @@ const LIST_OUT = 0.955
 const BAND = (ROW1 - ROW0) / NR
 
 const itemStart = (k: number) => F0 + SPAN * k
+const rowStart = (j: number) => ROW0 + j * BAND
 const rowAt = (j: number) => ROW0 + (j + 0.5) * BAND
+
+/* ---- the sites' scroll videos (scrub.ts) */
+/** a leaf's site scrolls across 30–94% of its item: from the moment it has cleared to just before its card leaves and the drum turns on */
+const V_A = TRAVEL
+const V_B = 0.94
+/** a tile's across 10–90% of its row (it is clear across ~7–93%) */
+const VT_A = 0.1
+const VT_B = 0.9
+/** 0..1 through a window → a frame, each of the video's frames an equal share */
+const frameOf = (x: number) => Math.min(SCRUB_LAST, Math.floor(clamp(x) * (SCRUB_LAST + 1)))
+const leafFrame = (k: number, l: number) => frameOf((l - itemStart(k) - V_A * SPAN) / ((V_B - V_A) * SPAN))
+const tileFrame = (j: number, l: number) => frameOf((l - rowStart(j) - VT_A * BAND) / ((VT_B - VT_A) * BAND))
+/**
+ * Where a site holds a decoder: from when the one before it starts to scroll
+ * (it is a step round, frosted, and readies its first frame there) until the
+ * turn that takes it away has ended (it rests on its last). One range ends
+ * where the next-but-one begins, so never more than two at once: the one in
+ * front and the next, or through a turn the one leaving.
+ */
+const leafHold = (k: number): [number, number] => [k === 0 ? -1 : itemStart(k - 1) + V_A * SPAN, itemStart(k + 1) + TRAVEL * SPAN]
+const tileHold = (j: number): [number, number] => [j === 0 ? RISE_A - 0.02 : rowStart(j - 1) + 0.25 * BAND, rowStart(j + 1) + 0.25 * BAND]
 
 /* ---- drum */
 /** how far the drum drifts through one item's hold (radians, + → -) */
@@ -97,6 +133,8 @@ const DEG = Math.PI / 180
 const UP = new THREE.Vector3(0, 1, 0)
 
 const pad = (n: number) => String(n).padStart(2, '0')
+/** how far `l` is from a print's hold range (0 inside it; NaN stays NaN) */
+const holdDist = (l: number, p: { hold: [number, number] }) => (l < p.hold[0] ? p.hold[0] - l : l > p.hold[1] ? l - p.hold[1] : l === l ? 0 : NaN)
 const esc = (s: string) => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
 /** wrap an angle to -π..π */
 const wrap = (a: number) => Math.atan2(Math.sin(a), Math.cos(a))
@@ -191,6 +229,26 @@ interface CardEl {
   name: HTMLElement
 }
 
+/** What a leaf / tile shows: its still screenshot, or its scroll video once that has a frame. */
+interface Print {
+  /** the face (its mirror shares uShot, uShotEnc and uShotLod) */
+  u: FaceUniforms
+  /** null: stills only (Data Saver, a slow connection, no H.264) */
+  s: Scrub | null
+  still: THREE.Texture | null
+  /** the flat colour bound until the still arrives */
+  placeholder: THREE.Texture
+  stillW: number
+  featured: boolean
+  /** where it holds a decoder (leafHold / tileHold) */
+  hold: [number, number]
+  /** how far ahead (either way, in local) its video downloads */
+  look: number
+  frameAt: (l: number) => number
+  /** the frame wanted this frame */
+  want: number
+}
+
 const _d = new THREE.Vector3()
 const _r = new THREE.Vector3()
 const _u = new THREE.Vector3()
@@ -251,11 +309,24 @@ class Work implements Chapter {
   private cards: CardEl[] = []
   private listDock!: HTMLElement
   private list!: HTMLElement
-  private listTitle!: HTMLElement
   /** the rows' scroll box (landscape, when nine rows can't fit above 'Say hello') */
   private rowsEl!: HTMLElement
   private rows: HTMLAnchorElement[] = []
   private curRow = -2
+
+  // the sites on the glass (featured leaves, then tiles)
+  private prints: Print[] = []
+  private scrubOn = false
+  private scrubFails = 0
+  /** one download at a time */
+  private fetching = false
+  /** after the reveal, with the story at or beside this chapter: the featured videos download in order */
+  private warm = false
+  private revealed = false
+  /** on screen (onEnter … onLeave: the boot's prewarm updates too, off screen) */
+  private active = false
+  /** local as of the last update on screen (NaN until the first) */
+  private lastL = NaN
 
   // layout / camera
   private lay: Layout | null = null
@@ -284,7 +355,36 @@ class Work implements Chapter {
     }
     document.fonts?.ready.then(() => (this.layDirty = true))
 
-    // screenshots: leaf 01 now, the rest once the site is revealed
+    // the sites: stills first (leaf 01 now, the rest once the site is revealed),
+    // then each one's scroll video as it comes near (scrub.ts)
+    const wide = this.mobile ? 800 : 1280
+    const tileW = this.mobile ? 480 : 720
+    this.scrubOn = !this.reduced && scrubAllowed()
+    const hooks: ScrubHooks = {
+      upload: tex => ctx.renderer.initTexture(tex),
+      frame: () => window.__hark?.engine?.wake(),
+      failed: (_s, decode) => {
+        // two that won't decode: this device can't, so every site keeps its still
+        if (decode && ++this.scrubFails >= 2) this.scrubOff()
+      },
+    }
+    const print = (u: FaceUniforms, id: string, featured: boolean, stillW: number, hold: [number, number], look: number, frameAt: (l: number) => number): Print => ({
+      u,
+      s: this.scrubOn ? new Scrub(scrubUrl(id), hooks) : null,
+      still: null,
+      placeholder: u.uShot.value,
+      stillW,
+      featured,
+      hold,
+      look,
+      frameAt,
+      want: 0,
+    })
+    this.prints = [
+      ...FEATURED.map((w, k) => print(this.set.leaves[k].u, w.id, true, wide, leafHold(k), SPAN, l => leafFrame(k, l))),
+      ...REST.map((w, j) => print(this.set.tiles[j].u, w.id, false, tileW, tileHold(j), j === 0 ? SPAN : 4 * BAND, l => tileFrame(j, l))),
+    ]
+
     const upload = (tex: THREE.Texture) => {
       tex.anisotropy = 8
       try {
@@ -293,27 +393,22 @@ class Work implements Chapter {
         /* uploads on first use instead */
       }
     }
-    const wide = this.mobile ? 800 : 1280
+    const setStill = (p: Print, tex: THREE.Texture) => {
+      upload(tex)
+      p.still = tex
+      if (p.u.uShot.value === p.placeholder) p.u.uShot.value = tex
+      p.placeholder.dispose()
+    }
     const load = (k: number) =>
       loadScreenshot(workImage(FEATURED[k].id), { width: wide })
         .then(tex => {
-          upload(tex)
-          const leaf = this.set.leaves[k]
-          const old = leaf.u.uShot.value
-          leaf.u.uShot.value = tex
-          averageColor(tex, leaf.tint)
-          old.dispose()
+          setStill(this.prints[k], tex)
+          averageColor(tex, this.set.leaves[k].tint)
         })
         .catch(err => console.warn(`[work] missing screenshot for ${FEATURED[k].id}`, err))
     const loadTile = (j: number) =>
-      loadScreenshot(workImage(REST[j].id), { width: this.mobile ? 480 : 720 })
-        .then(tex => {
-          upload(tex)
-          const tile = this.set.tiles[j]
-          const old = tile.u.uShot.value
-          tile.u.uShot.value = tex
-          old.dispose()
-        })
+      loadScreenshot(workImage(REST[j].id), { width: tileW })
+        .then(tex => setStill(this.prints[NF + j], tex))
         .catch(err => console.warn(`[work] missing screenshot for ${REST[j].id}`, err))
     load(0)
     whenRevealed().then(async () => {
@@ -321,11 +416,26 @@ class Work implements Chapter {
         await load(k)
         await nextFrame()
       }
+      this.revealed = true
+      this.armWarm()
+      this.pumpFetch()
       for (let j = 0; j < NR; j++) {
         await loadTile(j)
         await nextFrame()
       }
     })
+  }
+
+  onEnter() {
+    this.active = true
+    this.lastL = NaN
+  }
+
+  onLeave() {
+    this.active = false
+    this.lastL = NaN
+    // off screen: no decoders (each texture keeps its frame)
+    for (const p of this.prints) p.s?.release()
   }
 
   // ------------------------------------------------------------------ DOM
@@ -349,17 +459,10 @@ class Work implements Chapter {
     this.dock = el('div', 'wk-dock', undefined, stage)
     FEATURED.forEach((w, k) => this.cards.push(this.buildCard(this.dock, w, k)))
 
-    // the other nine
+    // the other nine: just their rows (no heading), then 'Say hello' and 'All work'
     this.listDock = el('div', 'wk-dock wk-dock--list', undefined, stage)
     this.list = el('section', 'wk-list hud-panel hud-panel--strong', undefined, this.listDock)
-    const meta = el('div', 'wk-meta', undefined, this.list)
-    el('span', 'hud-label wk-ind', 'More work', meta)
-    const allLive = REST.every(w => !isPreview(w.url))
-    const count9 = WORDS[NR] ?? String(NR)
-    this.listTitle = rise(
-      el('h3', 'hud-h2 wk-list-title', undefined, this.list),
-      allLive ? `${esc(count9)} more, <em>all live.</em>` : `${esc(count9)} <em>more.</em>`,
-    )
+    this.list.setAttribute('aria-label', 'More work')
     const ol = el('ol', 'wk-rows', undefined, this.list)
     this.rowsEl = ol
     ol.addEventListener('scroll', () => this.rowsEdges(), { passive: true })
@@ -648,6 +751,10 @@ class Work implements Chapter {
       }
     }
 
+    // ---- the sites' scroll videos
+    if (this.active) this.lastL = l
+    this.scrub(l)
+
     // ---- the floor: the ring's light (fading as it lifts), the lit screen's colour in front
     const fl = set.floor
     fl.uRingR.value = ringR
@@ -702,13 +809,133 @@ class Work implements Chapter {
     }
     const listV = smoothstep(RISE_A + 0.03, RISE_B + 0.002, l) * (1 - smoothstep(LIST_OUT - 0.002, LIST_OUT + 0.008, l))
     reveal(this.listDock, listV, 10)
-    setRise(this.listTitle, listV > 0.35)
     const inRows = l >= ROW0 - 0.004 && l <= LIST_OUT
     const selIdx = inRows ? clamp(Math.floor((l - ROW0) / BAND), 0, NR - 1) : -1
     if (selIdx !== this.curRow) {
       this.rows.forEach((r, j) => r.classList.toggle('is-cur', j === selIdx))
       this.curRow = selIdx
       if (selIdx >= 0) this.showRow(selIdx, still)
+    }
+  }
+
+  // ------------------------------------------------------------------ scroll videos
+
+  /**
+   * Each site's frame from `local`; decoders where the hold ranges say
+   * (released ones keep their frame), plus one at a time to bring a passed
+   * site that missed its last frame there; downloads as each comes near; then
+   * what each face shows.
+   */
+  private scrub(l: number) {
+    const P = this.prints
+    if (this.scrubOn) {
+      // releases first, so a hand-over never holds three
+      for (const p of P) {
+        const s = p.s!
+        p.want = p.frameAt(l)
+        s.seek(p.want)
+        // (one still to come shows its still; one gone by waits until it rests on its last frame)
+        if (s.attached && (l < p.hold[0] || l > p.hold[1]) && (s.settled || p.want === 0)) s.release()
+      }
+      let held = 0
+      for (const p of P) {
+        if (l >= p.hold[0] && l <= p.hold[1]) p.s!.attach()
+        if (p.s!.attached) held++
+      }
+      // a fling can leave some still seeking to their last frame: keep the nearest three
+      if (held > 3) {
+        P.filter(p => p.s!.attached)
+          .sort((a, b) => holdDist(l, a) - holdDist(l, b))
+          .slice(3)
+          .forEach(p => p.s!.release())
+        held = 3
+      }
+      // one gone by that isn't on its last frame (released mid-seek by the cap above
+      // or by onLeave, or readied a step early and then jumped past): a spare
+      // decoder puts it there, the nearest first, one at a time, so what a passed
+      // site shows comes from `local` alone and not from how the scroll got here
+      if (this.active && held < 3 && !P.some(p => p.s!.attached && holdDist(l, p) > 0)) {
+        let next: Print | null = null
+        for (const p of P) {
+          const s = p.s!
+          if (s.attached || s.state !== 'fetched' || p.want === 0 || s.frame === p.want) continue
+          if (!next || holdDist(l, p) < holdDist(l, next)) next = p
+        }
+        next?.s!.attach()
+      }
+      this.pumpFetch()
+    }
+    for (const p of P) this.showPrint(p)
+  }
+
+  /**
+   * The face shows its video once that has a frame (one holding a decoder), or
+   * once it has gone by (it keeps its last frame); its still otherwise. The
+   * video's first frame can differ from the still (a hero slider on another
+   * slide), so each video is readied a step early, while its glass is frosted.
+   */
+  private showPrint(p: Print) {
+    const s = p.s
+    let tex: THREE.Texture = p.still ?? p.placeholder
+    if (this.scrubOn && s && s.tex && s.frame >= 0 && s.state !== 'failed' && (s.attached || p.want > 0)) tex = s.tex
+    const u = p.u
+    if (u.uShot.value === tex) return
+    u.uShot.value = tex
+    const vid = !!s && tex === s.tex
+    u.uShotEnc.value = vid ? 1 : 0
+    u.uShotLod.value = vid && s!.width > 0 ? Math.log2(s!.width / p.stillW) : 0
+  }
+
+  /**
+   * One download at a time: what is needed now, then what is coming either
+   * way, then the featured in order (leaf 01's from the reveal, where the nav
+   * lands; the rest once the story is at or beside this chapter).
+   */
+  private pumpFetch() {
+    if (!this.scrubOn || this.fetching) return
+    const l = this.lastL
+    let best: Print | null = null
+    let bestKey = Infinity
+    this.prints.forEach((p, i) => {
+      if (p.s!.state !== 'idle') return
+      const d = holdDist(l, p)
+      const key = d <= p.look ? d : p.featured && (this.warm || (i === 0 && this.revealed)) ? 1 + i : Infinity
+      if (key < bestKey) {
+        bestKey = key
+        best = p
+      }
+    })
+    const s = (best as Print | null)?.s
+    if (!s) return
+    this.fetching = true
+    s.fetch(bestKey > 0).finally(() => {
+      this.fetching = false
+      this.pumpFetch()
+    })
+  }
+
+  /** After the reveal: once the story is at or beside this chapter, the featured videos download in order. */
+  private armWarm() {
+    const e = window.__hark?.engine
+    if (!this.scrubOn || !e) return
+    const at = e.slots.findIndex(s => s.def.id === this.id)
+    const go = () => {
+      this.warm = true
+      this.pumpFetch()
+    }
+    if (Math.abs(e.state.index - at) <= 1) return go()
+    // (left in place once warm: removing a listener while the engine walks the list would skip the next)
+    e.onCut.push((_from, to) => {
+      if (!this.warm && Math.abs(to - at) <= 1) go()
+    })
+  }
+
+  /** This device can't play them: every site keeps its still. */
+  private scrubOff() {
+    this.scrubOn = false
+    for (const p of this.prints) {
+      p.s?.release()
+      this.showPrint(p)
     }
   }
 

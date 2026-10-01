@@ -5,6 +5,7 @@ import { REDUCED_MOTION } from '../kit/motion'
 import { rise } from '../core/rise'
 import { framePaths } from '../service/neonFrame'
 import { THUMBS } from 'virtual:work-thumbs'
+import { mountPreviews } from './preview'
 
 /*
  * THE GLASS WALL: the sites hang as lit panes of glass on the black wall.
@@ -40,11 +41,17 @@ import { THUMBS } from 'virtual:work-thumbs'
  * the view. A 640w copy rides in srcset where one exists (virtual:work-thumbs).
  * A screenshot that fails, or hasn't decoded 8s after its pane came in, shows
  * the site's name card instead (and still clears if it turns up later).
+ *
+ * Previews (preview.ts): the hot pane (pointer) or, once a scroll settles, the
+ * lit one (touch: this file picks it, preview.ts only follows) plays a short
+ * film of its site over its screenshot (touch: once, under 5s). Only
+ * a pane whose entrance is over (is-hung, its screenshot sharp) plays; a filter
+ * stills them all before it moves the wall, and a retired pane's video goes.
  */
 
 export interface Item {
   w: WorkItem
-  /** place in WORK (its neon, the feet's breathing phase) */
+  /** place on the page, kit/work.ts PORTFOLIO_WORK (its neon, the feet's breathing phase) */
   index: number
   /** one of the prominent sites (kit/work.ts portfolioSplit): a row of its own, its placard beside it */
   feat: boolean
@@ -101,6 +108,8 @@ export interface Wall {
   finishAll(): void
   /** re-read the touch light / hot state after the wall moved */
   refresh(): void
+  /** every preview video stopped at once (a filter is about to move the wall) */
+  still(): void
 }
 
 const EASE_OUT = 'cubic-bezier(.16,1,.3,1)'
@@ -109,6 +118,8 @@ const EASE_CLEAR = 'cubic-bezier(.3,.1,.2,1)'
 const PHONE = '(max-width: 720px)'
 const HAS_THUMB = new Set(THUMBS)
 const MAX_FULL = 4
+/** touch: a pane is lit only with its screen's middle this near the view's (a share of half the view) */
+const LIT_WITHIN = 0.42
 /**
  * Touch: the panes lean as they pass by a scroll-driven CSS animation where there is one
  * (portfolio.css .pf-touch: on the compositor, so a phone never restyles a pane per scroll
@@ -178,12 +189,16 @@ export function mountWall(o: { stage: HTMLElement; work: readonly WorkItem[]; ma
     items.push(it)
   }
   const byLi = new Map(items.map(it => [it.li, it]))
+  /** place in the page's own order (the touch light's tie-break) */
+  const order = new Map(items.map((it, k) => [it, k]))
   const itemOf = (n: EventTarget | null) => {
     const li = (n as Element | null)?.closest?.<HTMLLIElement>('.pf-item')
     return li ? byLi.get(li) : undefined
   }
   const visible = () => items.filter(it => !it.li.hidden)
   const isTile = (it: Item) => !it.feat && phone.matches
+  // (touch: the lit pane, below, is told to it: the light and the film are one choice)
+  const previews = mountPreviews()
 
   // ------------------------------------------------------------ slots + sizes
   // (the prominent rows alternate their screen's side by visible index, so a filter that hides
@@ -373,6 +388,8 @@ export function mountWall(o: { stage: HTMLElement; work: readonly WorkItem[]; ma
         fullRunning = Math.max(0, fullRunning - 1)
       }
       later(it, 800, () => it.li.classList.remove('is-ebb'))
+      // (hot or in the middle while it came in: its preview can start now)
+      previews.ready(it)
     })
   }
 
@@ -407,6 +424,8 @@ export function mountWall(o: { stage: HTMLElement; work: readonly WorkItem[]; ma
     it.entered = true
     it.held = false
     entryIo.unobserve(it.li)
+    // (only an entered pane is lit: look again, or one that came in under a still view stays dark)
+    if (mode === 'touch') scrollLight()
     load(it)
     const li = it.li
     it.t0 = performance.now() + delay
@@ -506,6 +525,7 @@ export function mountWall(o: { stage: HTMLElement; work: readonly WorkItem[]; ma
   function retire(list: Item[]) {
     for (const it of list) {
       it.li.hidden = true
+      previews.drop(it)
       flush(it, false)
       it.anims.splice(0).forEach(a => a.cancel())
       // (and anything else still on it: a FLIP, a press ring; never the feet's breathing)
@@ -521,6 +541,10 @@ export function mountWall(o: { stage: HTMLElement; work: readonly WorkItem[]; ma
       it.quick = true
       if (it.nofile) it.li.classList.add('is-nofile')
       if (hot === it) unhot(it)
+      if (lit === it) {
+        lit = null
+        previews.lit(null)
+      }
       entryIo.observe(it.li)
     }
   }
@@ -625,6 +649,7 @@ export function mountWall(o: { stage: HTMLElement; work: readonly WorkItem[]; ma
     it.li.classList.add('is-hot')
     it.foot.style.setProperty('--ox', `${ox.toFixed(1)}%`)
     if (mode !== 'pointer') return
+    previews.want(it)
     stage.classList.add('has-hot')
     lampTo(it)
     const s = tiltOf(it)
@@ -642,6 +667,7 @@ export function mountWall(o: { stage: HTMLElement; work: readonly WorkItem[]; ma
   }
   function unhot(it: Item) {
     it.li.classList.remove('is-hot')
+    previews.unwant(it)
     if (hot === it) hot = null
     if (!hot) stage.classList.remove('has-hot')
     const s = tilts.get(it)
@@ -665,6 +691,23 @@ export function mountWall(o: { stage: HTMLElement; work: readonly WorkItem[]; ma
     it.screen.style.setProperty('--gy', `${(v * 100).toFixed(1)}%`)
     it.screen.style.setProperty('--sx', `${(110 - u * 80).toFixed(1)}%`)
   }
+
+  /**
+   * A pill holds its pane's light only while it has KEYBOARD focus (:focus-visible): Chrome and
+   * Firefox focus a link on a mouse click too, and that pane would stay hot (its preview looping)
+   * after the pointer had gone, and light up again on the way back from the site's new tab.
+   * (No :focus-visible, Safari before 15.4: a click never focuses a link there, so focus is the keyboard's)
+   */
+  const keyFocus = (it: Item) => {
+    if (document.activeElement !== it.cta) return false
+    try {
+      return it.cta.matches(':focus-visible')
+    } catch {
+      return true
+    }
+  }
+  /** the pointer is over the pane's screen or its pill */
+  const over = (it: Item) => it.hit.matches(':hover') || it.cta.matches(':hover')
 
   function pointerMode(signal: AbortSignal) {
     const opt = { signal, passive: true } as const
@@ -694,13 +737,13 @@ export function mountWall(o: { stage: HTMLElement; work: readonly WorkItem[]; ma
       it.hit.addEventListener(
         'pointerleave',
         e => {
-          if (e.pointerType === 'mouse' && hot === it && document.activeElement !== it.cta) unhot(it)
+          if (e.pointerType === 'mouse' && hot === it && !keyFocus(it)) unhot(it)
           it.screen.classList.remove('is-press')
         },
         opt,
       )
       it.cta.addEventListener('pointerenter', e => e.pointerType === 'mouse' && setHot(it, 'cta'), opt)
-      it.cta.addEventListener('pointerleave', e => e.pointerType === 'mouse' && hot === it && document.activeElement !== it.cta && unhot(it), opt)
+      it.cta.addEventListener('pointerleave', e => e.pointerType === 'mouse' && hot === it && !keyFocus(it) && unhot(it), opt)
       // press: the glass gives, a ring of light spreads from the click (the link itself navigates)
       it.hit.addEventListener(
         'pointerdown',
@@ -794,7 +837,9 @@ export function mountWall(o: { stage: HTMLElement; work: readonly WorkItem[]; ma
         const vh = innerHeight || 1
         const mid = scrollY + vh / 2
         let best: Item | null = null
-        let bestD = 0.42
+        let bestD = LIT_WITHIN
+        // (a pixel, in the same units)
+        const tie = 2 / vh
         // read every pane first, then write (a write between reads would force a style pass each)
         const read: [Item, number][] = []
         for (const it of inView) {
@@ -810,8 +855,11 @@ export function mountWall(o: { stage: HTMLElement; work: readonly WorkItem[]; ma
             it.screen.style.transform = `perspective(1400px) rotateX(${rx.toFixed(2)}deg)`
             it.glare.style.setProperty('--gy', `${(50 - v * 60).toFixed(1)}%`)
           }
-          if (Math.abs(v) < bestD && it.entered) {
-            bestD = Math.abs(v)
+          if (!it.entered) continue
+          // (panes side by side tie, to the pixel: the first on the page wins, whatever order they came into view)
+          const d = Math.abs(v)
+          if (d < bestD - tie || (best && d < bestD + tie && order.get(it)! < order.get(best)!)) {
+            bestD = Math.min(d, bestD)
             best = it
           }
         }
@@ -819,6 +867,8 @@ export function mountWall(o: { stage: HTMLElement; work: readonly WorkItem[]; ma
           lit?.li.classList.remove('is-lit')
           lit = best
           lit?.li.classList.add('is-lit')
+          // (the one choice: the touch preview plays on this pane, and on no other)
+          previews.lit(lit)
         }
       })
   }
@@ -835,14 +885,16 @@ export function mountWall(o: { stage: HTMLElement; work: readonly WorkItem[]; ma
     scrollLight()
   }
 
-  // keyboard: a focused pill lights its pane (tilt 0, lifted, the glare high)
+  // keyboard: a focused pill lights its pane (tilt 0, lifted, the glare high). Keyboard focus only
+  // (keyFocus): a pill clicked with the mouse is already lit by the pointer, and goes dark with it
   stage.addEventListener('focusin', e => {
     const it = itemOf(e.target)
-    if (it && e.target === it.cta) setHot(it, 'focus')
+    if (it && e.target === it.cta && keyFocus(it)) setHot(it, 'focus')
   })
   stage.addEventListener('focusout', e => {
     const it = itemOf(e.target)
-    if (it && e.target === it.cta && hot === it) unhot(it)
+    // (the pointer still on it, the window gone to the site's new tab: it stays the pointer's)
+    if (it && e.target === it.cta && hot === it && !(mode === 'pointer' && over(it))) unhot(it)
   })
 
   function setMode() {
@@ -866,6 +918,7 @@ export function mountWall(o: { stage: HTMLElement; work: readonly WorkItem[]; ma
     tilts.forEach((_, it) => it.li.classList.remove('is-tilt'))
     tilts.clear()
     stage.classList.toggle('pf-touch', mode === 'touch' && SCROLL_LEAN)
+    previews.mode(mode)
     if (mode === 'pointer') pointerMode(ac.signal)
     else touchMode(ac.signal)
   }
@@ -873,29 +926,6 @@ export function mountWall(o: { stage: HTMLElement; work: readonly WorkItem[]; ma
   const onMode = () => setMode()
   if (typeof fine.addEventListener === 'function') fine.addEventListener('change', onMode)
   else fine.addListener?.(onMode)
-
-  // ------------------------------------------------------------ the "More work" threshold: a neon sweep, once
-  const more = stage.querySelector<HTMLElement>('.pf-room--more')
-  const sweep = more?.querySelector<HTMLElement>('.pf-sweep > i')
-  if (more && sweep && !REDUCED_MOTION) {
-    const sio = new IntersectionObserver(
-      es => {
-        if (!es.some(e => e.isIntersecting && e.intersectionRatio >= 0.2)) return
-        sio.disconnect()
-        sweep.animate(
-          [
-            { transform: 'translateX(-40%)', opacity: 0 },
-            { opacity: 1, offset: 0.1 },
-            { opacity: 1, offset: 0.85 },
-            { transform: 'translateX(250%)', opacity: 0 },
-          ],
-          { duration: 1100, easing: 'cubic-bezier(.5,0,.25,1)' },
-        )
-      },
-      { threshold: 0.2 },
-    )
-    sio.observe(more)
-  }
 
   return {
     items,
@@ -912,6 +942,8 @@ export function mountWall(o: { stage: HTMLElement; work: readonly WorkItem[]; ma
         lastRx.clear()
         scrollLight()
       }
+      previews.moved()
     },
+    still: () => previews.stopAll(),
   }
 }

@@ -3,8 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { SERVICE_PAGES } from './src/service/data/pages'
 import { SERVICE_CONTENT } from './src/service/data/content'
-import { WORK } from './src/content'
-import { portfolioDescription, portfolioSplit, screenSizes } from './src/kit/work'
+import { PORTFOLIO_WORK, portfolioDescription, portfolioSplit, screenSizes } from './src/kit/work'
 
 /** where the concept is served (og:url etc.); the path part comes from --base */
 const ORIGIN = 'https://harkdigital.github.io'
@@ -66,12 +65,19 @@ function servicePages(): Plugin {
  * The Portfolio page: portfolio.html (src/portfolio/main.ts) served at <base>portfolio/.
  *   dev / shots  /portfolio/ (and /portfolio, with any query) is rewritten to /portfolio.html
  *   virtual:work-thumbs  the ids with a half-size screenshot (public/work/640/<id>.webp)
- *   build        dist/portfolio/index.html, its description generated from WORK, og:url
- *                for --base, and the lead screenshot preloaded; dist/portfolio.html goes
- * A WORK id without its screenshots is a build warning (the page shows its name card).
+ *   virtual:work-videos  the ids with a preview video (public/work/video/<id>.mp4, made by
+ *                scripts/work-video.mjs): only those tiles ever make a <video> (portfolio/preview.ts);
+ *                in dev it follows videos added or removed (the next page load sees them)
+ *   build        dist/portfolio/index.html, its description generated from its client
+ *                sites (kit/work.ts portfolioDescription), og:url for --base, and the lead
+ *                screenshot preloaded; dist/portfolio.html goes
+ * Any site on the page (WORK, PORTFOLIO_MORE: kit/work.ts PORTFOLIO_WORK) without its
+ * screenshots is a build warning (the page shows its name card), as is one without its
+ * preview video (its tile keeps its still screenshot).
  */
 function portfolioPage(): Plugin {
   const VIRTUAL = 'virtual:work-thumbs'
+  const VIDEOS = 'virtual:work-videos'
   let root = process.cwd()
   let outDir = 'dist'
   let base = '/'
@@ -87,9 +93,20 @@ function portfolioPage(): Plugin {
       return []
     }
   }
+  /** ids with a preview video (an empty file, one still being written, is left out) */
+  const videos = () => {
+    try {
+      return fs
+        .readdirSync(pub('video'))
+        .filter(f => f.endsWith('.mp4') && fs.statSync(pub('video', f)).size > 0)
+        .map(f => f.slice(0, -4))
+    } catch {
+      return []
+    }
+  }
   /** the lead screenshot (the first prominent site), asked for at high priority before any script runs */
   const preload = () => {
-    const lead = portfolioSplit(WORK).lead[0]
+    const lead = portfolioSplit(PORTFOLIO_WORK).lead[0]
     if (!lead) return ''
     const full = `${base}work/${lead.id}.webp`
     const set = fs.existsSync(pub('640', `${lead.id}.webp`))
@@ -112,18 +129,34 @@ function portfolioPage(): Plugin {
     },
     configureServer(server) {
       server.middlewares.use(rewrite)
+      // a video added (or removed) while the server runs: the list is made again on the next load
+      // (no reload of its own: a page open in the browser carries on with the list it has)
+      const dir = pub('video')
+      const stale = (file: string) => {
+        if (path.dirname(file) !== dir || !file.endsWith('.mp4')) return
+        const mod = server.moduleGraph.getModuleById(`\0${VIDEOS}`)
+        if (mod) server.moduleGraph.invalidateModule(mod)
+      }
+      server.watcher.add(dir)
+      server.watcher.on('add', stale)
+      server.watcher.on('change', stale)
+      server.watcher.on('unlink', stale)
     },
     resolveId(id) {
       if (id === VIRTUAL) return `\0${VIRTUAL}`
+      if (id === VIDEOS) return `\0${VIDEOS}`
     },
     load(id) {
       if (id === `\0${VIRTUAL}`) return `export const THUMBS = ${JSON.stringify(thumbs())}`
+      if (id === `\0${VIDEOS}`) return `export const VIDEOS = ${JSON.stringify(videos())}`
     },
     buildStart() {
       const have = new Set(thumbs())
-      for (const w of WORK) {
+      const clips = new Set(videos())
+      for (const w of PORTFOLIO_WORK) {
         if (!fs.existsSync(pub(`${w.id}.webp`))) this.warn(`[portfolio] ${w.id}: no public/work/${w.id}.webp (it shows its name card)`)
         if (!have.has(w.id)) this.warn(`[portfolio] ${w.id}: no public/work/640/${w.id}.webp (npm run thumbs)`)
+        if (!clips.has(w.id)) this.warn(`[portfolio] ${w.id}: no public/work/video/${w.id}.mp4 (it keeps its still screenshot; node scripts/work-video.mjs --id=${w.id} --url=${w.url})`)
       }
     },
     // dev: the same preload the build writes, so the lead screen arrives the same way

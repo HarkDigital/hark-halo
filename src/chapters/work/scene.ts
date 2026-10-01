@@ -14,6 +14,8 @@ import type { WorkItem } from '../../content'
  *             when the leaf is clear (roughness ~0, crisp studio strips),
  *             diffused into soft colour when it is frosted (mip blur + a
  *             jittered sandblast), bleeding into the frosted glass around it.
+ *             The print is a still screenshot, or the site's scroll video
+ *             (scrub.ts) once it has a frame: the chapter swaps uShot.
  *             Transmission-free: the faces are premultiplied-alpha surfaces
  *             (reflections are added at full strength, the print covers, the
  *             margins let the drum's interior through), so the glass buffer
@@ -159,6 +161,10 @@ function arcPoints(r: number, y: number, a0: number, a1: number, n: number) {
 /** Uniforms of one leaf / tile face (shared by its front and back faces). */
 export interface FaceUniforms {
   uShot: { value: THREE.Texture }
+  /** 1 while uShot is a video frame (stored sRGB-encoded: decoded in the shader, as three does for video maps) */
+  uShotEnc: { value: number }
+  /** mip bias for uShot: log2(its width / the still's), so the frost blurs a smaller video as much as the still */
+  uShotLod: { value: number }
   uLabel: { value: THREE.Texture }
   /** 0 = clear glass (the print razor sharp) … 1 = sandblasted */
   uFrost: { value: number }
@@ -194,20 +200,23 @@ varying vec2 vFaceUv;
 varying float vFaceY;
 varying float vBack;
 uniform sampler2D uShot, uLabel;
-uniform float uFrost, uLit, uCorner, uRingY, uFade, uMilk, uSpecIn, uEtch;
+uniform float uFrost, uLit, uCorner, uRingY, uFade, uMilk, uSpecIn, uEtch, uShotEnc, uShotLod;
 uniform vec4 uRect, uLabelRect;
 uniform vec2 uSize;
 uniform vec3 uSpill;
 float faceHash( vec2 p ) { vec3 p3 = fract( vec3( p.xyx ) * 0.1031 ); p3 += dot( p3, p3.yzx + 33.33 ); return fract( ( p3.x + p3.y ) * p3.z ); }
+// the print's colour (a video frame is decoded here; a still by its sampler)
+vec3 shotDec( vec3 c ) { return uShotEnc > 0.5 ? sRGBTransferEOTF( vec4( c, 1.0 ) ).rgb : c; }
+vec3 shotLod( vec2 uv, float lod ) { return shotDec( textureLod( uShot, uv, max( lod + uShotLod, 0.0 ) ).rgb ); }
 // sandblasted glass over a backlit print: a mip-blurred hexagonal gather
 // (smooth, so a frosted site reads as soft colour, never as static)
 vec3 faceFrost( vec2 suv, float f ) {
-	float lod = 0.5 + f * 4.3;
+	float lod = max( 0.5 + f * 4.3 + uShotLod, 0.0 );
 	vec2 ts = exp2( lod ) / vec2( textureSize( uShot, 0 ) );
-	vec3 acc = textureLod( uShot, suv, lod ).rgb * 0.28;
+	vec3 acc = shotDec( textureLod( uShot, suv, lod ).rgb ) * 0.28;
 	for ( int i = 0; i < 6; i ++ ) {
 		float a = float( i ) * 1.0471976 + 0.26;
-		acc += textureLod( uShot, clamp( suv + vec2( cos( a ), sin( a ) ) * ts * 1.3, 0.0, 1.0 ), lod ).rgb * 0.12;
+		acc += shotDec( textureLod( uShot, clamp( suv + vec2( cos( a ), sin( a ) ) * ts * 1.3, 0.0, 1.0 ), lod ).rgb ) * 0.12;
 	}
 	return acc;
 }
@@ -230,7 +239,7 @@ const FACE_FRAG_BODY = /* glsl */ `
 	// frosted, the print's edge softens into the glass
 	float rIn = 1.0 - smoothstep( -raa - fr * 0.02, raa + fr * 0.02, rOut );
 	vec2 suv = ( vFaceUv - uRect.xy ) / ( uRect.zw - uRect.xy );
-	vec3 sharpC = texture2D( uShot, suv ).rgb;
+	vec3 sharpC = shotDec( texture2D( uShot, suv ).rgb );
 	vec3 softC = fr > 0.01 ? faceFrost( clamp( suv, 0.0, 1.0 ), fr ) : sharpC;
 	// the sandblast's fine, fixed tooth
 	softC *= 1.0 + ( faceHash( floor( gl_FragCoord.xy * 0.5 ) ) - 0.5 ) * 0.07 * fr;
@@ -243,7 +252,7 @@ const FACE_FRAG_BODY = /* glsl */ `
 	softC = mix( softC, softL * tintC * 1.35, 0.38 * fr );
 	vec3 shotC = mix( sharpC, softC, smoothstep( 0.0, 0.3, fr ) );
 	// light diffusing out of the print into the frosted glass around it
-	vec3 edgeC = textureLod( uShot, clamp( suv, 0.0, 1.0 ), 6.0 ).rgb;
+	vec3 edgeC = shotLod( clamp( suv, 0.0, 1.0 ), 6.0 );
 	float bleed = exp( -max( rOut, 0.0 ) / 0.13 ) * fr;
 	// the neon behind the glass: brightest at the ring's height
 	float ringL = exp( -abs( vFaceY - uRingY ) * 2.1 );
@@ -324,7 +333,7 @@ const MIRROR_FRAG = /* glsl */ `
   uniform vec4 uRect;
   uniform vec2 uSize;
   uniform vec3 uSpill;
-  uniform float uK, uFrost, uLit, uRingY, uCorner;
+  uniform float uK, uFrost, uLit, uRingY, uCorner, uShotEnc, uShotLod;
   varying vec2 vUv;
   varying float vWY;
   void main() {
@@ -342,7 +351,9 @@ const MIRROR_FRAG = /* glsl */ `
     float rIn = 1.0 - smoothstep(-0.02, 0.03, rOut);
     vec2 suv = clamp((vUv - uRect.xy) / (uRect.zw - uRect.xy), 0.0, 1.0);
     // a black mirror is glossy, not perfect: the print a touch soft
-    vec3 c = textureLod(uShot, suv, mix(2.2, 5.0, uFrost)).rgb * rIn * uLit;
+    vec3 c = textureLod(uShot, suv, max(mix(2.2, 5.0, uFrost) + uShotLod, 0.0)).rgb;
+    if (uShotEnc > 0.5) c = sRGBTransferEOTF(vec4(c, 1.0)).rgb;
+    c *= rIn * uLit;
     float ringL = exp(-abs(-vWY - uRingY) * 2.1);
     c += uSpill * ringL * (1.0 - rIn) * mix(0.3, 0.7, uFrost);
     gl_FragColor = vec4(c * fade * fMask * uK, 1.0);
@@ -352,6 +363,8 @@ const MIRROR_FRAG = /* glsl */ `
 /** Mirror uniforms of one leaf (the print shares the face's texture uniform). */
 export interface MirrorUniforms {
   uShot: { value: THREE.Texture }
+  uShotEnc: { value: number }
+  uShotLod: { value: number }
   uRect: { value: THREE.Vector4 }
   uSize: { value: THREE.Vector2 }
   uSpill: { value: THREE.Color }
@@ -522,6 +535,8 @@ export function buildCarousel(featured: WorkItem[], rest: WorkItem[], mobile: bo
     const shot = placeholderTexture('#15171c')
     const u: FaceUniforms = {
       uShot: { value: shot },
+      uShotEnc: { value: 0 },
+      uShotLod: { value: 0 },
       uLabel: { value: blankLabel },
       uFrost: { value: 1 },
       uLit: { value: 0.5 },
@@ -551,6 +566,8 @@ export function buildCarousel(featured: WorkItem[], rest: WorkItem[], mobile: bo
     // the mirror: the leaf flipped under the floor
     const mirror: MirrorUniforms = {
       uShot: u.uShot,
+      uShotEnc: u.uShotEnc,
+      uShotLod: u.uShotLod,
       uRect: u.uRect,
       uSize: u.uSize,
       uSpill: { value: new THREE.Color() },
@@ -639,6 +656,8 @@ export function buildCarousel(featured: WorkItem[], rest: WorkItem[], mobile: bo
     halo.add(station)
     const u: FaceUniforms = {
       uShot: { value: placeholderTexture('#15171c') },
+      uShotEnc: { value: 0 },
+      uShotLod: { value: 0 },
       uLabel: { value: blankLabel },
       uFrost: { value: 1 },
       uLit: { value: 0.5 },

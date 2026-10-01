@@ -70,7 +70,7 @@
 }
 /* landscape: the card never outgrows the band between the chrome. If the
    nine rows can't fit, only the rows scroll (the wheel stays in the list,
-   data-lenis-prevent); the title and 'Say hello' always show. */
+   data-lenis-prevent); 'Say hello' always shows. */
 @media (min-aspect-ratio: 10/9) {
   .stage-work .wk-dock--list {
     grid-template-rows: minmax(0, 1fr);
@@ -150,15 +150,13 @@
 
 /* ---------------- the other nine ---------------- */
 
+/* no heading: the rows lead, the first row's highlight inset from the top
+   as from the sides */
 .stage-work .wk-list {
   display: grid;
   gap: 14px;
-  padding: 24px 26px 22px;
+  padding: 16px 26px 22px;
   align-self: center;
-}
-.stage-work .wk-list-title {
-  font-size: clamp(1.9rem, 2.7vw, 2.7rem);
-  line-height: 1;
 }
 .stage-work .wk-rows {
   list-style: none;
@@ -270,13 +268,11 @@
   }
   .stage-work .wk-list {
     gap: 10px;
-    padding: 16px 16px 14px;
+    padding: 12px 16px 14px;
   }
-  .stage-work .wk-list-title {
-    font-size: clamp(1.5rem, 6.6vw, 2rem);
-  }
+  /* (no industry column: the name, then the arrow) */
   .stage-work .wk-row {
-    grid-template-columns: 1.9em minmax(0, 1fr) 1em;
+    grid-template-columns: minmax(0, 1fr) 1em;
     gap: 8px;
     padding: 5px 8px;
   }
@@ -301,7 +297,7 @@
     border-top: 0;
   }
   .stage-work .wk-row {
-    grid-template-columns: 1.7em minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     padding: 4px 6px;
   }
   .stage-work .wk-row .wk-arrow {
@@ -310,9 +306,6 @@
   .stage-work .wk-rname {
     font-size: 13px;
     line-height: 1.2;
-  }
-  .stage-work .wk-list > .wk-meta {
-    display: none;
   }
   .stage-work .wk-card .wk-tags {
     display: none;
@@ -329,7 +322,7 @@
    for an industry column, which only wrapped the names onto two lines */
 @media (min-aspect-ratio: 10/9) and (max-width: 1180px) {
   .stage-work .wk-row {
-    grid-template-columns: 2.2em minmax(0, 1fr) 1em;
+    grid-template-columns: minmax(0, 1fr) 1em;
   }
   .stage-work .wk-rind {
     display: none;
@@ -337,18 +330,15 @@
 }
 
 /* short landscape windows (a 1366x657 laptop, a browser with toolbars):
-   tighter rows, no industry column, a smaller title, so all nine rows and
-   'Say hello' fit without scrolling */
+   tighter rows, no industry column, so all nine rows and 'Say hello' fit
+   without scrolling */
 @media (min-aspect-ratio: 10/9) and (max-height: 700px) {
   .stage-work .wk-list {
     gap: 10px;
-    padding: 18px 22px 16px;
-  }
-  .stage-work .wk-list-title {
-    font-size: clamp(1.7rem, 4.6vh, 2.3rem);
+    padding: 12px 22px 16px;
   }
   .stage-work .wk-row {
-    grid-template-columns: 2.2em minmax(0, 1fr) 1em;
+    grid-template-columns: minmax(0, 1fr) 1em;
     padding-block: 5px;
   }
   .stage-work .wk-rind {
@@ -394,10 +384,7 @@
   }
   .stage-work .wk-list {
     gap: 8px;
-    padding: 12px 14px;
-  }
-  .stage-work .wk-list-title {
-    font-size: 1.4rem;
+    padding: 10px 14px 12px;
   }
   .stage-work .wk-rows {
     grid-template-columns: 1fr 1fr;
@@ -407,7 +394,7 @@
     border-top: 0;
   }
   .stage-work .wk-row {
-    grid-template-columns: 1.7em minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     padding: 3px 6px;
   }
   .stage-work .wk-row .wk-rind,

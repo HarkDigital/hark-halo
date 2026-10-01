@@ -3,8 +3,10 @@
    (WebGL) is locked to this box: the card itself draws nothing but type.
    Rows: the meta line (eyebrow · count), the quote with its speaker
    (bottom-aligned, sized by JS to fit the longest voice), and the band at
-   the foot the neon line runs through. Every selector is scoped under
-   .stage-voices.
+   the foot the neon line runs through. The words (quote, speaker, intro
+   title) are scrubbed by scroll, not timed: scrub.ts writes each word's
+   --p 0..1 and the rules below map it onto the rise. Every selector is
+   scoped under .stage-voices.
    ------------------------------------------------------------------ */
 
 .stage-voices {
@@ -136,6 +138,7 @@
   position: absolute;
   inset: 0;
 }
+/* (each word shows itself while it has any reveal: see the scrubbed words below) */
 .stage-voices .vx-voice {
   position: absolute;
   left: 0;
@@ -144,12 +147,6 @@
   margin: 0;
   display: grid;
   gap: clamp(14px, 2.2vh, 24px);
-  visibility: hidden;
-  transition: visibility 0s linear 0.4s;
-}
-.stage-voices .vx-voice.is-on {
-  visibility: visible;
-  transition-delay: 0s;
 }
 
 /* the quote: the hero of the chapter */
@@ -168,18 +165,6 @@
 /* (text-indent is inherited: each word is an inline-block, keep it off them) */
 .stage-voices .vx-quote .rise-w {
   text-indent: 0;
-}
-/* a soft, capped stagger: the next voice drifts in after the last has faded */
-.stage-voices .vx-quote.rise .rise-w > span {
-  transition:
-    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1),
-    filter 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-    opacity 0.6s ease;
-  transition-delay: calc(0.28s + min(var(--i, 0), 24) * 12ms);
-}
-.stage-voices .vx-quote.rise:not(.is-in) .rise-w > span {
-  transition-duration: 0.36s, 0.36s, 0.32s;
-  transition-delay: 0s;
 }
 
 /* the speaker: small bold caps beneath, the company under the name */
@@ -205,8 +190,36 @@
 .stage-voices .vx-credit .rise-w + .rise-w {
   margin-left: 0;
 }
-.stage-voices .vx-credit .rise.is-in .rise-w > span {
-  transition-delay: calc(0.3s + var(--i, 0) * 25ms);
+
+/* ---------------- the scrubbed words (scrub.ts) ----------------
+   The site's rise (base.css: up out of the clip, blur to sharp, transparent
+   to opaque) with no clock: each word's --p is its place along it, written
+   per frame from the scroll. Hidden words aren't painted; settled words drop
+   their filter and transform. (.rise.vx-scrub outranks base.css's .rise rules.) */
+.stage-voices .rise.vx-scrub .rise-w {
+  visibility: hidden;
+  transition: none;
+}
+.stage-voices .rise.vx-scrub .rise-w:is(.is-fly, .is-set) {
+  visibility: visible;
+}
+/* a shown word keeps its own layer from its first rise until it's hidden
+   again, so a word settling never repaints the words around it, and its
+   blur and fade are the compositor's, not a fresh paint every frame (only
+   transform: will-change: filter on every settled word costs far more) */
+.stage-voices .rise.vx-scrub .rise-w:is(.is-fly, .is-set) > span {
+  will-change: transform;
+}
+.stage-voices .rise.vx-scrub .rise-w > span {
+  transition: none;
+  opacity: var(--p, 0);
+  filter: blur(calc((1 - var(--p, 0)) * 10px));
+  transform: translate3d(0, calc((1 - var(--p, 0)) * 0.18em), 0) scale(calc(1.02 - var(--p, 0) * 0.02));
+}
+.stage-voices .rise.vx-scrub .rise-w.is-set > span {
+  opacity: 1;
+  filter: none;
+  transform: none;
 }
 
 /* ---------------- portrait: a tall card, the line across its foot ---------------- */

@@ -1,5 +1,8 @@
 // Copied verbatim from the classic 2026 site (site-v2/src/data/serviceContent.ts): the
-// long-form article and FAQs under each service page.
+// long-form article and FAQs under each service page. The portfolio's count (Web Design) is
+// counted from the Portfolio's client sites (kit/work.ts PORTFOLIO_WORK).
+
+import { PORTFOLIO_WORK, countWord } from '../../kit/work'
 
 // Long-form service content for SEO (search engines) and GEO (AI answer
 // engines). Written to be quotable: definitional sentences, concrete
@@ -71,13 +74,13 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
 
   'web-design': {
     metaDescription:
-      'Web design in Philadelphia and beyond, beautiful, functional websites that load fast, rank well, and turn visitors into customers. 15 live projects, from dentists to global manufacturers.',
+      `Web design in Philadelphia and beyond, beautiful, functional websites that load fast, rank well, and turn visitors into customers. ${PORTFOLIO_WORK.length} live projects, from dentists to global manufacturers.`,
     article: [
       {
         heading: 'What makes a business website actually work',
         paragraphs: [
           'A working business website does three jobs: it looks credible in the first three seconds, it answers the visitor’s question in the first thirty, and it makes the next step (call, book, buy, ask) impossible to miss. Design that ignores any of those jobs is decoration, not design.',
-          'Hark Digital has designed and built websites for medical practices, manufacturers, real estate brokerages, restaurants, contractors, wineries, and nonprofits across Philadelphia and beyond, fifteen of them live in our portfolio right now. Every one is responsive, editable by its owner, and built with search visibility in the foundation rather than sprinkled on top.',
+          `Hark Digital has designed and built websites for medical practices, manufacturers, real estate brokerages, restaurants, contractors, wineries, and nonprofits across Philadelphia and beyond, ${countWord(PORTFOLIO_WORK.length).toLowerCase()} of them live in our portfolio right now. Every one is responsive, editable by its owner, and built with search visibility in the foundation rather than sprinkled on top.`,
         ],
       },
       {

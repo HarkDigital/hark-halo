@@ -10,19 +10,23 @@ import { hostOf, isPreview, neonKey } from '../kit/work'
  * its one real link (the pill) carry the site. The screen's own link (.pf-hit)
  * is the pill's mouse / touch twin, out of the tab order and the tree.
  *
- *   li.pf-item                 --n / --n-rgb: the site's neon (its place in WORK: a, b, c…)
+ *   li.pf-item                 --n / --n-rgb: the site's neon (its place on the page, kit/work.ts PORTFOLIO_WORK: a, b, c…)
  *     article.pf-art
  *       .pf-hang               the entrance and the filter's FLIP move this
  *         .pf-screen           tilt / lift (--rx, --ry, --lift)
  *           .pf-bezel          the frame; .pf-glass (16:10) holds, back to front:
- *                              frost canvas · fog · the screenshot · name card ·
+ *                              frost canvas · fog · the screenshot · (its preview
+ *                              video, added on first play: preview.ts) · name card ·
  *                              clearing edge · sheen · glare · dim · press ring
  *             svg.pf-tube      the neon frame (wall.ts writes its paths)
  *           a.pf-hit           the whole screen opens the site
  *         .pf-foot > .pf-pool  the lit tube it stands on, and its light on the wall
  *       .pf-plac               industry, name, blurb, tags, the pill + host
  *
- * `kind`: 'feat', a prominent site (the name an h2), or 'more' (an h3). Names are always plain, never an accent word.
+ * `kind`: 'feat', a prominent site, or 'more' (a tile in the grid). Every name is an h2: the grid
+ * has no heading of its own (its section is named "More work" by aria-label alone), so its sites
+ * are the prominent ones' peers, never sections of the last of them. Names are always plain,
+ * never an accent word.
  *
  * The pill's name is its aria-label, "Visit site, ComTec Systems (opens in a new
  * tab)": it starts with the words on it (WCAG 2.5.3). Visually hidden spans for
@@ -42,7 +46,6 @@ export function itemHtml(w: WorkItem, workIndex: number, kind: 'feat' | 'more'):
   const name = esc(w.name)
   const url = esc(w.url)
   const host = pre ? 'Pre-launch build' : esc(hostOf(w.url))
-  const h = kind === 'feat' ? 'h2' : 'h3'
   const label = 'Visit site'
   const note = pre ? ' (pre-launch build) (opens in a new tab)' : ' (opens in a new tab)'
   return `
@@ -70,7 +73,7 @@ export function itemHtml(w: WorkItem, workIndex: number, kind: 'feat' | 'more'):
         </div>
         <div class="pf-plac">
           <p class="pf-meta"><span class="hud-label">${esc(w.industry)}</span></p>
-          <${h} class="pf-name" id="pf-h-${id}">${name}</${h}>
+          <h2 class="pf-name" id="pf-h-${id}">${name}</h2>
           <p class="pf-blurb">${esc(w.blurb)}</p>
           <ul class="hud-tags pf-tags">${w.tags.map(t => `<li class="hud-tag">${esc(t)}</li>`).join('')}</ul>
           <p class="pf-go">
