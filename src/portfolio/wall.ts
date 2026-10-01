@@ -1,5 +1,5 @@
 import { workImage, workThumb, type WorkItem } from '../content'
-import { featuredSlot, isPreview, moreSlot, neonKey, screenSizes, type NeonKey } from '../kit/work'
+import { featuredSlot, moreSlot, neonKey, portfolioSplit, screenSizes, type NeonKey } from '../kit/work'
 import { ACTIVE } from '../kit/palette'
 import { REDUCED_MOTION } from '../kit/motion'
 import { rise } from '../core/rise'
@@ -35,7 +35,7 @@ import { THUMBS } from 'virtual:work-thumbs'
  *            little as they pass (a passive scroll listener, in-view panes only)
  *   keyboard a focused pill lights its pane (tilt 0, lifted)
  *
- * Screenshots: the first two featured are asked for at once (the lead at high
+ * Screenshots: the first two prominent are asked for at once (the lead at high
  * priority, as the page's own preload), the rest as they come within 150% of
  * the view. A 640w copy rides in srcset where one exists (virtual:work-thumbs).
  * A screenshot that fails, or hasn't decoded 8s after its pane came in, shows
@@ -46,8 +46,8 @@ export interface Item {
   w: WorkItem
   /** place in WORK (its neon, the feet's breathing phase) */
   index: number
+  /** one of the prominent sites (kit/work.ts portfolioSplit): a row of its own, its placard beside it */
   feat: boolean
-  pre: boolean
   key: NeonKey
   li: HTMLLIElement
   hang: HTMLElement
@@ -127,6 +127,7 @@ export function mountWall(o: { stage: HTMLElement; work: readonly WorkItem[]; ma
   const phone = matchMedia(PHONE)
   const q = <T extends Element>(root: Element, s: string) => root.querySelector<T>(s)!
 
+  const lead = new Set(portfolioSplit(o.work).lead)
   const items: Item[] = []
   for (const li of stage.querySelectorAll<HTMLLIElement>('.pf-item')) {
     const index = o.work.findIndex(w => w.id === li.dataset.id)
@@ -137,8 +138,7 @@ export function mountWall(o: { stage: HTMLElement; work: readonly WorkItem[]; ma
     const it: Item = {
       w,
       index,
-      feat: w.featured,
-      pre: isPreview(w.url),
+      feat: lead.has(w),
       key: neonKey(index),
       li,
       hang: q(li, '.pf-hang'),
@@ -186,21 +186,14 @@ export function mountWall(o: { stage: HTMLElement; work: readonly WorkItem[]; ma
   const isTile = (it: Item) => !it.feat && phone.matches
 
   // ------------------------------------------------------------ slots + sizes
-  const sizesOf = (it: Item) => {
-    const li = it.li
-    return it.feat
-      ? screenSizes({ featured: true, d: (li.dataset.d as never) ?? 'L7', t: (li.dataset.t as never) ?? 'wide' })
-      : screenSizes({ featured: false, p: (li.dataset.p as never) ?? 'half' })
-  }
+  // (the prominent rows alternate their screen's side by visible index, so a filter that hides
+  // one re-sides those after it; the rail FLIPs them there)
+  const sizesOf = (it: Item) => (it.feat ? screenSizes({ featured: true }) : screenSizes({ featured: false, p: (it.li.dataset.p as never) ?? 'half' }))
   function layout() {
     const vis = visible()
     const feat = vis.filter(it => it.feat)
     const more = vis.filter(it => !it.feat)
-    feat.forEach((it, k) => {
-      const s = featuredSlot(k, feat.length)
-      it.li.dataset.d = s.d
-      it.li.dataset.t = s.t
-    })
+    feat.forEach((it, k) => (it.li.dataset.d = featuredSlot(k)))
     more.forEach((it, k) => (it.li.dataset.p = moreSlot(k, more.length)))
     for (const it of vis) if (it.img.hasAttribute('srcset')) it.img.sizes = sizesOf(it)
   }
@@ -429,10 +422,10 @@ export function mountWall(o: { stage: HTMLElement; work: readonly WorkItem[]; ma
     it.full = !quick
     if (it.full) fullRunning++
     // a phone tile shows only its industry and name (the rest is there for screen readers), so only
-    // they rise: nine tiles × three unseen lines would be main-thread work for nothing mid-scroll.
+    // they rise: every tile × three unseen lines would be main-thread work for nothing mid-scroll.
     // And the pill's line must never rise there: a transform would make it the containing block of
     // the pill stretched over the tile, shrinking the tile's one link to nothing until it ended
-    // (untappable, and focus scrolled to an empty box would land under the stuck rail)
+    // (untappable, and focus would scroll to an empty box)
     const lines = isTile(it) ? it.lines.filter(n => n === it.name || n.classList.contains('pf-meta')) : it.lines
     const rises = (dy: number) => [{ opacity: 0, transform: `translateY(${dy}px)` }, { opacity: 1, transform: 'none' }]
     if (quick) {

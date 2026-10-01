@@ -4,7 +4,7 @@ import path from 'node:path'
 import { SERVICE_PAGES } from './src/service/data/pages'
 import { SERVICE_CONTENT } from './src/service/data/content'
 import { WORK } from './src/content'
-import { featuredSlot, portfolioDescription, screenSizes } from './src/kit/work'
+import { portfolioDescription, portfolioSplit, screenSizes } from './src/kit/work'
 
 /** where the concept is served (og:url etc.); the path part comes from --base */
 const ORIGIN = 'https://harkdigital.github.io'
@@ -87,14 +87,13 @@ function portfolioPage(): Plugin {
       return []
     }
   }
-  /** the lead screenshot (the first featured site), asked for at high priority before any script runs */
+  /** the lead screenshot (the first prominent site), asked for at high priority before any script runs */
   const preload = () => {
-    const featured = WORK.filter(w => w.featured)
-    const lead = featured[0]
+    const lead = portfolioSplit(WORK).lead[0]
     if (!lead) return ''
     const full = `${base}work/${lead.id}.webp`
     const set = fs.existsSync(pub('640', `${lead.id}.webp`))
-      ? ` imagesrcset="${esc(`${base}work/640/${lead.id}.webp 640w, ${full} 1280w`)}" imagesizes="${esc(screenSizes({ featured: true, ...featuredSlot(0, featured.length) }))}"`
+      ? ` imagesrcset="${esc(`${base}work/640/${lead.id}.webp 640w, ${full} 1280w`)}" imagesizes="${esc(screenSizes({ featured: true }))}"`
       : ''
     return `<link rel="preload" as="image" href="${esc(full)}"${set} fetchpriority="high">`
   }

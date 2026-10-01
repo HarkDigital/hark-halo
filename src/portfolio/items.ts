@@ -3,7 +3,9 @@ import { hostOf, isPreview, neonKey } from '../kit/work'
 
 /*
  * ONE SITE on the wall: a lit pane of glass (the screenshot behind it) standing
- * on a neon foot, and its placard beneath. The markup only; wall.ts brings it
+ * on a neon foot, and its placard: beside it for a prominent site (desktop and
+ * tablet; the CSS grid picks the side, the DOM is always screen then placard),
+ * beneath it otherwise and on phones. The markup only; wall.ts brings it
  * to life. Every piece of decoration is aria-hidden: the placard's words and
  * its one real link (the pill) carry the site. The screen's own link (.pf-hit)
  * is the pill's mouse / touch twin, out of the tab order and the tree.
@@ -17,11 +19,10 @@ import { hostOf, isPreview, neonKey } from '../kit/work'
  *                              clearing edge · sheen · glare · dim · press ring
  *             svg.pf-tube      the neon frame (wall.ts writes its paths)
  *           a.pf-hit           the whole screen opens the site
- *           .pf-tab            "Preview", standing on the frame (pre-launch builds)
  *         .pf-foot > .pf-pool  the lit tube it stands on, and its light on the wall
- *       .pf-plac               industry (+ Preview), name, blurb, tags, the pill + host
+ *       .pf-plac               industry, name, blurb, tags, the pill + host
  *
- * `kind`: 'feat' (the name an h2) or 'more' (an h3). Names are always plain, never an accent word.
+ * `kind`: 'feat', a prominent site (the name an h2), or 'more' (an h3). Names are always plain, never an accent word.
  *
  * The pill's name is its aria-label, "Visit site, ComTec Systems (opens in a new
  * tab)": it starts with the words on it (WCAG 2.5.3). Visually hidden spans for
@@ -64,12 +65,11 @@ export function itemHtml(w: WorkItem, workIndex: number, kind: 'feat' | 'more'):
               <svg class="pf-tube" aria-hidden="true" focusable="false">${TUBE}</svg>
             </div>
             <a class="pf-hit" href="${url}" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true"></a>
-            ${pre ? '<span class="pf-tab" aria-hidden="true">Preview</span>' : ''}
           </div>
           <i class="pf-foot" aria-hidden="true"><i class="pf-pool"></i></i>
         </div>
         <div class="pf-plac">
-          <p class="pf-meta"><span class="hud-label">${esc(w.industry)}</span>${pre ? '<span class="pf-badge">Preview</span>' : ''}</p>
+          <p class="pf-meta"><span class="hud-label">${esc(w.industry)}</span></p>
           <${h} class="pf-name" id="pf-h-${id}">${name}</${h}>
           <p class="pf-blurb">${esc(w.blurb)}</p>
           <ul class="hud-tags pf-tags">${w.tags.map(t => `<li class="hud-tag">${esc(t)}</li>`).join('')}</ul>

@@ -7,19 +7,17 @@ import type { Item, Wall } from './wall'
 /*
  * THE RAIL: a clear glass tube as wide as the wall, under the headline. It is
  * the filter: lit gas (white-hot, ringed in the three neons) sits under the
- * chosen tag and slides to the next one. It sticks under the header as you
- * scroll the wall (an opaque band behind it, so no screenshot ever shows
- * through the chips or the logo) and leaves with the last room.
+ * chosen tag and slides to the next one. It is never pinned: it sits above the
+ * wall and scrolls away with the page like the rest of the content.
  *
- * filterTo(slug), ~750ms, interruptible:
- *   0ms       with the rail stuck, the page starts gliding back up to the result's
- *             start (just under the rail, still stuck) as the leavers go
+ * filterTo(slug), ~750ms, interruptible. The page never scrolls: the chips are
+ * where the visitor left them (above the wall, which changes below them).
  *   0–200ms   the sites that don't match frost over and step back
  *   200ms     they leave the wall; the rest take their new places (FLIP: one
  *             uniform scale per screen, every screen is 16:10; placards only
- *             translate), the counts, the More room's heading and the URL
+ *             translate, or fade in where a prominent row changed sides), the counts, the More room's heading and the URL
  *             (?tag=, replaceState) update, the result is announced once
- *   220ms     the newcomers in view (where the page is headed) come in (the quick entrance)
+ *   220ms     the newcomers in view come in (the quick entrance)
  *   760ms     the stage lets go of its held height
  * A second click mid-swap finishes the first at once and starts from there.
  */
@@ -30,7 +28,6 @@ const countHtml = (parts: string[]) => parts.map(s => `<span>${esc(s)}</span>`).
 
 export function mountRail(o: { wall: Wall; stage: HTMLElement; work: readonly WorkItem[]; chips: TagChip[]; initial: string }) {
   const { wall, stage } = o
-  const bar = stage.querySelector<HTMLElement>('.pf-bar')
   const rail = stage.querySelector<HTMLElement>('.pf-rail')
   const gas = stage.querySelector<HTMLElement>('.pf-gas')
   const live = document.getElementById('pf-live')
@@ -112,35 +109,6 @@ export function mountRail(o: { wall: Wall; stage: HTMLElement; work: readonly Wo
     })
   } else document.body.classList.add('pf-norail')
 
-  // ------------------------------------------------------------ stuck
-  const sentinel = stage.querySelector<HTMLElement>('.pf-sentinel')
-  if (bar && sentinel) {
-    let sio: IntersectionObserver | null = null
-    let lastTop = -1
-    const watchStuck = () => {
-      const top = Math.round(parseFloat(getComputedStyle(bar).top) || 0)
-      if (top === lastTop) return
-      lastTop = top
-      sio?.disconnect()
-      sio = new IntersectionObserver(
-        ([e]) => bar.classList.toggle('is-stuck', !e.isIntersecting && e.boundingClientRect.top < top + 1),
-        { rootMargin: `-${top + 1}px 0px 0px 0px` },
-      )
-      sio.observe(sentinel)
-    }
-    watchStuck()
-    addEventListener('resize', watchStuck, { passive: true })
-  }
-  // focus never lands under the stuck rail (scroll-margin does this; this is the backstop)
-  stage.addEventListener('focusin', e => {
-    if (!bar?.classList.contains('is-stuck')) return
-    const t = e.target as HTMLElement
-    if (!t.closest('.pf-wall')) return
-    const floor = bar.getBoundingClientRect().bottom + 8
-    const r = t.getBoundingClientRect()
-    if (r.top < floor) scrollBy({ top: r.top - floor - 16 })
-  })
-
   // ------------------------------------------------------------ filter
   interface Step {
     at: number
@@ -167,25 +135,6 @@ export function mountRail(o: { wall: Wall; stage: HTMLElement; work: readonly Wo
     wall.finishAll()
   }
 
-  /**
-   * Where the result starts with the rail stuck: the first room's top under the
-   * rail (its scroll-margin), and never above the line where the bar sticks. The
-   * featured room begins right at the rail, so its scroll-margin alone lands 24px
-   * short of that line: the bar would come unstuck and the page settle with the
-   * headline under the header.
-   */
-  const resultTop = () => {
-    const room = [feat, more].find(r => r && !r.hidden)
-    const barTop = parseFloat(getComputedStyle(bar!).top) || 0
-    const stick = sentinel ? Math.ceil(sentinel.getBoundingClientRect().top + scrollY - barTop) + 1 : 0
-    const at = room ? room.getBoundingClientRect().top + scrollY - (parseFloat(getComputedStyle(room).scrollMarginTop) || 0) : stick
-    return Math.max(stick, Math.round(at))
-  }
-  /** the page glides back to the result's start (only ever up to it: the rail stays stuck) */
-  const glideTo = (top: number) => {
-    if (Math.abs(top - scrollY) > 1) scrollTo({ top, behavior: 'smooth' })
-  }
-
   function setUrl() {
     const u = new URL(location.href)
     if (slug) u.searchParams.set('tag', slug)
@@ -206,12 +155,6 @@ export function mountRail(o: { wall: Wall; stage: HTMLElement; work: readonly Wo
     wall.finishAll()
     const vis = wall.visible()
     const y0 = scrollY
-    // the rail is stuck: the page heads back up to the result's start as the leavers go (the
-    // featured room stays where it is when it keeps a site; otherwise the relayout aims it)
-    const stuck = !REDUCED_MOTION && !!bar?.classList.contains('is-stuck')
-    const keepsFeat = !!feat && !feat.hidden && o.work.some(w => w.featured && matches(w))
-    let land: number | null = stuck && keepsFeat ? resultTop() : null
-    if (land !== null) glideTo(land)
     const first = new Map<Item, { hang: DOMRect; plac: DOMRect }>()
     for (const it of vis) first.set(it, { hang: it.hang.getBoundingClientRect(), plac: it.plac.getBoundingClientRect() })
     stage.style.minHeight = `${stage.offsetHeight}px`
@@ -251,28 +194,23 @@ export function mountRail(o: { wall: Wall; stage: HTMLElement; work: readonly Wo
             ),
           )
           // placards only move (text is never scaled); one that changed width fades in at its new
-          // place, as does a phone tile's (moved, it would hold its stretched pill to the placard)
-          if (Math.abs(a.plac.width - pb.width) < 1 && !wall.isTile(it))
+          // place, as does a phone tile's (moved, it would hold its stretched pill to the placard),
+          // and a prominent site's that changed sides (moved, it would cross its own screen)
+          const sided = it.feat && Math.abs(a.plac.left - pb.left) > 1
+          if (Math.abs(a.plac.width - pb.width) < 1 && !wall.isTile(it) && !sided)
             s.anims.push(it.plac.animate([{ transform: `translate(${a.plac.left - pb.left}px, ${a.plac.top - pb.top - dy0}px)` }, { transform: 'none' }], t))
           else s.anims.push(it.plac.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 240, delay: 240, easing: 'ease', fill: 'backwards' }))
         })
       wall.refresh()
-      // the rail is stuck: bring the result's start back up under it
-      if (animate && stuck) {
-        const top = resultTop()
-        if (land === null || Math.abs(top - land) > 1) glideTo(top)
-        land = top
-      }
     }
-    // the newcomers in view come in (quick, 40ms apart), in view where the page is headed; the
-    // rest as they are scrolled to. Any part in view counts: a row whose stayers are already
-    // lit never shows a hole waiting for the entrance line
+    // the newcomers in view come in (quick, 40ms apart); the rest as they are scrolled to. Any
+    // part in view counts: a row whose stayers are already lit never shows a hole waiting for
+    // the entrance line
     const arrive = () => {
       const vh = innerHeight
-      const dy = land === null ? 0 : scrollY - land
       const inView = newcomers.filter(it => {
         const r = it.li.getBoundingClientRect()
-        return r.top + dy < vh && r.bottom + dy > 0
+        return r.top < vh && r.bottom > 0
       })
       newcomers.forEach(it => (it.held = false))
       wall.enter(inView, 'quick', 40)

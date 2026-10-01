@@ -481,6 +481,73 @@
     0 8px 26px rgba(255, 255, 255, 0.24);
 }
 
+/* "Start a project": a neon tube around the pill, its colour running round
+   it (the lights' three neons in a conic gradient that turns). ::before is
+   the tube, ::after its glow on the nav glass; both are masked to a ring so
+   the white pill stays clean. Browsers without @property (Safari < 16.4)
+   show the same ring, standing still. */
+@property --cta-a {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+.ch-cta.hud-btn::before,
+.ch-cta.hud-btn::after {
+  content: '';
+  position: absolute;
+  border-radius: 999px;
+  background: conic-gradient(
+    from var(--cta-a),
+    var(--neon-a, #5cf28a),
+    var(--neon-b, #6d8cff),
+    var(--neon-c, #b46dff),
+    var(--neon-a, #5cf28a)
+  );
+  -webkit-mask:
+    linear-gradient(#000000 0 0) content-box,
+    linear-gradient(#000000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000000 0 0) content-box exclude,
+    linear-gradient(#000000 0 0);
+  pointer-events: none;
+  animation: cta-spin 4s linear infinite;
+}
+/* the tube: 2px, hugging the pill */
+.ch-cta.hud-btn::before {
+  inset: -2px;
+  padding: 2px;
+}
+/* its glow: blurred, then cut away inside the pill */
+.ch-cta.hud-btn::after {
+  inset: -7px;
+  padding: 7px;
+  filter: blur(4px);
+  opacity: 0.5;
+  transition: opacity 0.3s ease;
+}
+.ch-cta.hud-btn:hover::after,
+.ch-cta.hud-btn:focus-visible::after {
+  opacity: 0.85;
+}
+@keyframes cta-spin {
+  to {
+    --cta-a: 360deg;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ch-cta.hud-btn::before,
+  .ch-cta.hud-btn::after {
+    animation: none;
+  }
+}
+@media (forced-colors: active) {
+  .ch-cta.hud-btn::before,
+  .ch-cta.hud-btn::after {
+    display: none;
+  }
+}
+
 /* Menu (≤ 720px) */
 .ch-menu-btn {
   position: absolute;

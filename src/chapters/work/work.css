@@ -120,18 +120,6 @@
 .stage-work .wk-ind {
   color: var(--fg-muted);
 }
-/* pre-launch build: an outlined silver chip (never "live") */
-.stage-work .wk-badge {
-  font-family: var(--font-label);
-  font-weight: var(--label-weight);
-  font-size: 10.5px;
-  letter-spacing: 0.066em;
-  text-transform: uppercase;
-  color: var(--fg);
-  padding: 3px 9px;
-  border-radius: 999px;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.42);
-}
 
 /* ---------------- project card ---------------- */
 
@@ -200,14 +188,6 @@
   font-weight: 500;
   letter-spacing: -0.012em;
   line-height: 1.3;
-}
-.stage-work .wk-pre {
-  font-family: var(--font-label);
-  font-weight: var(--label-weight);
-  font-size: 10px;
-  letter-spacing: 0.044em;
-  text-transform: uppercase;
-  color: var(--fg-muted);
 }
 .stage-work .wk-rind {
   font-family: var(--font-label);

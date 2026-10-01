@@ -6,20 +6,21 @@
    backdrop-filter anywhere here (15 panes, a moving lamp behind them), no
    SVG filters on the panes, no color-mix() (base.css).
 
-   Breakpoints: desktop ≥ 1000px (12 columns), tablet 721–999px (6), phone
-   ≤ 720px (1; the other sites as 2-up tiles). Pointer or touch behaviour is
-   chosen by the pointer, not the width (wall.ts).
+   Breakpoints: desktop ≥ 1000px, tablet 721–999px, phone ≤ 720px. The three
+   prominent sites hang one to a row, the screen beside its placard (desktop
+   7fr + 5fr, tablet 58fr + 42fr; sides alternating by data-d), stacked on
+   phones. The other sites: desktop 12 columns (three to a row), tablet 6
+   (two), phone 2-up tiles. kit/work.ts screenSizes mirrors these widths.
+   Pointer or touch behaviour is chosen by the pointer, not the width (wall.ts).
    ------------------------------------------------------------------ */
 
 .pf {
-  --pf-bar-top: calc(var(--ch-y) + var(--ch-h) + 10px);
   --pf-bar-mt: clamp(16px, 2.4vh, 24px);
   --pf-rail-h: 44px;
   --pf-ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
 @media (max-width: 720px) {
   .pf {
-    --pf-bar-top: calc(var(--ch-y) + var(--ch-h) + 4px);
     --pf-bar-mt: 14px;
     --pf-rail-h: 38px;
   }
@@ -60,7 +61,7 @@
   }
 }
 
-/* the count: "15 sites · 6 featured · 9 more" (as the Work chapter's), in the tube or the hero */
+/* the count: "15 sites · 3 featured · 12 more" (built by countParts, as the Work chapter's is), in the tube or the hero */
 .pf-count {
   display: flex;
   align-items: center;
@@ -109,67 +110,20 @@
   }
 }
 
-/* ---------------- the stage: the rail + the rooms (the rail's sticky range) ---------------- */
-/* (flow-root: the bar's top margin stays inside the stage, so the sentinel at that margin sits
-   exactly where the bar starts to stick; collapsed through, it sat a margin lower and the band
-   came in late) */
+/* ---------------- the stage: the rail + the rooms ---------------- */
+/* (flow-root: the bar's top margin stays inside the stage) */
 .pf-stage {
   display: flow-root;
   max-width: var(--svc-max);
   margin: 0 auto;
   padding: 0 var(--gutter);
 }
-.pf-sentinel {
-  position: absolute;
-  left: 0;
-  top: var(--pf-bar-mt);
-  width: 1px;
-  height: 1px;
-  pointer-events: none;
-}
-
-/* ---------------- the rail: a glass tube, and the filter ---------------- */
+/* ---------------- the rail: a glass tube, and the filter ----------------
+   In the flow, never pinned: it scrolls away with the page like any other content. */
 .pf-bar {
-  position: sticky;
-  top: var(--pf-bar-top);
-  z-index: 40;
+  position: relative;
   isolation: isolate;
   margin-top: var(--pf-bar-mt);
-}
-/* stuck: an opaque band from the top of the view to just under the tube (never a mask, never
-   a backdrop-filter), and a short fade beneath it; the header (z 50) sits above. Solid black:
-   at even .94 a white screenshot scrolling under the logo still reads through it */
-.pf-bar::before {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  left: 50%;
-  width: 100vw;
-  margin-left: -50vw;
-  top: calc(-1 * var(--pf-bar-top));
-  bottom: -6px;
-  background: var(--fr-grain), #000000;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  pointer-events: none;
-}
-.pf-bar::after {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  left: 50%;
-  width: 100vw;
-  margin-left: -50vw;
-  top: calc(100% + 6px);
-  height: 20px;
-  background: linear-gradient(180deg, #000000, rgba(0, 0, 0, 0));
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  pointer-events: none;
-}
-.pf-bar.is-stuck::before,
-.pf-bar.is-stuck::after {
-  opacity: 1;
 }
 .pf-rail {
   position: relative;
@@ -321,11 +275,8 @@
 }
 
 /* ---------------- the rooms ---------------- */
-.pf-room {
-  scroll-margin-top: calc(var(--pf-bar-top) + var(--pf-rail-h) + 24px);
-}
 .pf-room--feat {
-  padding-top: clamp(20px, 3.2vh, 32px);
+  padding-top: clamp(32px, 4.4vh, 52px);
 }
 .pf-room--more {
   position: relative;
@@ -378,67 +329,86 @@
 .pf-wall--more {
   margin-top: clamp(36px, 5vh, 56px);
 }
-@media (min-width: 1000px) {
-  .pf-wall {
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    column-gap: clamp(20px, 1.95vw, 28px);
+
+/* the prominent sites: one to a row (never two side by side), the screen beside its placard,
+   both centred on the row's middle line. data-d (wall.ts, by visible index) picks the screen's
+   side: L, R, L… Grid placement only: the DOM, and so reading and tab order, stays screen then
+   placard. Phones stack them: screen, then placard */
+.pf-wall--feat {
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: 64px;
+}
+@media (min-width: 721px) {
+  .pf-item--feat .pf-art {
+    display: grid;
+    grid-template-columns: minmax(0, 58fr) minmax(0, 42fr);
+    column-gap: 28px;
+    align-items: center;
+  }
+  .pf-item--feat .pf-hang {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .pf-item--feat .pf-plac {
+    grid-column: 2;
+    grid-row: 1;
+    margin-top: 0;
+  }
+  .pf-item--feat[data-d='R'] .pf-art {
+    grid-template-columns: minmax(0, 42fr) minmax(0, 58fr);
+  }
+  .pf-item--feat[data-d='R'] .pf-hang {
+    grid-column: 2;
+  }
+  .pf-item--feat[data-d='R'] .pf-plac {
+    grid-column: 1;
   }
   .pf-wall--feat {
-    row-gap: clamp(72px, 7vw, 112px);
+    row-gap: 80px;
   }
+}
+@media (min-width: 1000px) {
+  .pf-item--feat .pf-art {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    column-gap: clamp(40px, 5vw, 88px);
+  }
+  .pf-item--feat[data-d='R'] .pf-art {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  }
+  .pf-wall--feat {
+    row-gap: clamp(104px, 9.4vw, 152px);
+  }
+}
+
+/* the other sites: three to a row on desktop, two on tablets, 2-up tiles on phones */
+@media (min-width: 1000px) {
   .pf-wall--more {
-    row-gap: clamp(56px, 5.5vw, 88px);
-  }
-  /* featured pairs zigzag 7 + 5, then 5 + 7, hung from one top line; a lone last one centred */
-  .pf-item[data-d='L7'] {
-    grid-column: 1 / span 7;
-  }
-  .pf-item[data-d='R5'] {
-    grid-column: 8 / span 5;
-  }
-  .pf-item[data-d='L5'] {
-    grid-column: 1 / span 5;
-  }
-  .pf-item[data-d='R7'] {
-    grid-column: 6 / span 7;
-  }
-  .pf-item[data-d='C8'] {
-    grid-column: 3 / span 8;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: clamp(56px, 5.5vw, 88px) clamp(20px, 1.95vw, 28px);
   }
   .pf-item--more {
     grid-column: span 4;
   }
 }
 @media (min-width: 721px) and (max-width: 999px) {
-  .pf-wall {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    column-gap: 20px;
-  }
-  .pf-wall--feat {
-    row-gap: 64px;
-  }
   .pf-wall--more {
-    row-gap: 48px;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 48px 20px;
   }
-  .pf-item[data-t='wide'] {
-    grid-column: 1 / -1;
-  }
-  .pf-item[data-t='half'],
   .pf-item--more {
     grid-column: span 3;
   }
-  /* an odd count of the other sites leads with one wide (as on phones): no lone half at the end */
+  /* an odd count of the other sites leads with one on a row of its own (as on phones), but at a
+     half's width, centred: never wider than the prominent screens (58% of the row) above it */
   .pf-item--more[data-p='full'] {
     grid-column: 1 / -1;
+    justify-self: center;
+    width: calc(50% - 10px);
   }
 }
 @media (max-width: 720px) {
   .pf-room--feat {
     padding-top: 26px;
-  }
-  .pf-wall--feat {
-    grid-template-columns: minmax(0, 1fr);
-    row-gap: 56px;
   }
   .pf-wall--more {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -705,41 +675,6 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-/* "Preview": a dark-glass tab standing on the frame's top edge, off the screenshot */
-.pf-tab {
-  position: absolute;
-  z-index: 3;
-  bottom: calc(100% - 1px);
-  right: 22px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 20px;
-  padding: 0 10px 0 9px;
-  border-radius: 8px 8px 0 0;
-  background: var(--fr-grain), rgba(10, 11, 13, 0.94);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.3),
-    inset 1px 0 0 rgba(255, 255, 255, 0.12),
-    inset -1px 0 0 rgba(255, 255, 255, 0.12);
-  font-family: var(--font-label);
-  font-weight: 700;
-  font-size: 10px;
-  line-height: 1;
-  letter-spacing: 0.066em;
-  text-transform: uppercase;
-  color: var(--fg);
-  pointer-events: none;
-}
-.pf-tab::before {
-  content: '';
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: rgb(var(--n-rgb));
-  box-shadow: 0 0 6px rgb(var(--n-rgb));
-}
-
 /* the foot: a lit tube under the pane (it breathes, out of phase with the others), and the
    light it spills on the wall. The tube is ::before (its ends taper), the hot light ::after. */
 .pf-foot {
@@ -885,7 +820,7 @@
   transition: opacity 0.45s ease 0.12s;
 }
 
-/* ---------------- the placard: plain type on black, left with its screen ---------------- */
+/* ---------------- the placard: plain type on black, beside or beneath its screen ---------------- */
 .pf-plac {
   position: relative;
   z-index: 1;
@@ -908,18 +843,6 @@
   gap: 6px 10px;
   margin: 0;
 }
-.pf-badge {
-  font-family: var(--font-label);
-  font-weight: 700;
-  font-size: 10.5px;
-  line-height: 1.5;
-  letter-spacing: 0.066em;
-  text-transform: uppercase;
-  color: var(--fg);
-  padding: 3px 9px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 999px;
-}
 .pf-name {
   margin: 10px 0 0;
   max-width: 100%;
@@ -940,6 +863,28 @@
   background-clip: text;
   -webkit-text-fill-color: transparent;
   padding-right: 0.04em;
+}
+/* a prominent site's placard has the room for larger type (beside its screen) */
+@media (min-width: 721px) {
+  .pf-item--feat .pf-meta .hud-label {
+    font-size: 12px;
+  }
+  .pf-item--feat .pf-name {
+    margin-top: 14px;
+    font-size: clamp(1.9rem, 3.2vw, 3rem);
+    font-size: clamp(1.9rem, 8.6cqi, 3rem);
+  }
+  .pf-item--feat .pf-blurb {
+    max-width: 42ch;
+    margin-top: 16px;
+    font-size: clamp(16px, 1.25vw, 18px);
+  }
+  .pf-item--feat .pf-tags {
+    margin-top: 22px;
+  }
+  .pf-item--feat .pf-go {
+    margin-top: 28px;
+  }
 }
 .pf-item--more .pf-name {
   font-size: clamp(1.2rem, 5.2cqi, 1.5rem);
@@ -985,10 +930,10 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.45),
     inset 0 0 0 1px rgba(var(--n-rgb), 0.5);
 }
-/* focus is never hidden under the stuck rail */
+/* focus is never hidden under the fixed header */
 .pf-go .pf-cta,
 .pf-chip {
-  scroll-margin-top: calc(var(--pf-bar-top) + var(--pf-rail-h) + 24px);
+  scroll-margin-top: calc(var(--ch-y) + var(--ch-h) + 24px);
   scroll-margin-bottom: 24px;
 }
 
@@ -1006,10 +951,6 @@
   }
   .pf-foot {
     margin: 8px 12px 0;
-  }
-  .pf-tab {
-    right: 14px;
-    height: 18px;
   }
   .pf-plac {
     margin-top: 26px;
@@ -1143,13 +1084,8 @@
   .pf-fog,
   .pf-sheen,
   .pf-gas::before,
-  .pf-gas::after,
-  .pf-bar::after {
+  .pf-gas::after {
     display: none;
-  }
-  /* the stuck band stays (the screens still scroll under the logo and the chips), minus its grain */
-  .pf-bar::before {
-    background: Canvas;
   }
   .pf-img {
     clip-path: none !important;
@@ -1167,18 +1103,10 @@
   .pf-gas {
     display: none;
   }
-  .pf-tab {
-    border: 1px solid CanvasText;
-  }
 }
 
 /* ---------------- print ---------------- */
 @media print {
-  .pf-bar {
-    position: static;
-  }
-  .pf-bar::before,
-  .pf-bar::after,
   .pf-lamp,
   .pf-tube,
   .pf-foot,
@@ -1189,8 +1117,7 @@
   .pf-frost,
   .pf-fog,
   .pf-ring,
-  .pf-sweep,
-  .pf-tab::before {
+  .pf-sweep {
     display: none !important;
   }
   .pf-img {

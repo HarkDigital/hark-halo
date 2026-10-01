@@ -8,7 +8,7 @@ import './portfolio.css'
 import { installPrintPolyfills } from '../ui/polyfills'
 import { applyLightsCss } from '../kit/palette'
 import { PORTFOLIO, SECTIONS, WORK } from '../content'
-import { countParts, moreTitleHtml, tagChips, tagSlug } from '../kit/work'
+import { countParts, moreTitleHtml, portfolioSplit, tagChips, tagSlug } from '../kit/work'
 import { bindReveals, contactHtml, footerHtml, mountContact, mountTop, type Current } from '../page/shell'
 import { itemHtml } from './items'
 import { mountWall } from './wall'
@@ -27,8 +27,10 @@ import { mountRail } from './rail'
  *
  *   hero       "Portfolio", "Built to be heard." (the Work chapter's own title),
  *              the count (on phones, or when the tube can't hold it)
- *   stage      the rail (sticky), the featured sites (big, in zigzag pairs), then
- *              "More work": the other sites, three to a band (2-up tiles on phones)
+ *   stage      the rail (it scrolls with the page), the three prominent sites (the
+ *              first three featured, kit/work.ts portfolioSplit: one to a row, the
+ *              screen beside its placard, sides alternating), then "More work": every
+ *              other site, three to a band (2-up tiles on phones)
  *   contact    "Say hello." and the form (no service chosen), the footer
  *
  * Every word is the site's own copy (content.ts WORK, SECTIONS.work, CONTACT)
@@ -62,8 +64,10 @@ const initialTag = chips.find(c => c.slug === initial)?.tag
 const match = (w: (typeof WORK)[number]) => !initialTag || w.tags.includes(initialTag)
 
 // ---------------------------------------------------------------- the page
-const featured = WORK.map((w, i) => ({ w, i })).filter(x => x.w.featured)
-const rest = WORK.map((w, i) => ({ w, i })).filter(x => !x.w.featured)
+// (on this page "featured" is the prominent few; the story's Work chapter shows every featured site)
+const split = portfolioSplit(WORK)
+const featured = split.lead.map(w => ({ w, i: WORK.indexOf(w) }))
+const rest = split.rest.map(w => ({ w, i: WORK.indexOf(w) }))
 const title = SECTIONS.work.title
 const cut = title.lastIndexOf(' ')
 const h1 = cut > 0 ? `${esc(title.slice(0, cut))} <em>${esc(title.slice(cut + 1))}</em>` : `<em>${esc(title)}</em>`
@@ -82,7 +86,6 @@ document.getElementById('main')!.innerHTML = `
       WORK.length
         ? `
     <div class="pf-stage">
-      <i class="pf-sentinel" aria-hidden="true"></i>
       ${
         chips.length
           ? `
