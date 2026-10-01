@@ -43,7 +43,7 @@ export function itemHtml(w: WorkItem, workIndex: number, kind: 'feat' | 'more'):
   const url = esc(w.url)
   const host = pre ? 'Pre-launch build' : esc(hostOf(w.url))
   const h = kind === 'feat' ? 'h2' : 'h3'
-  const label = pre ? 'Preview site' : 'Visit site'
+  const label = 'Visit site'
   const note = pre ? ' (pre-launch build) (opens in a new tab)' : ' (opens in a new tab)'
   return `
     <li class="pf-item pf-item--${kind}" data-id="${id}" style="--k:${workIndex}; --n:var(--neon-${k}); --n-rgb:var(--neon-${k}-rgb)">

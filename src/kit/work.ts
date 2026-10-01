@@ -14,7 +14,7 @@ export const countWord = (n: number) => WORDS[n] ?? String(n)
 
 const esc = (s: string) => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
 
-/** a pre-launch build (City Line Capital on harktest.com): always "Preview", never live */
+/** a pre-launch build (City Line Capital on harktest.com): "Pre-launch build" under its button, never "live" */
 export const isPreview = (url: string) => {
   try {
     return /(^|\.)harktest\.com$/i.test(new URL(url).hostname)

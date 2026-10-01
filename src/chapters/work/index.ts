@@ -392,7 +392,7 @@ class Work implements Chapter {
     const tags = el('ul', 'hud-tags wk-tags', undefined, root)
     for (const t of w.tags) el('li', 'hud-tag', t, tags)
     const cta = el('div', 'wk-cta', undefined, root)
-    const a = el('a', 'hud-btn wk-visit', pre ? 'Preview site ↗' : 'Visit site ↗', cta)
+    const a = el('a', 'hud-btn wk-visit', 'Visit site ↗', cta)
     a.href = w.url
     a.target = '_blank'
     a.rel = 'noopener'

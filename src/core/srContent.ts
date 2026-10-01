@@ -35,7 +35,7 @@ const COPY: Record<string, () => string> = {
       (w, i) =>
         `<li><h3>${esc(w.name)}</h3><p>${esc(w.industry)}. ${esc(w.blurb)}</p><p>${ext(
           w.url,
-          isPreview(w.url) ? `Preview ${w.name} (pre-launch build)` : `Visit ${w.name}`,
+          isPreview(w.url) ? `Visit ${w.name} (pre-launch build)` : `Visit ${w.name}`,
           i,
         )}</p></li>`,
     ).join('')}</ul>
