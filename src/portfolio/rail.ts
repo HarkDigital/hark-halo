@@ -15,23 +15,21 @@ import type { Item, Wall } from './wall'
  *   0–200ms   the sites that don't match frost over and step back
  *   200ms     they leave the wall; the rest take their new places (FLIP: one
  *             uniform scale per screen, every screen is 16:10; placards only
- *             translate, or fade in where a prominent row changed sides), the counts, the More room's heading and the URL
- *             (?tag=, replaceState) update, the result is announced once
+ *             translate, or fade in where a prominent row changed sides), the More room's heading and the URL
+ *             (?tag=, replaceState) update, the result ("5 sites, 2 featured, 3 more")
+ *             is announced once to screen readers (no count is shown)
  *   220ms     the newcomers in view come in (the quick entrance)
  *   760ms     the stage lets go of its held height
  * A second click mid-swap finishes the first at once and starts from there.
  */
 
 const EASE_OUT = 'cubic-bezier(.16,1,.3,1)'
-const esc = (s: string) => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
-const countHtml = (parts: string[]) => parts.map(s => `<span>${esc(s)}</span>`).join('<i aria-hidden="true"></i>')
 
 export function mountRail(o: { wall: Wall; stage: HTMLElement; work: readonly WorkItem[]; chips: TagChip[]; initial: string }) {
   const { wall, stage } = o
   const rail = stage.querySelector<HTMLElement>('.pf-rail')
   const gas = stage.querySelector<HTMLElement>('.pf-gas')
   const live = document.getElementById('pf-live')
-  const counts = [...document.querySelectorAll<HTMLElement>('.pf-count')]
   const feat = stage.querySelector<HTMLElement>('.pf-room--feat')
   const more = stage.querySelector<HTMLElement>('.pf-room--more')
   const moreEye = more?.querySelector<HTMLElement>('.hud-eyebrow')
@@ -40,13 +38,11 @@ export function mountRail(o: { wall: Wall; stage: HTMLElement; work: readonly Wo
   let slug = o.initial
   const matches = (w: WorkItem) => !slug || w.tags.some(t => o.chips.find(c => c.slug === slug)?.tag === t)
 
-  // ------------------------------------------------------------ counts, rooms
+  // ------------------------------------------------------------ rooms, the announcement
   function writeState(announce: boolean) {
     const vis = wall.visible()
     const f = vis.filter(it => it.feat).length
-    const parts = countParts({ total: vis.length, featured: f, more: vis.length - f })
-    counts.forEach(c => (c.innerHTML = countHtml(parts)))
-    if (announce && live) live.textContent = parts.join(', ')
+    if (announce && live) live.textContent = countParts({ total: vis.length, featured: f, more: vis.length - f }).join(', ')
     const rest = vis.filter(it => !it.feat)
     if (feat) feat.hidden = !f
     if (more && moreEye && moreH) {
@@ -88,26 +84,10 @@ export function mountRail(o: { wall: Wall; stage: HTMLElement; work: readonly Wo
   }
   const press = () => chips.forEach(c => c.setAttribute('aria-pressed', String((c.dataset.tag ?? '') === slug)))
 
-  // tight: the count leaves the tube for the hero when chips + count don't fit
-  const tight = () => {
-    if (!rail) return
-    const railCount = rail.querySelector<HTMLElement>('.pf-count--rail')
-    const chipsEl = rail.querySelector<HTMLElement>('.pf-chips')
-    if (!railCount || !chipsEl) return
-    document.body.classList.remove('pf-tight')
-    const need = chipsEl.offsetWidth + railCount.offsetWidth + 40
-    document.body.classList.toggle('pf-tight', need > rail.clientWidth)
-  }
   if (rail) {
-    new ResizeObserver(() => {
-      tight()
-      placeGas(false)
-    }).observe(rail)
-    void document.fonts?.ready.then(() => {
-      tight()
-      placeGas(false)
-    })
-  } else document.body.classList.add('pf-norail')
+    new ResizeObserver(() => placeGas(false)).observe(rail)
+    void document.fonts?.ready.then(() => placeGas(false))
+  }
 
   // ------------------------------------------------------------ filter
   interface Step {

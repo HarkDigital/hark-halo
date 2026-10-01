@@ -8,7 +8,7 @@ import './portfolio.css'
 import { installPrintPolyfills } from '../ui/polyfills'
 import { applyLightsCss } from '../kit/palette'
 import { PORTFOLIO, SECTIONS, WORK } from '../content'
-import { countParts, moreTitleHtml, portfolioSplit, tagChips, tagSlug } from '../kit/work'
+import { moreTitleHtml, portfolioSplit, tagChips, tagSlug } from '../kit/work'
 import { bindReveals, contactHtml, footerHtml, mountContact, mountTop, type Current } from '../page/shell'
 import { itemHtml } from './items'
 import { mountWall } from './wall'
@@ -25,8 +25,7 @@ import { mountRail } from './rail'
  * per pane. The header, Menu sheet, contact card and footer are the service
  * pages' own (page/shell.ts), with Work lit.
  *
- *   hero       "Portfolio", "Built to be heard." (the Work chapter's own title),
- *              the count (on phones, or when the tube can't hold it)
+ *   hero       "Portfolio", "Built to be heard." (the Work chapter's own title)
  *   stage      the rail (it scrolls with the page), the three prominent sites (the
  *              first three featured, kit/work.ts portfolioSplit: one to a row, the
  *              screen beside its placard, sides alternating), then "More work": every
@@ -71,7 +70,6 @@ const rest = split.rest.map(w => ({ w, i: WORK.indexOf(w) }))
 const title = SECTIONS.work.title
 const cut = title.lastIndexOf(' ')
 const h1 = cut > 0 ? `${esc(title.slice(0, cut))} <em>${esc(title.slice(cut + 1))}</em>` : `<em>${esc(title)}</em>`
-const count = `<span>${countParts({ total: WORK.length, featured: featured.length, more: rest.length }).map(esc).join('</span><i aria-hidden="true"></i><span>')}</span>`
 const chipsHtml = [{ tag: PORTFOLIO.all, slug: '' }, ...chips]
   .map(c => `<button class="pf-chip" type="button" data-tag="${esc(c.slug)}" aria-pressed="${c.slug === initial}">${esc(c.tag)}</button>`)
   .join('')
@@ -80,7 +78,6 @@ document.getElementById('main')!.innerHTML = `
     <section class="pf-hero" aria-labelledby="pf-h1">
       <p class="hud-eyebrow svc-rv" data-rv="wipe">${esc(PORTFOLIO.eyebrow)}</p>
       <h1 class="hud-title pf-h1 svc-rv" data-words id="pf-h1">${h1}</h1>
-      ${WORK.length ? `<p class="pf-count pf-count--hero svc-rv" data-rv="wipe" style="--d:2">${count}</p>` : ''}
     </section>
     ${
       WORK.length
@@ -93,7 +90,6 @@ document.getElementById('main')!.innerHTML = `
         <div class="pf-rail svc-rv" style="--d:3">
           <i class="pf-gas" aria-hidden="true"></i>
           <div class="pf-chips" role="group" aria-label="${esc(PORTFOLIO.filterLabel)}">${chipsHtml}</div>
-          <p class="pf-count pf-count--rail">${count}</p>
         </div>
         <p class="sr-only" aria-live="polite" id="pf-live"></p>
       </div>`

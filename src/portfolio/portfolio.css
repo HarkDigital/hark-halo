@@ -61,55 +61,6 @@
   }
 }
 
-/* the count: "15 sites · 3 featured · 12 more" (built by countParts, as the Work chapter's is), in the tube or the hero */
-.pf-count {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px 14px;
-  margin: 0;
-  font-family: var(--font-label);
-  font-weight: var(--label-weight);
-  font-size: 11.5px;
-  line-height: 1.5;
-  letter-spacing: 0.077em;
-  text-transform: uppercase;
-  color: var(--fg-muted);
-}
-.pf-count i {
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: var(--fg);
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
-}
-.pf-count--hero {
-  display: none;
-  margin-top: 14px;
-}
-.pf-count--rail {
-  flex: none;
-  flex-wrap: nowrap;
-  margin-left: auto;
-  padding: 0 18px;
-  white-space: nowrap;
-}
-.pf-tight .pf-count--hero,
-.pf-norail .pf-count--hero {
-  display: flex;
-}
-.pf-tight .pf-count--rail {
-  display: none;
-}
-@media (max-width: 720px) {
-  .pf-count--hero {
-    display: flex;
-  }
-  .pf-count--rail {
-    display: none;
-  }
-}
-
 /* ---------------- the stage: the rail + the rooms ---------------- */
 /* (flow-root: the bar's top margin stays inside the stage) */
 .pf-stage {
