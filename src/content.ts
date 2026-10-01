@@ -337,8 +337,8 @@ export const WORK: WorkItem[] = [
  * PORTFOLIO ONLY: client sites the Portfolio page (src/portfolio) hangs in its grid
  * after WORK's own; the story never reads them (its Work chapter, the accessible
  * copy and the Read-as-a-page fallback stay WORK's 15).
- * Adding one works as for WORK (public/work/<id>.webp, npm run thumbs; its preview video,
- * public/work/video/<id>.mp4, from scripts/work-video.mjs); ids are unique across both lists. Never featured: the Portfolio's prominent sites come from WORK.
+ * Add one with `npm run add-site -- <url> --industry="…"` (scripts/add-site.mjs: the still,
+ * its 640 copy, the hover video and the entry here); ids are unique across both lists. Never featured: the Portfolio's prominent sites come from WORK.
  */
 export const PORTFOLIO_MORE: WorkItem[] = [
   {

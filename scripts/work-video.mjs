@@ -8,8 +8,8 @@
 // --travel px over 5.4 s, a 0.8 s hold. Frames are taken at exact scroll
 // positions, so the motion is even however long each capture takes. Encodes
 // public/work/video/<id>.mp4 (800×500, 24 fps, H.264 CRF 31, no audio,
-// faststart: ~500 KB). Common third-party overlays (cookie banners, chat,
-// reCAPTCHA badges, accessibility toolbars, Popup Maker) are hidden by default;
+// faststart: ~500 KB). Common third-party overlays (lib/capture.mjs: cookie banners,
+// chat, reCAPTCHA badges, accessibility toolbars, Popup Maker) are hidden by default;
 // --hide adds CSS selectors for a site's own. Nothing on the page is ever
 // clicked. --keep leaves the frames in /private/tmp/claude-501/work-video/<id>/.
 import puppeteer from 'puppeteer-core'
@@ -17,6 +17,7 @@ import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { COLOR, LAUNCH, UA, hideCss } from './lib/capture.mjs'
 
 const args = Object.fromEntries(
   process.argv.slice(2).map(a => {
@@ -36,39 +37,22 @@ const MOVE = 5.4
 const W = parseInt(args.w ?? '1280', 10)
 const H = Math.round(W * 0.625)
 const TRAVEL = parseInt(args.travel ?? String(Math.round((2800 * W) / 1280)), 10)
-const DEFAULT_HIDE = [
-  '.grecaptcha-badge', '#pojo-a11y-toolbar', '[id^="trustedsite"]', '.trustedsite-trustmark',
-  '#hubspot-messages-iframe-container', '.intercom-lightweight-app', '#CybotCookiebotDialog',
-  '#onetrust-banner-sdk', '#onetrust-consent-sdk', '.cky-consent-container', '#cookie-law-info-bar',
-  '#hark-wpe-cookie-consent', '.pum-overlay', '#moove_gdpr_cookie_info_bar', '.cmplz-cookiebanner',
-  '#wm-ipp-base', '#wm-ipp', '#donato', '.wm-ipp-base',
-].join(',')
-// Frames are full-range sRGB JPEGs: encode limited-range BT.601 and tag it fully
-// (primaries, transfer, matrix). Untagged, Chrome guesses BT.709 for HD sizes (800+
-// lines), and its software decoder reads full range as limited: grey purples, crushed blacks.
-const COLOR = 'in_range=pc:out_range=tv:in_color_matrix=bt601:out_color_matrix=bt601,setparams=range=tv:colorspace=smpte170m:color_primaries=smpte170m:color_trc=smpte170m'
 const ease = t => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 
 fs.rmSync(tmp, { recursive: true, force: true })
 fs.mkdirSync(tmp, { recursive: true })
 fs.mkdirSync(path.dirname(out), { recursive: true })
 
-const browser = await puppeteer.launch({
-  executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-  headless: 'new',
-  args: ['--hide-scrollbars', '--disable-blink-features=AutomationControlled', '--mute-audio'],
-})
+const browser = await puppeteer.launch(LAUNCH)
 try {
   const page = await browser.newPage()
-  await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36')
+  await page.setUserAgent(UA)
   await page.setViewport({ width: W, height: H, deviceScaleFactor: 1 })
   await page.goto(String(args.url), { waitUntil: 'networkidle2', timeout: 90000 }).catch(() => {})
   await new Promise(r => setTimeout(r, 2500))
-  const hide = typeof args.hide === 'string' && args.hide ? `${DEFAULT_HIDE},${args.hide}` : DEFAULT_HIDE
+  const hide = hideCss(typeof args.hide === 'string' ? args.hide : '')
   // instant scrolling (no smooth-scroll libraries or CSS easing in the way), no scrollbars, overlays gone
-  await page.addStyleTag({
-    content: `html,body{scroll-behavior:auto!important}::-webkit-scrollbar{display:none}${hide ? `${hide}{display:none!important;visibility:hidden!important}` : ''}`,
-  })
+  await page.addStyleTag({ content: `html,body{scroll-behavior:auto!important}::-webkit-scrollbar{display:none}${hide}` })
   const height = await page.evaluate(() => Math.max(document.documentElement.scrollHeight, document.body?.scrollHeight ?? 0))
   // walk the page once so lazy images and scroll-reveal animations have run, then back to the top
   for (let y = 0; y < Math.min(height, TRAVEL + 1600); y += 400) {
@@ -77,7 +61,7 @@ try {
   }
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }))
   await new Promise(r => setTimeout(r, 1500))
-  if (hide) await page.addStyleTag({ content: `${hide}{display:none!important;visibility:hidden!important}` })
+  await page.addStyleTag({ content: hide })
 
   const travel = Math.max(0, Math.min(TRAVEL, height - H))
   const total = (HOLD * 2 + MOVE) * FPS
