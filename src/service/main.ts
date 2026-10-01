@@ -212,6 +212,9 @@ function render(i: number) {
   // word (the story's rise), everything else by its data-rv kind (service.css), in on scroll
   bindReveals()
 
+  // desktop: the hero copy is centred in the left half by the width you see (service.css)
+  fitHeroCopy()
+
   // hover: frosted panels carry a soft light in the neon that follows the cursor
   bindSpots('.svc-feature, .svc-quote, .svc-step, .svc-block, .svc-q')
 
@@ -222,4 +225,38 @@ function render(i: number) {
       if (menu.isOpen) art.hold(true)
     })
     .catch(err => console.error('[service] hero scene failed', err))
+}
+
+/**
+ * The hero copy's visible width, which service.css centres in the left half on
+ * desktop (--svc-copy-vis on .svc-hero): from the box's left edge to the
+ * furthest of its eyebrow, headline words, lede lines, tags and buttons.
+ * Layout edges, not the entrances' transforms: a tag pops in from scale(0.8)
+ * about its centre, so its centre and layout width give where it comes to rest.
+ * Only the block's position depends on it, never its width, so it settles in
+ * one pass; measured again once the font is in and on every resize (the type
+ * can change size while the box keeps its width).
+ */
+function fitHeroCopy() {
+  const hero = document.querySelector<HTMLElement>('.svc-hero')
+  const copy = hero?.querySelector<HTMLElement>('.svc-hero-copy')
+  if (!hero || !copy) return
+  const lede = copy.querySelector('.svc-lede')
+  const range = document.createRange()
+  const measure = () => {
+    const left = copy.getBoundingClientRect().left
+    let right = left
+    copy.querySelectorAll<HTMLElement>('.hud-eyebrow, .rise-w, .hud-tag, .hud-btn').forEach(el => {
+      const r = el.getBoundingClientRect()
+      right = Math.max(right, (r.left + r.right) / 2 + el.offsetWidth / 2)
+    })
+    if (lede) {
+      range.selectNodeContents(lede)
+      for (const r of range.getClientRects()) right = Math.max(right, r.right)
+    }
+    if (right > left) hero.style.setProperty('--svc-copy-vis', `${Math.ceil(right - left)}px`)
+  }
+  measure()
+  document.fonts?.ready.then(measure)
+  addEventListener('resize', measure, { passive: true })
 }

@@ -11,6 +11,10 @@ import { Pen, type Pointer, type Scene } from './kit'
  * Drawn only while the hero is on screen, the tab visible and the scene not
  * held (the phone Menu sheet holds it still behind its frost). Under reduced
  * motion the scene settles off screen and one still frame is drawn.
+ * On wide desktop screens the page grows with --hud-px (base.css) and the art
+ * grows with it: the scene draws in the laptop's pixels (w, h are the box
+ * over k) and the canvases scale them by k, so strokes, gaps and panels grow
+ * in step with the copy beside them. k is 1 everywhere else.
  * `?autopilot` drives a synthetic cursor (for headless screenshots).
  */
 
@@ -38,8 +42,13 @@ export function runScene(host: HTMLElement, scene: Scene, o: { reduced: boolean 
   const haze = hazeC.getContext('2d')!
   const pen = new Pen(ctx, glow)
   const pointer: Pointer = { x: -9999, y: -9999, inside: false, down: false }
+  // reads --hud-px as a length (a custom property's value is not resolved for us)
+  const probe = document.createElement('i')
+  probe.style.cssText = 'position:absolute;left:0;top:0;width:calc(1000 * var(--hud-px, 1px));height:0;visibility:hidden;pointer-events:none'
+  host.append(probe)
 
   let dpr = 1
+  let k = 1
   let w = 0
   let h = 0
   let raf = 0
@@ -53,14 +62,14 @@ export function runScene(host: HTMLElement, scene: Scene, o: { reduced: boolean 
   const autopilot = /[?&]autopilot\b/.test(location.search)
 
   const draw = (dt: number, t: number) => {
-    for (const [c, k] of [
-      [ctx, dpr],
-      [glow, GLOW],
+    for (const [c, s] of [
+      [ctx, dpr * k],
+      [glow, GLOW * k],
     ] as const) {
       c.setTransform(1, 0, 0, 1, 0, 0)
       c.globalCompositeOperation = 'source-over'
       c.clearRect(0, 0, c.canvas.width, c.canvas.height)
-      c.setTransform(k, 0, 0, k, 0, 0)
+      c.setTransform(s, 0, 0, s, 0, 0)
       c.globalCompositeOperation = 'lighter'
       c.lineCap = 'round'
       c.lineJoin = 'round'
@@ -105,19 +114,21 @@ export function runScene(host: HTMLElement, scene: Scene, o: { reduced: boolean 
 
   const resize = () => {
     const r = host.getBoundingClientRect()
-    const nw = Math.max(1, Math.round(r.width))
-    const nh = Math.max(1, Math.round(r.height))
+    const nk = Math.max(1, Math.round(probe.getBoundingClientRect().width) / 1000)
+    const nw = Math.max(1, Math.round(r.width / nk))
+    const nh = Math.max(1, Math.round(r.height / nk))
     const nd = Math.min(window.devicePixelRatio || 1, 2)
-    if (nw === w && nh === h && nd === dpr) return
+    if (nw === w && nh === h && nd === dpr && nk === k) return
     w = nw
     h = nh
     dpr = nd
-    coreC.width = Math.round(w * dpr)
-    coreC.height = Math.round(h * dpr)
-    glowC.width = Math.max(1, Math.round(w * GLOW))
-    glowC.height = Math.max(1, Math.round(h * GLOW))
-    hazeC.width = Math.max(1, Math.round(w * HAZE))
-    hazeC.height = Math.max(1, Math.round(h * HAZE))
+    k = nk
+    coreC.width = Math.round(w * k * dpr)
+    coreC.height = Math.round(h * k * dpr)
+    glowC.width = Math.max(1, Math.round(w * k * GLOW))
+    glowC.height = Math.max(1, Math.round(h * k * GLOW))
+    hazeC.width = Math.max(1, Math.round(w * k * HAZE))
+    hazeC.height = Math.max(1, Math.round(h * k * HAZE))
     scene.init(w, h)
     if (o.reduced) {
       // settle the simulation, then one still frame
@@ -131,9 +142,9 @@ export function runScene(host: HTMLElement, scene: Scene, o: { reduced: boolean 
   let touching = false
   const locate = () => {
     const r = host.getBoundingClientRect()
-    pointer.x = cx - r.left
-    pointer.y = cy - r.top
-    pointer.inside = pointer.x >= 0 && pointer.x <= r.width && pointer.y >= 0 && pointer.y <= r.height
+    pointer.x = (cx - r.left) / k
+    pointer.y = (cy - r.top) / k
+    pointer.inside = pointer.x >= 0 && pointer.x <= w && pointer.y >= 0 && pointer.y <= h
   }
   const onMove = (e: PointerEvent) => {
     if (e.pointerType !== 'mouse' && !touching) return
@@ -201,6 +212,7 @@ export function runScene(host: HTMLElement, scene: Scene, o: { reduced: boolean 
       hazeC.remove()
       glowC.remove()
       coreC.remove()
+      probe.remove()
     },
   }
 }

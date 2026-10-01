@@ -74,9 +74,10 @@ html {
   --safe-top: calc(clamp(80px, 10.5vh, 112px) + env(safe-area-inset-top, 0px));
   --safe-bottom: calc(clamp(82px, 10.5vh, 110px) + env(safe-area-inset-bottom, 0px));
 
-  /* WIDE DESKTOP (the story's stages only: see the .stage rule below). Off
-     here, so everything outside it (phones, tablets, portrait, short
-     landscape, the chrome, the service pages) keeps its exact sizes:
+  /* WIDE DESKTOP (the story's stages and a service page's content only: see
+     the .stage / .svc-main rule below). Off here, so everything outside them
+     (phones, tablets, portrait, short landscape, the chrome, the Portfolio,
+     the form dialog) keeps its exact sizes:
        --hud-px            a pixel that grows on wide screens (1px here)
        --hud-rem           a rem that grows with it (1rem here)
        --col-left-center   the centre of the left half, where a chapter's
@@ -99,9 +100,13 @@ html {
      left: max(var(--gutter), calc(var(--col-left-center) - <its width> / 2))
    and scales with calc(<px> * var(--hud-px)) / calc(<rem> * var(--hud-rem)).
    (No length ÷ length in calc(): Safari 15. Chapters repeat this query for
-   their desktop blocks: keep them in sync.) */
+   their desktop blocks: keep them in sync.) The service pages' <main>
+   (.svc-main, service.html) takes the same tokens: its hero copy is centred
+   in the left half the same way, and the page below grows with it
+   (src/service/service.css); their header stays as it is, like the story's. */
 @media (min-width: 1024px) and (min-aspect-ratio: 5/4) and (min-height: 501px) {
-  .stage {
+  .stage,
+  .svc-main {
     --col-left-center: 25vw;
     --hud-px: clamp(1px, min(calc(1px + (100vw - 1440px) / 2240), calc(1px + (100vh - 800px) / 1200)), 1.5px);
     --hud-rem: calc(16 * var(--hud-px));

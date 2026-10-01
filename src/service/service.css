@@ -33,6 +33,22 @@ body.svc {
   background: #000000;
   color: var(--fg);
 }
+/* a service page's content (service.html's <main>; not the Portfolio's): on
+   wide desktop screens its type and spacing grow with --hud-px (base.css);
+   the header stays as it is. Every size below written as
+   calc(<n> * var(--hud-px)) is <n>px everywhere else.
+   The sections' column is not simply scaled: 1560 x --hud-px outgrows the
+   window from about 1560 to 2340 wide and would pull every section out to
+   the gutter, left of the centred hero copy. It stays 1560px (as on a
+   laptop, so 1680 and 1920 keep their centred margins), widens only where
+   the window leaves 180px a side beyond it (from 1920 wide, holding the
+   sections near the hero copy's left edge on a 2560 screen), and stops at
+   1560 x --hud-px (an ultrawide keeps a centred column). Same query as base.css. */
+@media (min-width: 1024px) and (min-aspect-ratio: 5/4) and (min-height: 501px) {
+  .svc-main {
+    --svc-max: clamp(1560px, calc(100vw - 360px), calc(1560 * var(--hud-px)));
+  }
+}
 .svc a:focus-visible,
 .svc button:focus-visible,
 .svc summary:focus-visible {
@@ -148,27 +164,49 @@ html.is-svc.menu-open {
   width: min(640px, 50vw);
 }
 .svc-h1 {
-  margin-top: 22px;
-  font-size: clamp(2.8rem, 5.6vw, 6rem);
+  margin-top: calc(22 * var(--hud-px));
+  font-size: clamp(2.8rem, 5.6vw, calc(6 * var(--hud-rem)));
   line-height: 0.96;
 }
 .svc-h1.is-long {
-  font-size: clamp(2.4rem, 4.4vw, 4.6rem);
+  font-size: clamp(2.4rem, 4.4vw, calc(4.6 * var(--hud-rem)));
 }
 .svc-lede {
-  margin-top: 26px;
+  margin-top: calc(26 * var(--hud-px));
   max-width: 50ch;
-  font-size: clamp(16px, 1.25vw, 18.5px);
+  font-size: clamp(16px, 1.25vw, calc(18.5 * var(--hud-px)));
   color: rgba(246, 247, 249, 0.82);
 }
 .svc-tags {
-  margin-top: 22px;
+  margin-top: calc(22 * var(--hud-px));
 }
 .svc-ctas {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 30px;
+  gap: calc(10 * var(--hud-px));
+  margin-top: calc(30 * var(--hud-px));
+}
+
+/* desktop landscape: the copy block centred in the left half (its text still
+   left-aligned) and scaled up on wide screens, as the story's chapters are
+   (base.css: --col-left-center, --hud-px; keep the query in sync). The box is
+   the laptop's 640px grown with --hud-px, so every headline breaks as it does
+   there; what gets centred is the block you see, its visible width
+   (--svc-copy-vis: main.ts measures the widest line, tag row or buttons; a
+   typical nine tenths of the box until then). The art starts under the box's
+   right end, as it always has, so the scene keeps the rest of the width. */
+@media (min-width: 1024px) and (min-aspect-ratio: 5/4) and (min-height: 501px) {
+  .svc-hero {
+    --svc-copy-w: min(calc(640 * var(--hud-px)), 50vw);
+    --svc-copy-l: max(var(--gutter), calc(var(--col-left-center) - var(--svc-copy-vis, calc(var(--svc-copy-w) * 0.9)) / 2));
+  }
+  .svc-hero-copy {
+    width: var(--svc-copy-w);
+    margin-left: calc(var(--svc-copy-l) - var(--gutter));
+  }
+  .svc-art {
+    left: calc(var(--svc-copy-l) + var(--svc-copy-w) - 80 * var(--hud-px));
+  }
 }
 
 @media (orientation: portrait), (max-width: 820px) {
@@ -206,14 +244,14 @@ html.is-svc.menu-open {
 .svc-sec {
   max-width: var(--svc-max);
   margin: 0 auto;
-  padding: clamp(80px, 13vh, 150px) var(--gutter) 0;
+  padding: clamp(80px, 13vh, calc(150 * var(--hud-px))) var(--gutter) 0;
 }
 .svc-eyebrow {
-  margin: 0 0 32px;
+  margin: 0 0 calc(32 * var(--hud-px));
   font-weight: 400;
 }
 .svc-h2 {
-  margin: 18px 0 0;
+  margin: calc(18 * var(--hud-px)) 0 0;
   max-width: 18ch;
 }
 
@@ -221,21 +259,21 @@ html.is-svc.menu-open {
 .svc-feature-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: calc(14 * var(--hud-px));
   margin: 0;
   padding: 0;
   list-style: none;
 }
 .svc-feature.hud-panel {
-  padding: 30px 32px 34px;
+  padding: calc(30 * var(--hud-px)) calc(32 * var(--hud-px)) calc(34 * var(--hud-px));
   overflow: hidden;
 }
 /* a neon hairline comes into focus along the top edge on hover */
 .svc-feature::after {
   content: '';
   position: absolute;
-  left: 24px;
-  right: 24px;
+  left: calc(24 * var(--hud-px));
+  right: calc(24 * var(--hud-px));
   top: 0;
   height: 1px;
   background: var(--neon-line);
@@ -251,9 +289,9 @@ html.is-svc.menu-open {
   transform: none;
 }
 .svc-feature-t {
-  margin: 0 0 12px;
+  margin: 0 0 calc(12 * var(--hud-px));
   font-family: var(--font-display);
-  font-size: clamp(1.35rem, 1.7vw, 1.7rem);
+  font-size: clamp(1.35rem, 1.7vw, calc(1.7 * var(--hud-rem)));
   font-weight: 560;
   letter-spacing: -0.03em;
   line-height: 1.1;
@@ -261,14 +299,14 @@ html.is-svc.menu-open {
 }
 .svc-feature-p {
   margin: 0;
-  font-size: 15.5px;
+  font-size: calc(15.5 * var(--hud-px));
   line-height: 1.66;
   color: var(--fg-muted);
 }
 
 /* the stat: a band of light across the page */
 .svc-stat {
-  margin-top: clamp(80px, 13vh, 150px);
+  margin-top: clamp(80px, 13vh, calc(150 * var(--hud-px)));
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
   background:
@@ -280,15 +318,15 @@ html.is-svc.menu-open {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 10px 36px;
+  gap: calc(10 * var(--hud-px)) calc(36 * var(--hud-px));
   max-width: var(--svc-max);
   margin: 0 auto;
-  padding: clamp(44px, 7vh, 72px) var(--gutter);
+  padding: clamp(44px, 7vh, calc(72 * var(--hud-px))) var(--gutter);
 }
 .svc-stat-v {
   font-family: var(--font-display);
   font-weight: 560;
-  font-size: clamp(4rem, 9.5vw, 9rem);
+  font-size: clamp(4rem, 9.5vw, calc(9 * var(--hud-rem)));
   line-height: 0.9;
   letter-spacing: -0.055em;
   color: var(--fg);
@@ -298,7 +336,7 @@ html.is-svc.menu-open {
 }
 .svc-stat-l {
   max-width: 38ch;
-  font-size: 12px;
+  font-size: calc(12 * var(--hud-px));
   letter-spacing: 0.14em;
   line-height: 1.7;
 }
@@ -307,14 +345,14 @@ html.is-svc.menu-open {
 .svc-steps {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 40px 28px;
-  margin: 52px 0 0;
+  gap: calc(40 * var(--hud-px)) calc(28 * var(--hud-px));
+  margin: calc(52 * var(--hud-px)) 0 0;
   padding: 0;
   list-style: none;
 }
 .svc-step {
   position: relative;
-  padding-top: 24px;
+  padding-top: calc(24 * var(--hud-px));
 }
 .svc-step::before,
 .svc-step::after {
@@ -339,16 +377,16 @@ html.is-svc.menu-open {
   transform: scaleX(1);
 }
 .svc-step-t {
-  margin: 10px 0 10px;
+  margin: calc(10 * var(--hud-px)) 0;
   font-family: var(--font-display);
-  font-size: 1.35rem;
+  font-size: calc(1.35 * var(--hud-rem));
   font-weight: 560;
   letter-spacing: -0.025em;
   color: var(--fg);
 }
 .svc-step-p {
   margin: 0;
-  font-size: 15px;
+  font-size: calc(15 * var(--hud-px));
   line-height: 1.62;
   color: var(--fg-muted);
 }
@@ -357,16 +395,16 @@ html.is-svc.menu-open {
 .svc-article-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 56px 64px;
+  gap: calc(56 * var(--hud-px)) calc(64 * var(--hud-px));
 }
 .svc-block--wide {
   grid-column: 1 / -1;
-  max-width: 820px;
+  max-width: calc(820 * var(--hud-px));
 }
 .svc-block-t {
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(1.45rem, 2.1vw, 2rem);
+  font-size: clamp(1.45rem, 2.1vw, calc(2 * var(--hud-rem)));
   font-weight: 560;
   letter-spacing: -0.03em;
   line-height: 1.12;
@@ -374,17 +412,17 @@ html.is-svc.menu-open {
   text-wrap: balance;
 }
 .svc-block p {
-  margin: 18px 0 0;
+  margin: calc(18 * var(--hud-px)) 0 0;
   max-width: 62ch;
-  font-size: 16px;
+  font-size: calc(16 * var(--hud-px));
   line-height: 1.72;
   color: var(--fg-muted);
 }
 
 /* Questions, answered */
 .svc-faq-list {
-  max-width: 900px;
-  margin-top: 44px;
+  max-width: calc(900 * var(--hud-px));
+  margin-top: calc(44 * var(--hud-px));
   border-top: 1px solid var(--line-strong);
 }
 .svc-q {
@@ -394,10 +432,10 @@ html.is-svc.menu-open {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 24px;
-  padding: 24px 0;
+  gap: calc(24 * var(--hud-px));
+  padding: calc(24 * var(--hud-px)) 0;
   font-family: var(--font-display);
-  font-size: clamp(1.1rem, 1.5vw, 1.35rem);
+  font-size: clamp(1.1rem, 1.5vw, calc(1.35 * var(--hud-rem)));
   font-weight: 540;
   letter-spacing: -0.02em;
   line-height: 1.3;
@@ -411,8 +449,8 @@ html.is-svc.menu-open {
 .svc-q summary i {
   position: relative;
   flex: none;
-  width: 14px;
-  height: 14px;
+  width: calc(14 * var(--hud-px));
+  height: calc(14 * var(--hud-px));
   transition: transform 0.35s var(--svc-ease);
 }
 .svc-q summary i::before,
@@ -435,10 +473,10 @@ html.is-svc.menu-open {
   text-shadow: 0 0 18px rgba(255, 255, 255, 0.3);
 }
 .svc-q p {
-  margin: -6px 0 0;
-  padding: 0 0 26px;
+  margin: calc(-6 * var(--hud-px)) 0 0;
+  padding: 0 0 calc(26 * var(--hud-px));
   max-width: 68ch;
-  font-size: 16px;
+  font-size: calc(16 * var(--hud-px));
   line-height: 1.7;
   color: var(--fg-muted);
 }
@@ -446,12 +484,12 @@ html.is-svc.menu-open {
 /* a client */
 .svc-quote.hud-panel {
   margin: 0;
-  padding: clamp(32px, 5vw, 64px);
+  padding: clamp(32px, 5vw, calc(64 * var(--hud-px)));
 }
 .svc-quote-mark {
   display: block;
   font-family: var(--font-display);
-  font-size: 5rem;
+  font-size: calc(5 * var(--hud-rem));
   line-height: 0.7;
   height: 0.5em;
   color: var(--fg);
@@ -459,10 +497,10 @@ html.is-svc.menu-open {
 }
 .svc-quote blockquote {
   max-width: 34ch;
-  margin: 18px 0 0;
+  margin: calc(18 * var(--hud-px)) 0 0;
 }
 .svc-quote figcaption {
-  margin-top: 24px;
+  margin-top: calc(24 * var(--hud-px));
   letter-spacing: 0.16em;
 }
 
@@ -471,7 +509,7 @@ html.is-svc.menu-open {
   max-width: 24ch;
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(1.9rem, 3.6vw, 3.3rem);
+  font-size: clamp(1.9rem, 3.6vw, calc(3.3 * var(--hud-rem)));
   font-weight: 560;
   letter-spacing: -0.04em;
   line-height: 1.04;
@@ -481,14 +519,14 @@ html.is-svc.menu-open {
 .svc-pn {
   display: flex;
   justify-content: space-between;
-  gap: 24px;
-  margin-top: 48px;
-  padding-top: 26px;
+  gap: calc(24 * var(--hud-px));
+  margin-top: calc(48 * var(--hud-px));
+  padding-top: calc(26 * var(--hud-px));
   border-top: 1px solid var(--line);
 }
 .svc-pn-a {
   display: grid;
-  gap: 8px;
+  gap: calc(8 * var(--hud-px));
   text-decoration: none;
   color: var(--fg);
 }
@@ -497,7 +535,7 @@ html.is-svc.menu-open {
 }
 .svc-pn-t {
   font-family: var(--font-display);
-  font-size: clamp(1.1rem, 1.6vw, 1.45rem);
+  font-size: clamp(1.1rem, 1.6vw, calc(1.45 * var(--hud-rem)));
   font-weight: 540;
   letter-spacing: -0.02em;
   transition: text-shadow 0.3s ease;
@@ -510,12 +548,12 @@ html.is-svc.menu-open {
 .svc-contact {
   max-width: var(--svc-max);
   margin: 0 auto;
-  padding: clamp(80px, 13vh, 150px) var(--gutter) 0;
+  padding: clamp(80px, 13vh, calc(150 * var(--hud-px))) var(--gutter) 0;
   outline: none;
 }
 .svc-contact-card.hud-panel {
   max-width: none;
-  padding: clamp(28px, 4.5vw, 56px);
+  padding: clamp(28px, 4.5vw, calc(56 * var(--hud-px)));
   overflow: visible;
 }
 .svc-contact-grid {
@@ -523,7 +561,7 @@ html.is-svc.menu-open {
   z-index: 1;
   display: grid;
   grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-  gap: clamp(32px, 5vw, 72px);
+  gap: clamp(32px, 5vw, calc(72 * var(--hud-px)));
   align-items: start;
 }
 .svc-contact-copy .hud-body {
@@ -564,30 +602,30 @@ html.is-svc.menu-open {
   opacity: 0.85;
 }
 .svc-contact-t {
-  margin: 20px 0 18px;
-  font-size: clamp(3rem, 7vw, 6.2rem);
+  margin: calc(20 * var(--hud-px)) 0 calc(18 * var(--hud-px));
+  font-size: clamp(3rem, 7vw, calc(6.2 * var(--hud-rem)));
 }
 
 /* footer: a traditional one — the services in columns, the site's own pages, then the
    logo bottom left and the colophon */
 .svc-foot {
   max-width: var(--svc-max);
-  margin: clamp(80px, 12vh, 140px) auto 0;
-  padding: clamp(48px, 7vh, 72px) var(--gutter) calc(32px + env(safe-area-inset-bottom, 0px));
+  margin: clamp(80px, 12vh, calc(140 * var(--hud-px))) auto 0;
+  padding: clamp(48px, 7vh, calc(72 * var(--hud-px))) var(--gutter) calc(32 * var(--hud-px) + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--line);
 }
 .svc-foot-cols {
   display: grid;
   grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
-  gap: 40px 56px;
+  gap: calc(40 * var(--hud-px)) calc(56 * var(--hud-px));
 }
 .svc-foot-h {
-  margin: 0 0 18px;
+  margin: 0 0 calc(18 * var(--hud-px));
   color: var(--fg-faint);
 }
 .svc-foot-col ul {
   display: grid;
-  gap: 2px 32px;
+  gap: calc(2 * var(--hud-px)) calc(32 * var(--hud-px));
   margin: 0;
   padding: 0;
   list-style: none;
@@ -600,9 +638,9 @@ html.is-svc.menu-open {
 }
 .svc-foot-col a {
   display: inline-block;
-  padding: 7px 0;
+  padding: calc(7 * var(--hud-px)) 0;
   font-family: var(--font-sans);
-  font-size: 15px;
+  font-size: calc(15 * var(--hud-px));
   line-height: 1.35;
   text-decoration: none;
   color: var(--fg-muted);
@@ -620,9 +658,9 @@ html.is-svc.menu-open {
 .svc-foot-col a[aria-current='page']::before {
   content: '';
   display: inline-block;
-  width: 6px;
-  height: 6px;
-  margin: 0 9px 2px 0;
+  width: calc(6 * var(--hud-px));
+  height: calc(6 * var(--hud-px));
+  margin: 0 calc(9 * var(--hud-px)) calc(2 * var(--hud-px)) 0;
   border-radius: 50%;
   background: var(--neon-a);
   box-shadow: 0 0 8px var(--neon-a);
@@ -632,9 +670,9 @@ html.is-svc.menu-open {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 18px 32px;
-  margin-top: clamp(40px, 6vh, 64px);
-  padding-top: 26px;
+  gap: calc(18 * var(--hud-px)) calc(32 * var(--hud-px));
+  margin-top: clamp(40px, 6vh, calc(64 * var(--hud-px)));
+  padding-top: calc(26 * var(--hud-px));
   border-top: 1px solid var(--line);
 }
 .svc-foot-bar p {
@@ -649,7 +687,7 @@ html.is-svc.menu-open {
 }
 .svc-foot-logo-svg {
   display: block;
-  height: 38px;
+  height: calc(38 * var(--hud-px));
   width: auto;
   filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.18));
   transition: filter 0.35s ease;
@@ -891,9 +929,9 @@ html.is-svc.menu-open {
   position: absolute;
   left: 0;
   top: 0;
-  width: 9px;
-  height: 9px;
-  margin: -4px 0 0 -1px;
+  width: calc(9 * var(--hud-px));
+  height: calc(9 * var(--hud-px));
+  margin: calc(-4 * var(--hud-px)) 0 0 -1px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.28);
   transition:
@@ -1113,7 +1151,7 @@ html.is-svc.menu-open {
   border-radius: inherit;
   pointer-events: none;
   opacity: 0;
-  background: radial-gradient(380px circle at var(--mx, 50%) var(--my, 50%), rgba(var(--spot-rgb), 0.17), rgba(var(--spot-rgb), 0) 62%);
+  background: radial-gradient(calc(380 * var(--hud-px)) circle at var(--mx, 50%) var(--my, 50%), rgba(var(--spot-rgb), 0.17), rgba(var(--spot-rgb), 0) 62%);
   transition: opacity 0.35s ease;
 }
 /* (the entrance overlays keep their own positioning) */
@@ -1146,7 +1184,7 @@ html.is-svc.menu-open {
   }
   /* steps: lift, the title glows, the line fills in the step's own light */
   .svc-step {
-    border-radius: 14px;
+    border-radius: calc(14 * var(--hud-px));
     transition: transform 0.5s var(--svc-ease);
   }
   .svc-step:hover {
@@ -1161,9 +1199,9 @@ html.is-svc.menu-open {
   }
   /* article blocks: a neon bar grows beside the heading */
   .svc-block {
-    border-radius: 16px;
-    padding: 18px 20px;
-    margin: -18px -20px;
+    border-radius: calc(16 * var(--hud-px));
+    padding: calc(18 * var(--hud-px)) calc(20 * var(--hud-px));
+    margin: calc(-18 * var(--hud-px)) calc(-20 * var(--hud-px));
   }
   .svc-block-t {
     transition: text-shadow 0.35s ease;
@@ -1181,7 +1219,7 @@ html.is-svc.menu-open {
       color 0.3s ease;
   }
   .svc-q:hover summary {
-    padding-left: 10px;
+    padding-left: calc(10 * var(--hud-px));
   }
   .svc-q:hover summary i {
     color: rgb(var(--spot-rgb));
@@ -1199,7 +1237,7 @@ html.is-svc.menu-open {
   /* prev / next: the arrow leans in, a neon underline draws */
   .svc-pn-t {
     position: relative;
-    padding-bottom: 4px;
+    padding-bottom: calc(4 * var(--hud-px));
   }
   .svc-pn-t::after {
     content: '';

@@ -9,7 +9,7 @@
 }
 .cf-form {
   display: grid;
-  gap: 16px;
+  gap: calc(16 * var(--hud-px));
   margin: 0;
 }
 .cf-form[hidden] {
@@ -18,17 +18,17 @@
 .cf-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: calc(16 * var(--hud-px));
 }
 .cf-field {
   display: grid;
-  gap: 8px;
+  gap: calc(8 * var(--hud-px));
   margin: 0;
 }
 .cf-label {
   font-family: var(--font-label);
   font-weight: var(--label-weight);
-  font-size: 11px;
+  font-size: calc(11 * var(--hud-px));
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--fg-muted);
@@ -36,15 +36,15 @@
 .cf-input {
   width: 100%;
   margin: 0;
-  padding: 12px 14px;
+  padding: calc(12 * var(--hud-px)) calc(14 * var(--hud-px));
   font: inherit;
   font-family: var(--font-sans);
-  font-size: 15.5px;
+  font-size: calc(15.5 * var(--hud-px));
   line-height: 1.4;
   color: var(--fg);
   background: rgba(255, 255, 255, 0.045);
   border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 12px;
+  border-radius: calc(12 * var(--hud-px));
   outline: none;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   transition:
@@ -70,7 +70,7 @@
   border-color: #ff6b6b;
 }
 .cf-text {
-  min-height: 120px;
+  min-height: calc(120 * var(--hud-px));
   resize: vertical;
 }
 /* the select: our own chevron, dark options */
@@ -81,7 +81,7 @@
 .cf-select select {
   -webkit-appearance: none;
   appearance: none;
-  padding-right: 36px;
+  padding-right: calc(36 * var(--hud-px));
   cursor: pointer;
 }
 .cf-select select:invalid,
@@ -95,11 +95,11 @@
 .cf-select::after {
   content: '';
   position: absolute;
-  right: 16px;
+  right: calc(16 * var(--hud-px));
   top: 50%;
-  width: 7px;
-  height: 7px;
-  margin-top: -5px;
+  width: calc(7 * var(--hud-px));
+  height: calc(7 * var(--hud-px));
+  margin-top: calc(-5 * var(--hud-px));
   border-right: 1.5px solid rgba(246, 247, 249, 0.7);
   border-bottom: 1.5px solid rgba(246, 247, 249, 0.7);
   transform: rotate(45deg);
@@ -122,7 +122,7 @@
 .cf-error {
   margin: 0;
   min-height: 0;
-  font-size: 14px;
+  font-size: calc(14 * var(--hud-px));
   line-height: 1.5;
   color: #ff8a8a;
 }
@@ -132,8 +132,8 @@
 .cf-submit.hud-btn {
   justify-content: center;
   width: 100%;
-  padding: 15px 22px;
-  font-size: 15px;
+  padding: calc(15 * var(--hud-px)) calc(22 * var(--hud-px));
+  font-size: calc(15 * var(--hud-px));
 }
 .cf-submit:disabled {
   opacity: 0.6;
@@ -144,7 +144,7 @@
   text-align: center;
   font-family: var(--font-label);
   font-weight: var(--label-weight);
-  font-size: 10.5px;
+  font-size: calc(10.5 * var(--hud-px));
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--fg-faint);
@@ -153,8 +153,8 @@
 .cf-done {
   display: grid;
   justify-items: center;
-  gap: 10px;
-  padding: 36px 8px;
+  gap: calc(10 * var(--hud-px));
+  padding: calc(36 * var(--hud-px)) calc(8 * var(--hud-px));
   text-align: center;
 }
 .cf-done[hidden] {
@@ -163,18 +163,18 @@
 .cf-check {
   display: grid;
   place-items: center;
-  width: 58px;
-  height: 58px;
+  width: calc(58 * var(--hud-px));
+  height: calc(58 * var(--hud-px));
   border-radius: 50%;
-  font-size: 24px;
+  font-size: calc(24 * var(--hud-px));
   color: #000000;
   background: var(--cf-neon);
   box-shadow: 0 0 26px var(--cf-neon);
 }
 .cf-done-t {
-  margin: 8px 0 0;
+  margin: calc(8 * var(--hud-px)) 0 0;
   font-family: var(--font-display);
-  font-size: 1.8rem;
+  font-size: calc(1.8 * var(--hud-rem));
   font-weight: 560;
   letter-spacing: -0.03em;
   color: var(--fg);
@@ -182,7 +182,7 @@
 .cf-done-b {
   margin: 0;
   max-width: 34ch;
-  font-size: 15.5px;
+  font-size: calc(15.5 * var(--hud-px));
   line-height: 1.6;
   color: var(--fg-muted);
 }
