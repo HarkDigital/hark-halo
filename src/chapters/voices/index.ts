@@ -20,8 +20,8 @@ import './voices.css'
  * speaker small beneath it; scrolling to the next voice morphs the tube into
  * the next speaker's print and shifts its colour (cyan → violet → magenta …).
  *
- *   0.00–0.12  intro: the line lies flat and dark: “We listen.” (0.012). It
- *              catches (0.036–0.056) and starts to talk: “They talk.” (0.044);
+ *   0.00–0.12  intro: the line lies flat and dark: “They talk.” (0.012). It
+ *              catches (0.036–0.056) and lights up: “We Listen.” (0.044);
  *              settled 0.06 (heading) and 0.08 (landing), clear of the cut
  *   0.12–0.93  eight voices (0.101 each): hold (the quote, the live line; a
  *              soft playhead reads along the voice as you scroll) → around
@@ -134,9 +134,10 @@ export default function create(): Chapter {
     ticks = TESTIMONIALS.map(() => el('i', '', undefined, tickRow))
 
     body = el('div', 'vx-body', undefined, card)
-    // “We listen.” first; “They talk.” once the line catches
+    // “They talk.” first; “We Listen.” (the lit accent) once the line catches.
+    // (on the card, not the body: it's centred on the whole pane)
     const m = SECTIONS.voices.title.match(/^(.*?\.)\s+(.*)$/)
-    title = el('h2', 'hud-h2 vx-title', undefined, body)
+    title = el('h2', 'hud-h2 vx-title', undefined, card)
     titleA = rise(el('span', 'vx-t1', undefined, title), m ? m[1] : SECTIONS.voices.title)
     title.appendChild(document.createTextNode(' '))
     titleB = rise(el('span', 'vx-t2', undefined, title), m ? `<em>${m[2]}</em>` : '')

@@ -30,6 +30,8 @@
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) var(--vx-band, 30%);
   row-gap: clamp(12px, 2vh, 22px);
+  /* the card's text width: the intro title is sized off it (works without container queries) */
+  --vx-tw: calc(var(--vx-w) - var(--pad-l) - var(--pad-x));
 }
 
 /* ---------------- meta: eyebrow · count + ticks ---------------- */
@@ -113,16 +115,21 @@
 }
 
 .stage-voices .vx-title {
+  /* the intro line, large and centred on the whole pane: one sentence a line */
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   margin: 0;
-  font-size: clamp(2.6rem, 6.2vw, 6.4rem);
-  line-height: 0.94;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none;
+  font-size: clamp(3rem, calc(var(--vx-tw) * 0.22), 10rem);
+  line-height: 0.96;
 }
 .stage-voices .vx-title > span {
-  display: inline;
+  display: block;
 }
 
 .stage-voices .vx-voices {
@@ -214,7 +221,7 @@
     --pad-l: clamp(28px, 8vw, 64px);
   }
   .stage-voices .vx-title {
-    font-size: clamp(2.3rem, 11vw, 5rem);
+    font-size: clamp(2.6rem, calc(var(--vx-tw) * 0.21), 7rem);
   }
   .stage-voices .vx-credit {
     font-size: 11px;
@@ -247,7 +254,11 @@
     --vx-floor: 12px;
     --vx-w: min(68vw, 720px);
   }
+  /* too short to centre on the whole pane: centre between the meta row and
+     the band, so the neon line never runs through the words */
   .stage-voices .vx-title {
-    font-size: clamp(1.9rem, 5.4vw, 2.8rem);
+    top: calc(var(--pad-t) + 32px);
+    bottom: var(--vx-band, 30%);
+    font-size: min(calc(var(--vx-tw) * 0.2), 14vh);
   }
 }

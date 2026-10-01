@@ -174,10 +174,17 @@ export class Engine {
       reducedMotion: this.reducedMotion,
     }
 
+    // ?lerp= / ?wheel= audition the scroll feel without a rebuild (see main.ts)
+    const q = new URLSearchParams(location.search)
+    const num = (k: string, lo: number, hi: number) => {
+      const v = parseFloat(q.get(k) ?? '')
+      return Number.isFinite(v) ? clamp(v, lo, hi) : undefined
+    }
     this.lenis = new Lenis({
       autoRaf: false,
-      lerp: this.reducedMotion ? 1 : 0.09,
-      wheelMultiplier: 0.85,
+      // tight: the story follows the wheel/trackpad closely (0.09 / 0.85 felt floaty)
+      lerp: this.reducedMotion ? 1 : (num('lerp', 0.02, 1) ?? 0.2),
+      wheelMultiplier: num('wheel', 0.2, 3) ?? 1,
       touchMultiplier: 1.4,
       smoothWheel: !this.reducedMotion,
     })
@@ -616,7 +623,13 @@ export class Engine {
       this.upWatch = 0
       this.perfCooldown = 6
       this.resize()
-    } else if (this.fastFor > 8 && this.dprScale < Math.min(1, this.dprCeil) && this.perfCooldown <= 0) {
+    } else if (
+      this.fastFor > 8 &&
+      this.dprScale < Math.min(1, this.dprCeil) &&
+      this.perfCooldown <= 0 &&
+      // a step up is optional and reallocates every render target: never mid-scroll
+      Math.abs(this.frame.velocity) < 0.05
+    ) {
       this.upFrom = this.dprScale
       this.dprScale = Math.min(1, this.dprCeil, this.dprScale + 0.1)
       this.fastFor = 0

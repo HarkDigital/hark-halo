@@ -4,8 +4,9 @@
    Black, and frosted glass. Backgrounds are black (#000); light only exists
    where it makes frost glow. The page is frosted glass on black — panels
    with a soft sandblasted fill, a razor-thin bright top edge and a
-   light-catching rim; white type in Schibsted Grotesk, italic accents, and
-   bold tracked-caps labels in the same grotesk. Monochrome on purpose: the Hark brand is the
+   light-catching rim; white type in Schibsted Grotesk (upright only, never
+   italic: accent words are lit by a gradient instead), and bold
+   tracked-caps labels in the same grotesk. Monochrome on purpose: the Hark brand is the
    monochrome mark (no green). Headlines come INTO FOCUS (blur → sharp).
 
    STRUCTURE (keep): #gl / #track / #stages / .stage / #chrome / #loader,
@@ -15,6 +16,20 @@
    fallbacks — use rgba tokens); write -webkit-backdrop-filter BEFORE
    backdrop-filter; small text ≥ 4.5:1 on the real rendered background.
    ------------------------------------------------------------------ */
+
+/* no italics anywhere (Mike, 2026-09-30): not even the browser's own default
+   for em/i/cite, and no faux-italic if something asks for one */
+em,
+i,
+cite,
+dfn,
+var,
+address {
+  font-style: normal;
+}
+html {
+  font-synthesis-style: none;
+}
 
 :root {
   --bg: #000000;
@@ -291,7 +306,7 @@ a {
 /* <em> = the accent words, lit like light through tinted glass */
 .hud-title em,
 .hud-h2 em {
-  font-style: italic;
+  font-style: normal;
   color: var(--signal);
   background: var(--accent-grad);
   -webkit-background-clip: text;

@@ -1,6 +1,5 @@
-// Fonts: Schibsted Grotesk for everything (display, body, italics, and bold labels).
+// Fonts: Schibsted Grotesk for everything (display, body and bold labels). Upright only: no italics anywhere.
 import '@fontsource-variable/schibsted-grotesk'
-import '@fontsource-variable/schibsted-grotesk/wght-italic.css'
 import '../styles/base.css'
 import '../ui/ui.css'
 import '../service/service.css'

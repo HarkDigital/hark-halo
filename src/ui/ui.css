@@ -757,7 +757,7 @@ html.menu-open #stages {
   letter-spacing: -0.045em;
 }
 .ch-ml.is-now .ch-ml-name {
-  font-style: italic;
+  font-style: normal;
   background: var(--accent-grad);
   -webkit-background-clip: text;
   background-clip: text;
@@ -1133,7 +1133,7 @@ html.menu-open #stages {
   letter-spacing: -0.035em;
 }
 .rot-title em {
-  font-style: italic;
+  font-style: normal;
   background: var(--accent-grad);
   -webkit-background-clip: text;
   background-clip: text;

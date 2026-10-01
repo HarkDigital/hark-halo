@@ -9,7 +9,7 @@ import { holdInert, releaseInert } from './inert'
  * frosted sheet, a real modal dialog (focus trap, Escape, the layers behind
  * it inert with a fallback, focus back to Menu on close): the sections as big
  * plain names (Services opens the eleven service pages beneath it; the
- * section you are in is lit, italic with a glass bead), 'Start a project'
+ * section you are in is lit, with a glass bead), 'Start a project'
  * (and the host's own extra button), the address, and the mark drawn as a
  * hairline behind it all.
  */

@@ -165,6 +165,12 @@ export default defineConfig({
     chunkSizeWarningLimit: 1500,
     rollupOptions: {
       input: { main: 'index.html', service: 'service.html', portfolio: 'portfolio.html' },
+      // three.js (~180 KB gzipped, most of the story's JS) in a file of its own:
+      // it only changes when three is upgraded, so a deploy doesn't make every
+      // returning visitor download it again
+      output: {
+        codeSplitting: { groups: [{ name: 'three', test: /node_modules[\\/]three[\\/]/ }] },
+      },
     },
   },
 })

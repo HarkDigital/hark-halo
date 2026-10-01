@@ -21,7 +21,7 @@ import { hostOf, isPreview, neonKey } from '../kit/work'
  *         .pf-foot > .pf-pool  the lit tube it stands on, and its light on the wall
  *       .pf-plac               industry (+ Preview), name, blurb, tags, the pill + host
  *
- * `kind`: 'feat' (the name an h2) or 'more' (an h3). Names are always plain, never an italic word.
+ * `kind`: 'feat' (the name an h2) or 'more' (an h3). Names are always plain, never an accent word.
  *
  * The pill's name is its aria-label, "Visit site, ComTec Systems (opens in a new
  * tab)": it starts with the words on it (WCAG 2.5.3). Visually hidden spans for

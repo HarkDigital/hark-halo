@@ -391,7 +391,7 @@ class Work implements Chapter {
     const meta = el('div', 'wk-meta', undefined, root)
     el('span', 'hud-label wk-ind', w.industry, meta)
     if (pre) el('span', 'wk-badge', 'Preview', meta)
-    const name = rise(el('h3', 'hud-h2 wk-name', undefined, root), esc(w.name)) // (plain: no italic last word)
+    const name = rise(el('h3', 'hud-h2 wk-name', undefined, root), esc(w.name)) // (plain: no accent last word)
     el('p', 'hud-body wk-blurb', w.blurb, root)
     const tags = el('ul', 'hud-tags wk-tags', undefined, root)
     for (const t of w.tags) el('li', 'hud-tag', t, tags)

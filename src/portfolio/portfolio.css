@@ -933,7 +933,7 @@
   text-wrap: balance;
 }
 .pf-name em {
-  font-style: italic;
+  font-style: normal;
   color: var(--signal);
   background: var(--accent-grad);
   -webkit-background-clip: text;

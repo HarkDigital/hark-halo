@@ -394,7 +394,7 @@ export const STATS = [
 export const SECTIONS = {
   work: { eyebrow: 'Selected work', title: 'Built to be heard.' },
   services: { eyebrow: 'What we do', title: 'Eleven ways to be heard.' },
-  voices: { eyebrow: 'Client voices', title: 'We listen. They talk.' },
+  voices: { eyebrow: 'Client voices', title: 'They talk. We Listen.' },
 }
 
 /** How every engagement runs (Software Development process, servicePages.ts). */

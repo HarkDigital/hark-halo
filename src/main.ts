@@ -1,6 +1,5 @@
-// Fonts: Schibsted Grotesk for everything (display, body, italics, and bold labels).
+// Fonts: Schibsted Grotesk for everything (display, body and bold labels). Upright only: no italics anywhere.
 import '@fontsource-variable/schibsted-grotesk'
-import '@fontsource-variable/schibsted-grotesk/wght-italic.css'
 import './styles/base.css'
 import './ui/ui.css'
 
@@ -23,6 +22,7 @@ import { mountDebug } from './core/debug'
  *   ?p=0.42             jump to global progress
  *   ?only=work          init only that chapter (fast dev loop)
  *   ?debug              fps / chapter / progress readout
+ *   ?lerp=0.09&wheel=0.85  audition the smooth-scroll feel (lower lerp = floatier; default 0.2 / 1)
  */
 const params = new URLSearchParams(location.search)
 
