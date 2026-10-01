@@ -1,12 +1,13 @@
 import * as THREE from 'three'
 import Lenis from 'lenis'
-import { Post } from './post'
+import { Post, SEGUE_ID } from './post'
 import { Assets } from './assets'
 import { World } from '../world/World'
 import { clamp, damp } from './math'
 import { buildChapterCopy } from './srContent'
 import { nextFrame } from './yield'
-import type { CameraPose, Chapter, ChapterContext, ChapterDef, Frame } from './types'
+import type { CameraPose, Chapter, ChapterContext, ChapterDef, Frame, SegueMode } from './types'
+import { SEGUE_MODES } from './types'
 import { REDUCED_MOTION } from '../kit/motion'
 
 export interface ChapterSlot {
@@ -31,8 +32,17 @@ export interface EngineState {
 
 /** Scroll distance (in vh) on each side of a cut where the glitch ramps. */
 const CUT_WINDOW = 0.18
-/** A 'tube' segue (ChapterDef.segue) plays over a longer stretch each side: it is watched, not hidden. */
-const SEGUE_WINDOW = 0.38
+/**
+ * A segue (ChapterDef.segue) plays over a longer stretch each side (vh): it is
+ * watched, not hidden. Scroll-linear: each mode's own phases shape it (post.ts).
+ */
+const SEGUE_WINDOW: Record<SegueMode, number> = { blinds: 0.42, glass: 0.4, neon: 0.44, tube: 0.38 }
+/**
+ * How much faster than the transition the chapters' DOM copy fades under a
+ * segue (--cut × k): the copy is gone while the picture is changing, and back
+ * only once the incoming chapter has nearly cleared.
+ */
+const SEGUE_COPY: Record<SegueMode, number> = { blinds: 2.6, glass: 2.4, neon: 2.6, tube: 3 }
 /** Render-pixel budget: 4K/5K windows would otherwise push 15+ MP through bloom. */
 const PIXEL_BUDGET = 6e6
 /** device pixels of three's glass (transmission) buffer on desktop; it only ever shrinks with the frame */
@@ -108,6 +118,10 @@ export class Engine {
   private cutHold = 0
   private cutCss = -1
   private cutPeakAt = -1e9
+  /** 1 while a fast scroll / recent peak holds the cut; eases to 0 to let the hold go */
+  private holdK = 0
+  /** the look the transition in play wears (a segue mode, or null: the fog cut) */
+  private look: SegueMode | null = null
   /** frames the view has held perfectly still with Motion off (see tick) */
   private quiet = 0
   /**
@@ -120,6 +134,8 @@ export class Engine {
   onContextGone: (() => void) | null = null
   private listenerFailed = new WeakSet<object>()
   private suppressFocusLand = false
+  /** ?segue= review override: a mode for every segue boundary, null = the fog cut instead */
+  private segueParam: SegueMode | null | undefined
   private tmpRight = new THREE.Vector3()
   private tmpUp = new THREE.Vector3()
 
@@ -176,6 +192,8 @@ export class Engine {
 
     // ?lerp= / ?wheel= audition the scroll feel without a rebuild (see main.ts)
     const q = new URLSearchParams(location.search)
+    const sq = q.get('segue')
+    this.segueParam = sq === 'fog' || sq === 'none' ? null : SEGUE_MODES.includes(sq as SegueMode) ? (sq as SegueMode) : undefined
     const num = (k: string, lo: number, hi: number) => {
       const v = parseFloat(q.get(k) ?? '')
       return Number.isFinite(v) ? clamp(v, lo, hi) : undefined
@@ -735,26 +753,37 @@ export class Engine {
         near = i
       }
     }
-    const segue = this.slots[near]?.def.segue === 'tube'
-    const tr = clamp(1 - d / (segue ? SEGUE_WINDOW : CUT_WINDOW))
-    // (the tube segue runs linear in scroll: its own phases shape it)
+    const def = this.slots[near]?.def.segue
+    const segue = def ? (this.segueParam === undefined ? def : this.segueParam) : null
+    const tr = clamp(1 - d / (segue ? SEGUE_WINDOW[segue] : CUT_WINDOW))
+    // (a segue runs linear in scroll: its own phases shape it)
     const scrollCut = segue ? tr : tr * tr * (3 - 2 * tr)
     const cut = Math.max(scrollCut, fx)
     // which side of the cut we're on (fog forms, then clears)
     this.post.cutSide = fx > scrollCut && this.jump ? (this.jump.swapped ? 1 : -1) : side
-    // the tube segue only for a scroll through that boundary (a nav jump keeps the fog)
-    this.post.segue = segue && scrollCut >= fx ? 1 : 0
     // cut budget (WCAG 2.3.1): while boundaries come fast (a quick scroll or
     // a cut peaked < 0.5 s ago) hold the transition so they merge into one
-    // continuous sheet instead of a train of full-frame dips
+    // continuous sheet instead of a train of full-frame dips. The hold lets go
+    // over ~0.35 s once things calm down (a step back to the live value would
+    // pop the frame from a third-covered to clear in one frame).
     const now = performance.now()
     if (cut > 0.9) this.cutPeakAt = now
     this.cutHold = Math.max(this.cutHold * Math.exp(-f.dt / 0.45), cut)
     const rapid = now - this.cutPeakAt < 500 || Math.abs(f.velocity) > 3
-    const cutOut = rapid ? Math.max(cut, this.cutHold) : cut
+    this.holdK = rapid ? 1 : Math.max(0, this.holdK - f.dt / 0.35)
+    const cutOut = Math.max(cut, this.cutHold * this.holdK)
+    // which look the transition wears: a segue only while a scroll through its
+    // boundary drives it, a nav jump's fog otherwise. A held transition (a fast
+    // scroll's tail, a jump's tail) keeps the look it had, so it never changes
+    // face mid-way; a jump that starts mid-segue plays that segue on to full
+    // cover, then its fog clears onto the new chapter.
+    if (cutOut <= 0.001) this.look = null
+    else if (scrollCut > 0 && scrollCut >= fx) this.look = segue
+    else if (fx > 0 && (!this.jump || this.jump.swapped || !this.look)) this.look = null
+    this.post.segue = this.look ? SEGUE_ID[this.look] : 0
     // the chapter's DOM copy fades while the cut covers the frame; CSS reads --cut
-    // (through the tube segue it stays gone until the picture has nearly powered up)
-    const cutCss = Math.round(Math.min(1, cutOut * (this.post.segue ? 3 : 1)) * 50) / 50
+    // (through a segue it stays gone until the incoming picture has nearly cleared)
+    const cutCss = Math.round(Math.min(1, cutOut * (this.look ? SEGUE_COPY[this.look] : 1)) * 50) / 50
     if (cutCss !== this.cutCss) {
       this.cutCss = cutCss
       this.stages.style.setProperty('--cut', String(cutCss))

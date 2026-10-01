@@ -3,6 +3,16 @@ import type { Post } from './post'
 import type { Assets } from './assets'
 import type { World } from '../world/World'
 
+/**
+ * A watched segue between two chapters (src/core/post.ts, THE SEGUES):
+ *   blinds  the frame closes into frosted glass slats, which open onto the next
+ *   glass   the camera pushes through a pane of frosted glass lit from behind
+ *   neon    the light drains into one line of neon that draws across the frame
+ *   tube    an old tube set switching off: a line, a point, black (and back)
+ */
+export type SegueMode = 'blinds' | 'glass' | 'neon' | 'tube'
+export const SEGUE_MODES: readonly SegueMode[] = ['blinds', 'glass', 'neon', 'tube']
+
 /** Per-frame state handed to every update. */
 export interface Frame {
   /** seconds since the experience started */
@@ -108,11 +118,11 @@ export interface ChapterDef {
   /** Local progress where the section headline shows (heading Tab stop lands here). */
   intro?: number
   /**
-   * How the story arrives at this chapter from the one before. Default: the
-   * breath cut (fog). 'tube': the frame powers down into a line of neon light,
-   * then a point (an old tube set switching off), and this chapter powers up
-   * from it, over a longer window (SEGUE_WINDOW).
+   * How the story arrives at this chapter from the one before, over a longer,
+   * watched window (Engine SEGUE_WINDOW), instead of the breath cut (fog).
+   * The modes are drawn in src/core/post.ts (THE SEGUES); `?segue=<mode>`
+   * (or `?segue=fog`) overrides it for review.
    */
-  segue?: 'tube'
+  segue?: SegueMode
   load: () => Promise<{ default: ChapterFactory }>
 }

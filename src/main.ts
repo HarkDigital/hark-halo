@@ -18,7 +18,7 @@ import { mountDebug } from './core/debug'
 /*
  * URL params (handy for review + screenshots):
  *   ?nointro            skip the loader animation
- *   ?c=work&l=0.5       jump to a chapter at local progress
+ *   ?c=work&l=0.5       jump to a chapter at local progress (no l: its nav landing)
  *   ?p=0.42             jump to global progress
  *   ?only=work          init only that chapter (fast dev loop)
  *   ?debug              fps / chapter / progress readout
@@ -103,7 +103,7 @@ async function boot() {
   const svcAt = svc ? SERVICES.findIndex(s => s.slug === svc) : -1
   const svcSlot = engine.slots.find(s => s.def.id === 'services')
   if (p) engine.goto(parseFloat(p))
-  else if (c) engine.gotoChapter(c, parseFloat(params.get('l') ?? '0'))
+  else if (c) engine.gotoChapter(c, params.has('l') ? parseFloat(params.get('l') ?? '0') : engine.landingFor(c))
   else if (svcAt >= 0 && svcSlot) engine.land('services', false, svcSlot.chapter.anchors?.[svcAt])
   else if (hash && CHAPTERS.some(ch => ch.id === hash)) engine.land(hash, false)
   else engine.goto(0)

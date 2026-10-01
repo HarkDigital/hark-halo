@@ -32,9 +32,9 @@ import './hero.css'
  *                      crystalline melt front at its edge.
  *   0.56–0.86  SETTLE  pull back; the mark alone, centred and square to you.
  *   0.86–1.00  SEGUE   the neon surges and the camera eases in while the
- *                      engine's TUBE SEGUE (services arrives with `segue:
- *                      'tube'`) squashes the picture into one line of neon,
- *                      then a point: services powers up out of it.
+ *                      engine's segue to services plays (chapters/index.ts
+ *                      `segue`, drawn in src/core/post.ts: by default the
+ *                      glass pane, the frosted neon swelling into soft light).
  *
  * HOVER (tube mark, a mouse, while not scrolling, at the headline and the
  * settle): the mark leans toward the pointer, the neon and the glass light up
@@ -93,7 +93,7 @@ const FIT: Record<'land' | 'port', Record<'intro' | 'end', Fit>> = {
   land: {
     // beside the headline block
     intro: { sx: 0.42, sy: 0.05, hf: 0.5, wf: 0.34 },
-    // alone, centred: the picture the segue squashes into a line
+    // alone, centred: the picture the segue carries into services
     end: { sx: 0, sy: 0.02, hf: 0.6, wf: 0.6 },
   },
   port: {
@@ -184,7 +184,7 @@ export default function create(): Chapter {
       // settle: pulled back, the mark alone, centred and square to you
       k(0.65, true, [0, 0, 0, 0.0, 0.04, dEnd, 30, F.end.sx, F.end.sy, 0, 0]),
       k(0.86, true, [0, 0, 0, 0.0, 0.04, dEnd, 30, F.end.sx, F.end.sy, 0, 0]),
-      // segue: easing in while the picture powers down into a line of neon
+      // segue: easing in as the picture gives way to services
       k(1.0, false, [0, 0, 0, 0.0, 0.03, dEnd + Math.log(0.84), 30, F.end.sx, F.end.sy, 0, 0]),
     )
     // Catmull-Rom tangents (per unit local); zero at holds and at the ends
@@ -362,7 +362,7 @@ export default function create(): Chapter {
       const macro = smoothstep(0.08, 0.2, local) * (1 - smoothstep(0.52, 0.64, local))
       const payW = smoothstep(0.56, 0.66, local)
       const outW = smoothstep(0.86, 1, local)
-      // the segue: the neon surges as the picture powers down
+      // the segue: the neon surges as the picture gives way
       const surge = smoothstep(0.84, 0.96, local)
       const dist = Math.exp(val[LD])
       fov = val[FOV]

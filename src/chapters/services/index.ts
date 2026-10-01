@@ -5,6 +5,7 @@ import { nextFrame } from '../../core/yield'
 import { N, TILE_H, TILE_W, buildDeck, type Deck } from './deck'
 import { Hud, type HudMetrics } from './hud'
 import { G } from '../../kit/glass'
+import { A, B, CARD_IN, CARD_OUT, INTRO_IN, LENGTH, LOUVRE_IN_AT, LOUVRE_IN_LEN, at } from './timeline'
 import { SERVICES, serviceUrl } from '../../content'
 import './services.css'
 
@@ -18,27 +19,33 @@ import './services.css'
  * forward out of the louvres and turns to face you, its frost thaws a touch
  * and its backlight swells; its neighbours part, the rest fade into black.
  *
- *   0.00–0.08  intro: the louvres open out of hairlines (under the breath
- *              cut), the whole column hangs in its backlight; the camera
- *              drifts in. "Eleven ways to be heard." (settled 0.06 & 0.08)
- *   0.08–0.92  eleven plates (~0.076 each): part → turn → settle → hold
- *   0.92–1.00  the last plate returns; the louvres close to hairlines of
- *              light and the camera pulls back into black
+ * The timeline lives in ./timeline.ts (in vh of scroll; chapters/index.ts
+ * reads the chapter's length and landing from it too):
+ *
+ *   0.000–0.205  intro (0.9 vh): the hero's segue clears (src/core/post.ts);
+ *                the louvres open out of hairlines, the whole column hangs in
+ *                its backlight, the camera drifts in. "Eleven ways to be
+ *                heard." rises at 0.068 and holds to 0.217 (landing 0.15)
+ *   0.205–0.930  eleven plates (~0.066 each): part → turn → settle → hold
+ *   0.930–1.000  the last plate returns; the louvres close to hairlines of
+ *                light and the camera pulls back into black
+ *
+ * While the segue plays, update() reports where the column sits on screen
+ * (post.aim), so the blinds' hairlines and the neon line can hand over to it.
  *
  * Everything derives from `local`; frame.time only drives idle sway and a
  * slow drift of the studio light. Two things are damped over time so fast
  * scrolling can't strobe: the backlight swell and the light sweep.
  */
 
-const A = 0.08
-const B = 0.92
 const SPAN = (B - A) / N
 /** half-width (in beats) of each turn, centred on the boundary between two plates */
 const TURN = 0.3
 const ANCHORS = Array.from({ length: N }, (_, i) => A + SPAN * (i + 0.55))
-const INTRO_IN = 0.035
-const CARD_IN = 0.094
-const CARD_OUT = 0.915
+/** local progress that was `l` in the old 3.8 vh chapter, measured from plate 1 (A) */
+const fromA = (l: number) => A + ((l - 0.08) * 3.8) / LENGTH
+/** …and from the last plate (B) */
+const fromB = (l: number) => B + ((l - 0.92) * 3.8) / LENGTH
 
 /** louvre spacing, extra parting around the plate in view, how far it slides forward */
 const SP = 0.5
@@ -224,7 +231,7 @@ export default function create(): Chapter {
       // jump); cmd / ctrl / middle-click opens it in a new tab
       canvas = ctx.renderer.domElement
       const open = (e: MouseEvent) => {
-        if (!active || !canvas || lastLocal < A - 0.02 || lastLocal > CARD_OUT) return
+        if (!active || !canvas || lastLocal < A - at(0.076) || lastLocal > CARD_OUT) return
         const r = canvas.getBoundingClientRect()
         ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1)
         const k = pick(ctx)
@@ -256,25 +263,26 @@ export default function create(): Chapter {
       const still = rm || ctx.reducedMotion || !!frame.still
       const t = frame.time
       const dt = frame.dt
-      if (Math.abs(local - lastLocal) > 0.04) snap = true
+      if (Math.abs(local - lastLocal) > at(0.15)) snap = true
       lastLocal = local
 
       const { f, u, turning } = plateAt(local)
       // presenting: the plate in view is out of the louvres
       const open = glide(u / 0.32) * (1 - glide((u - 10.72) / 0.3))
-      // the louvres: hairlines → open (intro, under the cut) … open → hairlines (out beat)
-      const louvreIn = glide(local / 0.06)
-      const louvreOut = glide((local - 0.915) / 0.07)
+      // the louvres: hairlines → open (intro, as the segue clears) … open → hairlines (out beat)
+      const louvreIn = glide((local - LOUVRE_IN_AT) / LOUVRE_IN_LEN)
+      const louvreOut = glide((local - fromB(0.915)) / at(0.266))
       const tilt = lerp(HAIR, LOUVRE, louvreIn * (1 - louvreOut))
       // camera: the whole column (intro / out) ↔ the plate in view
-      const near = glide((local - 0.064) / 0.052) * (1 - glide((local - 0.905) / 0.08))
+      const near = glide((local - fromA(0.064)) / at(0.198)) * (1 - glide((local - fromB(0.905)) / at(0.304)))
       // speed calm: 1 at reading pace, 0 when scrubbing fast
       const calmV = 1 - smoothstep(0.5, 1.2, Math.abs(frame.velocity))
       calm = snap ? calmV : damp(calm, calmV, calmV < calm ? 10 : 2.5, dt)
 
       // ---------- the column
       const idle = still ? 0 : 1
-      const yaw = YAW + 0.1 * local + idle * 0.012 * Math.sin(t * 0.21)
+      // (the column turns a touch along the plates: the same yaw per plate as before the longer intro)
+      const yaw = YAW + 0.1 * (0.08 + ((local - A) * LENGTH) / 3.8) + idle * 0.012 * Math.sin(t * 0.21)
       deck.column.rotation.y = yaw
       deck.column.position.y = idle * 0.012 * Math.sin(t * 0.37)
       const vis = mobile ? 3.3 : 4.6
@@ -332,8 +340,30 @@ export default function create(): Chapter {
       subject.set(tall ? FWD * lead * near * Math.sin(yaw) : 0, cy, 0)
       // at the ends of the column, frame the plate a little off-centre toward the empty end
       const bias = tall ? 0 : near * 0.16 * (1 - 2 * clamp(f / (N - 1)))
-      const push = 1 + 0.06 * (1 - glide(local / 0.07)) - 0.05 * louvreOut
+      // (the camera drifts in through the intro beat, in place before plate 1 parts)
+      const push = 1 + 0.07 * (1 - glide(local / (A - at(0.08)))) - 0.05 * louvreOut
       computePose(frame, m, subject, hw, hh, hd, bias, push, lerp(colCY, 0, open))
+
+      // ---------- the segue's hand-over (src/core/post.ts): while it plays, tell post where
+      // the column sits on screen (uv, y up: its width, the bottom plate, the top plate's
+      // hairline), so the blinds' hairlines and the neon line can land on it
+      if (local < at(0.6)) {
+        deck.column.updateMatrixWorld(true)
+        let x0 = Infinity
+        let x1 = -Infinity
+        let yTop = 0
+        let yBot = 0
+        for (const k of [0, N - 1]) {
+          for (const sx of [-1, 1]) {
+            pv.set(sx * TILE_W * 0.5, 0, 0).applyMatrix4(deck.plates[k].holder.matrixWorld).project(probe)
+            x0 = Math.min(x0, pv.x)
+            x1 = Math.max(x1, pv.x)
+            if (k === 0) yTop += pv.y / 2
+            else yBot += pv.y / 2
+          }
+        }
+        if (Number.isFinite(x0 + x1 + yTop + yBot)) ctx.post.aim.set(x0 * 0.5 + 0.5, yBot * 0.5 + 0.5, x1 * 0.5 + 0.5, yTop * 0.5 + 0.5)
+      }
 
       // ---------- the backlight: tall behind the whole column → a softbox behind the plate in view
       const target = 1 - 0.3 * turning * calm
@@ -417,7 +447,7 @@ export default function create(): Chapter {
           lastHoverX = px
           lastHoverY = py
           ndc.set(px, py)
-          const k = local > A - 0.02 && local < CARD_OUT ? pick(ctx) : -1
+          const k = local > A - at(0.076) && local < CARD_OUT ? pick(ctx) : -1
           canvas.style.cursor = k >= 0 ? 'pointer' : ''
           hoverPlate = k
         }

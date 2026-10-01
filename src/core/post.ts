@@ -5,6 +5,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js'
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js'
 import { ACTIVE } from '../kit/palette'
+import type { SegueMode } from './types'
 
 /*
  * Post-processing for Hark Frost: Scene (render + NaN guard) → Bloom →
@@ -25,11 +26,39 @@ import { ACTIVE } from '../kit/palette'
  *    the whole frame is fogged (hiding the swap); after it the fog clears from
  *    the centre outward like breath evaporating off cold glass. uCutSide says
  *    which half. A few tiny clear 'droplet' spots sparkle in the fog.
- *  - THE TUBE SEGUE (uSegue, a chapter's `segue: 'tube'`): instead of the fog,
- *    the picture powers down like an old tube set: it squashes into one
- *    white-hot line with a neon glow (the lights, a → b → c), the line pulls in
- *    to a point, the point goes out; the next chapter powers up the same way
- *    in reverse. Driven by uTransition alone (scroll-linear, both sides).
+ *  - THE SEGUES (uSegue = SEGUE_ID[mode], a chapter's `segue`): a watched
+ *    transition instead of the fog, for a scroll through that boundary. Each
+ *    is drawn here, in this pass (no extra one), from uTransition (t: 0 far …
+ *    1 at the boundary, scroll-linear over the Engine's SEGUE_WINDOW) and
+ *    uCutSide (-1 on the way in, +1 after it), so it plays both ways and is
+ *    scene-independent at t = 1 (the swap is never seen). uAim is where the
+ *    incoming chapter's subject sits on screen (its chapter writes post.aim).
+ *      blinds  the frame closes into horizontal glass slats, a slow wave down
+ *              the blind: fluted frosted glass (the picture behind magnified a
+ *              touch and diffused), a sheen sliding down each slat as it turns,
+ *              a rim of light along its top edge. Shut, it is black glass ruled
+ *              with fine neon hairlines; it opens the same way onto the next
+ *              chapter, and the hairlines draw in to uAim (services: the column,
+ *              whose own louvres open out of hairlines) and go.
+ *      glass   the camera pushes through a pane of frosted glass: the frame
+ *              frosts (a wide sandblasted blur that blooms the light it
+ *              catches, a fine static grain), a soft light swells behind the
+ *              pane while the picture gives way to it, a sheen crosses the pane
+ *              once; it clears onto the next chapter as it settles in from a
+ *              touch smaller. A soft shoulder keeps the frosted neon from
+ *              clipping to a flat white field.
+ *      neon    the light drains out of the picture (its highlights pulled out
+ *              sideways into a faint anamorphic streak) while one thin line of
+ *              neon draws across the frame, left to right, a white-hot spark at
+ *              its head; after the boundary the line glides onto uAim's top
+ *              hairline (services: the first plate, Software Development) as the
+ *              next chapter comes up behind it, and goes. No squash, no dot.
+ *      tube    an old tube set switching off: the picture squashes into one
+ *              white-hot line with a neon glow (the lights, a → b → c), the line
+ *              pulls in to a point, the point goes out; the next chapter powers
+ *              up the same way in reverse.
+ *    A held transition (a fast scroll, a nav jump's tail) keeps the look it
+ *    started with (Engine); a long nav jump always wears the breath cut.
  *
  * Keep the Post API (params / resetParams / setSize / render / compileAsync /
  * setFadeTone / cutSide) and the uTransition / uFade / uFlash / uGlitch uniforms.
@@ -52,6 +81,7 @@ const FinalShader = {
     uFrost: { value: 0 },
     uFog: { value: new THREE.Color('#9aa2ad') },
     uSegue: { value: 0 },
+    uAim: { value: new THREE.Vector4(0, 0, 1, 1) },
     uNeonA: { value: new THREE.Color(ACTIVE.a) },
     uNeonB: { value: new THREE.Color(ACTIVE.b) },
     uNeonC: { value: new THREE.Color(ACTIVE.c) },
@@ -67,6 +97,7 @@ const FinalShader = {
     uniform vec2 uResolution;
     uniform vec3 uFog, uFadeColor;
     uniform float uSegue;
+    uniform vec4 uAim;
     uniform vec3 uNeonA, uNeonB, uNeonC;
     varying vec2 vUv;
 
@@ -90,6 +121,24 @@ const FinalShader = {
       }
       return acc / 10.0;
     }
+
+    // a wide frost (the glass segue's pane): a few more taps, and one spiral per CSS pixel
+    // (neighbouring device pixels share it, so the wide taps stay cache-friendly; the
+    // grain it leaves is the sandblast's own, at 1 CSS px)
+    vec3 frostedWide(vec2 uv, float radiusPx) {
+      vec2 px = 1.0 / uResolution;
+      float a0 = hash(floor(gl_FragCoord.xy / max(uDpr, 1.0))) * 6.2831853;
+      vec3 acc = vec3(0.0);
+      for (int i = 0; i < 12; i++) {
+        float fi = float(i);
+        float r = sqrt((fi + 0.5) / 12.0) * radiusPx;
+        float a = a0 + fi * 2.3999632;
+        acc += texture2D(tDiffuse, clamp(uv + vec2(cos(a), sin(a)) * r * px, 0.001, 0.999)).rgb;
+      }
+      return acc / 12.0;
+    }
+
+    float ease3(float x) { x = clamp(x, 0.0, 1.0); return x * x * (3.0 - 2.0 * x); }
 
     vec3 neonAt(float x) {
       return x < 0.5 ? mix(uNeonA, uNeonB, x * 2.0) : mix(uNeonB, uNeonC, x * 2.0 - 1.0);
@@ -124,6 +173,158 @@ const FinalShader = {
       return outc;
     }
 
+    // THE BLINDS (t: 0 far … 1 at the boundary; side -1 closing on the way in, +1 opening after)
+    vec3 blindsSegue(vec2 uv, vec3 col, float t, float side) {
+      float H = uResolution.y / uDpr;
+      float aspect = uResolution.x / max(uResolution.y, 1.0);
+      float n = clamp(floor(H / 62.0 + 0.5), 9.0, 18.0);
+      float band = H / n;                       // CSS px per slat
+      float yd = (1.0 - uv.y) * n;
+      float bi = floor(yd);
+      float f = yd - bi - 0.5;                  // -0.5 top … 0.5 bottom of this slat's band
+      float k = bi / max(n - 1.0, 1.0);         // 0 top slat … 1 bottom slat
+      // how shut each slat is (0 edge-on … 1 flat): a slow wave down the blind, both ways
+      float c = side < 0.0 ? ease3((t - 0.1 - 0.2 * k) / 0.6) : ease3((t - 0.42 - 0.18 * (1.0 - k)) / 0.36);
+      float px = 1.0 / band;                    // one CSS px, in band units
+      float halfC = 0.5 * max(sin(c * 1.5707963), px);
+      float inside = 1.0 - smoothstep(halfC - 0.6 * px, halfC + 0.6 * px, abs(f));
+      // the hairlines (the slats edge-on): in before they turn; after, they draw in to the
+      // column's own louvres (uAim) and go, those beyond its height first
+      float lineK;
+      if (side < 0.0) lineK = ease3(t / 0.12);
+      else {
+        float g = ease3((t - 0.1) / 0.36);
+        float x0 = mix(uAim.x, -0.02, g), x1 = mix(uAim.z, 1.02, g);
+        float inCol = step(uAim.y - 0.03, uv.y) * step(uv.y, uAim.w + 0.03);
+        lineK = ease3(t / 0.16) * smoothstep(x0 - 0.008, x0 + 0.008, uv.x) * (1.0 - smoothstep(x1 - 0.008, x1 + 0.008, uv.x));
+        lineK *= max(inCol, ease3((t - 0.2) / 0.2));
+      }
+      float alpha = inside * mix(lineK, 1.0, ease3(c / 0.12));
+      // the slat: fluted frosted glass (the picture behind it magnified a touch and diffused,
+      // giving way to the light behind the blind as it shuts), shaded along its curve
+      float v = clamp(f / max(halfC, 1e-4), -1.0, 1.0);      // -1 its top edge … 1 its bottom edge
+      vec2 pc = vec2((uv.x - 0.5) * aspect, uv.y - 0.5);
+      float lamp = 0.2 + 0.8 * exp(-dot(pc, pc) / 0.3);
+      float trans = 0.85 * (1.0 - ease3((t - 0.45) / 0.5));
+      vec3 face = vec3(0.0);
+      if (trans > 0.002 && alpha > 0.002) {
+        float yc = 1.0 - (bi + 0.5) / n;                       // the slat's axis (uv)
+        face = frosted(vec2(uv.x, yc + (uv.y - yc) * 0.72), 12.0 * uDpr) * trans;
+      }
+      // smoked glass: a faint lift where the light behind the blind is, darker along its curve
+      face += vec3(0.022, 0.026, 0.034) * lamp;
+      face *= 1.2 - 0.55 * (v * 0.5 + 0.5);
+      // a soft sheen slides down each slat as it turns past the light (a ripple down the blind)
+      float dg = v - mix(-0.9, 0.6, c);
+      face += vec3(0.8, 0.86, 0.95) * exp(-dg * dg / 0.05) * 0.09 * c * (1.0 - c) * 4.0 * lamp;
+      // the rim of light along each slat's top edge (all there is of a slat edge-on), a shadow under it
+      float dTop = (f + halfC) * band;
+      float dBot = (halfC - f) * band;
+      vec3 rimC = mix(vec3(0.95, 0.97, 1.0), neonAt(uv.x), 0.45);
+      face += rimC * (exp(-dTop * dTop / 0.5) * 0.85 + exp(-dTop / 3.0) * 0.12) * (0.3 + 0.7 * lamp);
+      face *= 1.0 - 0.5 * exp(-dBot * dBot / 3.0) * c;
+      // through the gaps: the picture, darkening as the slats close, shadowed at their edges
+      float de = (abs(f) - halfC) * band;
+      float deN = (1.0 - abs(f) - halfC) * band;
+      float gapK = (1.0 - 0.5 * c - 0.5 * smoothstep(0.8, 1.0, c)) * (1.0 - 0.4 * c * (exp(-max(de, 0.0) / 7.0) + exp(-max(deN, 0.0) / 7.0)));
+      return mix(col * max(gapK, 0.0), face, alpha);
+    }
+
+    // THE GLASS PANE (the camera pushes through a pane of frosted glass lit from behind)
+    vec3 glassSegue(vec2 uv, float t, float side) {
+      vec2 c = uv - 0.5;
+      float aspect = uResolution.x / max(uResolution.y, 1.0);
+      vec2 pc = vec2(c.x * aspect, c.y);
+      float e = ease3(t);
+      // the push: in toward the pane (the hero grows), on past it (services settles in from a touch smaller)
+      float z = side < 0.0 ? 1.0 + 0.1 * e * e : 1.0 - 0.06 * e;
+      vec2 su = clamp(0.5 + c / z, 0.001, 0.999);
+      float fk = ease3((t - 0.04) / 0.78);                  // how frosted
+      vec3 col = texture2D(tDiffuse, su).rgb;
+      if (fk > 0.002) {
+        // the frost spreads the light it catches (a soft bloom)
+        vec3 fr = frostedWide(su, (3.0 + 44.0 * fk) * uDpr);
+        col = mix(col, fr * (1.0 + 0.3 * fk), smoothstep(0.0, 0.4, fk));
+      }
+      // the picture behind gives way to the pane's own light at the boundary (hides the swap)
+      col *= 1.0 - ease3((t - 0.68) / 0.3);
+      float L = ease3((t - 0.42) / 0.58);
+      vec2 gq = pc * vec2(0.75, 1.0);
+      float glow = exp(-dot(gq, gq) / 0.1);
+      float wide = exp(-dot(gq, gq) / 0.5);
+      vec3 lightC = mix(vec3(0.84, 0.9, 1.0), neonAt(uv.x), 0.4 * (1.0 - glow));
+      col += lightC * (0.12 * wide + 0.4 * glow) * L;
+      // sandblasted: a fine grain and a faint mottling in the frost (static: no shimmer)
+      float g = hash(floor(gl_FragCoord.xy / uDpr)) - 0.5;
+      float m = fbm(pc * 4.0 + 3.1) - 0.5;
+      col += (0.045 * g + 0.02 * m) * fk * (0.25 + 0.75 * L);
+      // a sheen crosses the pane once over the whole segue (continuous through the boundary)
+      float ph = side < 0.0 ? 0.5 * t : 1.0 - 0.5 * t;
+      float sd = (pc.x * 0.6 + c.y) - mix(-1.3, 1.3, ph);
+      col += vec3(0.88, 0.92, 1.0) * (exp(-sd * sd / 0.0012) * 0.045 + exp(-sd * sd / 0.02) * 0.015) * fk;
+      // a soft shoulder (hue kept): the frosted neon glows, it never clips to a flat white field
+      col = max(col, vec3(0.0));
+      float pk = max(max(col.r, col.g), col.b);
+      if (pk > 0.7) col *= (0.7 + 0.26 * (1.0 - exp(-(pk - 0.7) / 0.26))) / pk;
+      return col;
+    }
+
+    // THE NEON LINE (the light drains into one line of neon; it becomes the first plate's hairline)
+    vec3 neonSegue(vec2 uv, vec3 col, float t, float side) {
+      float W = uResolution.x / uDpr;
+      float H = uResolution.y / uDpr;
+      float y0, xa, xb, lineK, u;
+      float head = 0.0;
+      if (side < 0.0) {
+        // the picture's light drains away, its highlights pulled out sideways into streaks
+        // (an anamorphic flare: jittered taps, so a smooth streak, never stepped copies)
+        float st = ease3((t - 0.06) / 0.6);
+        vec3 streak = vec3(0.0);
+        if (st > 0.002) {
+          float R = 260.0 * st / W;
+          float j = hash(gl_FragCoord.xy) - 0.5;
+          for (int i = 0; i < 8; i++) {
+            float o = (float(i) - 3.5 + j) / 4.0;
+            vec3 sm = texture2D(tDiffuse, vec2(clamp(uv.x + o * R, 0.001, 0.999), uv.y)).rgb;
+            streak += max(sm - 0.3, 0.0) * (1.0 - abs(o));
+          }
+          streak *= 0.32 * st;
+        }
+        col = (col + streak) * (1.0 - ease3((t - 0.14) / 0.66));
+        float draw = ease3((t - 0.16) / 0.68);
+        y0 = 0.5;
+        xa = 0.0;
+        xb = draw;
+        u = uv.x;
+        lineK = smoothstep(0.0, 0.05, draw);
+        head = smoothstep(0.0, 0.05, draw) * (1.0 - smoothstep(0.88, 1.0, draw));
+      } else {
+        // services comes up behind it; the line glides onto the top plate's hairline and goes
+        float g = 1.0 - ease3((t - 0.3) / 0.62);
+        y0 = mix(0.5, uAim.w, g);
+        xa = mix(0.0, uAim.x, g);
+        xb = mix(1.0, uAim.z, g);
+        u = (uv.x - xa) / max(xb - xa, 1e-3);
+        col *= 1.0 - ease3((t - 0.12) / 0.58);
+        lineK = ease3((t - 0.02) / 0.3);
+      }
+      float dy = (uv.y - y0) * H;
+      float ex = 1.5 / W;
+      float inX = smoothstep(xa - ex, xa + ex, uv.x) * (1.0 - smoothstep(xb - ex, xb + ex, uv.x));
+      float gx = 30.0 / W;
+      float inG = smoothstep(xa - gx, xa + ex, uv.x) * (1.0 - smoothstep(xb - ex, xb + gx, uv.x));
+      vec3 neon = neonAt(clamp(u, 0.0, 1.0));
+      float core = exp(-dy * dy / 1.1);
+      float glow = 0.5 * exp(-dy * dy / 70.0) + 0.2 * exp(-dy * dy / 1400.0);
+      col += ((vec3(0.85) + 0.5 * neon) * core * inX + neon * glow * inG) * lineK;
+      // the drawing head: a white-hot spark with a little glow
+      if (head > 0.001) {
+        vec2 d = vec2((uv.x - xb) * W, dy);
+        col += (vec3(1.0) * exp(-(d.x * d.x / 260.0 + d.y * d.y / 3.0)) * 1.3 + neon * exp(-dot(d, d) / 1800.0) * 0.35) * head;
+      }
+      return col;
+    }
+
     void main() {
       vec2 uv = vUv;
       vec2 c = uv - 0.5;
@@ -142,7 +343,12 @@ const FinalShader = {
       // ---- THE BREATH CUT: a noise-edged fog front
       float fogMask = 0.0;
       if (uSegue > 0.5) {
-        if (t > 0.001) col = tubeSegue(uv, t);
+        if (t > 0.001) {
+          if (uSegue < 1.5) col = tubeSegue(uv, t);
+          else if (uSegue < 2.5) col = blindsSegue(uv, col, t, uCutSide);
+          else if (uSegue < 3.5) col = glassSegue(uv, t, uCutSide);
+          else col = neonSegue(uv, col, t, uCutSide);
+        }
       } else if (t >= 0.82) fogMask = 1.0;   // fully fogged: no front to shape
       else if (t > 0.001) {
         float aspect = uResolution.x / max(uResolution.y, 1.0);
@@ -181,6 +387,9 @@ const FinalShader = {
     }
   `,
 }
+
+/** uSegue per mode (0 = the breath cut) */
+export const SEGUE_ID: Record<SegueMode, number> = { tube: 1, blinds: 2, glass: 3, neon: 4 }
 
 /** minimum seconds between two white-flash onsets (WCAG 2.3.1) */
 const FLASH_GAP = 0.4
@@ -304,8 +513,14 @@ export class Post {
   transition = 0
   /** -1 while approaching a chapter boundary, +1 after it (engine-driven) */
   cutSide = 1
-  /** 1 while the boundary in play arrives through the tube segue (engine-driven) */
+  /** the segue drawing the boundary in play (SEGUE_ID; 0 = the breath cut; engine-driven) */
   segue = 0
+  /**
+   * Where the incoming chapter's subject sits on screen (uv, y up: x0, y0, x1,
+   * y1), written by that chapter while a segue plays: the blinds' hairlines and
+   * the neon line land on it (services: its column, y1 the top plate).
+   */
+  aim = new THREE.Vector4(0, 0, 1, 1)
   fade = 0
   private lastFlashAt = -1e9
   private flashLive = false
@@ -419,6 +634,7 @@ export class Post {
     u.uFrost.value = c.frost
     u.uCutSide.value = this.cutSide
     u.uSegue.value = this.segue
+    ;(u.uAim.value as THREE.Vector4).copy(this.aim)
     u.uFade.value = this.fade
     this.composer.render(dt)
   }
