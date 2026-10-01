@@ -66,11 +66,28 @@ const PLATE_VERT = /* glsl */ `
   }
 `
 
-/** crisp etched lines (R) + a slow light sweep across them; the "Learn More" pill (B) in white light */
+/**
+ * crisp etched lines (R) + a slow light sweep across them; the "Learn More"
+ * button: a lit pill (a capsule drawn here, crisp at any angle) with its words
+ * (B) laid over it as an opaque stencil.
+ *
+ * The face blends premultiplied (src + dst · (1 − a)): the lines and the halo
+ * add (a = 0, as before), the pill covers the frost behind it a little and the
+ * words cover it almost completely, so they read as dark letters blocking the
+ * light. The pill's light is held under the bloom threshold (the bloom is
+ * screen-space and would flood the thin letters); hover and the sweep swell
+ * the light AROUND the words instead: the rim and a halo outside the pill.
+ *
+ *   uBtn   x: the pill's light (0 … ~0.8), y: hover (0 … 1)
+ *   uPill  the capsule in plate units: centre xy, half extents zw (radius = w)
+ *   uHalf  the face's half extents (plate units)
+ */
 const FACE_FRAG = /* glsl */ `
   uniform sampler2D uMap;
   uniform vec3 uColor;
-  uniform float uBright, uSweep, uSweepAmt, uBtn;
+  uniform float uBright, uSweep, uSweepAmt;
+  uniform vec2 uBtn, uHalf;
+  uniform vec4 uPill;
   varying vec2 vUv;
   varying vec2 vP;
   void main() {
@@ -78,8 +95,34 @@ const FACE_FRAG = /* glsl */ `
     float s = (vP.x * 0.8 + vP.y * 0.55) - uSweep;
     float band = exp(-(s * s) / 0.035);
     vec3 lines = uColor * t.r * (uBright + uSweepAmt * band);
-    vec3 pill = vec3(t.b * (uBtn + 0.3 * uSweepAmt * band));
-    gl_FragColor = vec4(lines + pill, 1.0);
+
+    // the pill: a capsule, anti-aliased by its own screen-space gradient
+    vec2 q = abs(vP - uPill.xy) - vec2(uPill.z - uPill.w, 0.0);
+    float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - uPill.w;
+    float aa = max(fwidth(d), 1e-5);
+    float inside = 1.0 - smoothstep(-aa, aa, d);
+    float on = clamp(uBtn.x / 0.72, 0.0, 1.15);
+    float hov = uBtn.y * on;
+    float sw = uSweepAmt * band * on;
+    vec3 tint = mix(vec3(1.0), uColor, 0.6);
+    // the words: the stencil (mip-filtered, so they soften, never vanish, at an angle)
+    float ink = t.b;
+    // the body: a flat white light that swells on hover and as the sweep passes, with a
+    // thin brighter rim just inside its edge; it covers most of the frost behind it, so
+    // body + frost stays under the bloom threshold (1.05) on every plate colour
+    float core = uBtn.x * (0.95 + 0.17 * hov) + 0.12 * sw;
+    float rim = exp(-max(-d, 0.0) / 0.0045) * (0.06 * on + 0.2 * hov + 0.25 * sw);
+    vec3 body = min(vec3(core) + tint * rim, vec3(0.84)) * (1.0 - ink);
+    // the halo: light spilling round the pill onto the frost (wider on hover); it lies
+    // OVER the frost a little rather than adding to it (the sum stays under the bloom
+    // threshold too), and fades before the face's own edges so it never ends in a line
+    vec2 e = uHalf - abs(vP);
+    float amp = min(0.08 * on + 0.4 * hov + 0.25 * sw, 0.55);
+    float hs = exp(-max(d, 0.0) / (0.014 + 0.012 * hov)) * smoothstep(0.0, 0.04, min(e.x, e.y));
+    vec3 col = lines + inside * body + (1.0 - inside) * tint * amp * hs;
+    float lit = smoothstep(0.0, 0.3, uBtn.x);
+    float a = inside * mix(0.8, 0.93, ink) * lit + (1.0 - inside) * 0.9 * amp * hs;
+    gl_FragColor = vec4(col, a);
   }
 `
 
@@ -158,26 +201,35 @@ export function buildDeck(mobile: boolean, envMap: THREE.Texture | null): Deck {
   const capsBase = frosted({ frost: 0.5, thickness: 0.35 })
   const sidesBase = polished({ thickness: 0.35 })
 
-  // ---- the etched atlas (R crisp, G glow)
+  // ---- the etched atlas (R crisp, G glow, B the Learn More words)
+  const pw = TILE_W - 2 * PLATE_INSET
+  const ph = TILE_H - 2 * PLATE_INSET
   const cellW = mobile ? 540 : 800
-  const cellH = Math.round((cellW * (TILE_H - 2 * PLATE_INSET)) / (TILE_W - 2 * PLATE_INSET))
+  const cellH = Math.round((cellW * ph) / pw)
   const atlas = buildAtlas(cellW, cellH, mobile ? 1.35 : 1)
   const tex = new THREE.CanvasTexture(atlas.canvas)
   tex.colorSpace = THREE.NoColorSpace
-  tex.anisotropy = 8
+  // (clamped to the GPU's maximum: the words stay sharp on a plate turned away)
+  tex.anisotropy = 16
   tex.generateMipmaps = true
   tex.minFilter = THREE.LinearMipmapLinearFilter
   tex.magFilter = THREE.LinearFilter
+  // the Learn More pill in plate units (shared by every face; it moves when the font lands)
+  const pillU = { value: new THREE.Vector4() }
+  const placePill = () => {
+    const p = atlas.pill
+    pillU.value.set((p.x - 0.5) * pw, (0.5 - p.y) * ph, p.w * pw, p.h * ph)
+  }
+  placePill()
   const redraw = () => {
     atlas.draw()
+    placePill()
     tex.needsUpdate = true
   }
   document.fonts?.load("700 24px 'Schibsted Grotesk Variable'").then(redraw, () => {})
 
   const column = new THREE.Group()
   const plates: Plate[] = []
-  const pw = TILE_W - 2 * PLATE_INSET
-  const ph = TILE_H - 2 * PLATE_INSET
   for (let i = 0; i < N; i++) {
     const holder = new THREE.Group()
     holder.rotation.order = 'YXZ'
@@ -208,12 +260,21 @@ export function buildDeck(mobile: boolean, envMap: THREE.Texture | null): Deck {
         uBright: { value: 0 },
         uSweep: { value: -3 },
         uSweepAmt: { value: 0 },
-        uBtn: { value: 0 },
+        uBtn: { value: new THREE.Vector2() },
+        uPill: pillU,
+        uHalf: { value: new THREE.Vector2(pw / 2, ph / 2) },
       },
       vertexShader: PLATE_VERT,
       fragmentShader: FACE_FRAG,
       transparent: true,
-      blending: THREE.AdditiveBlending,
+      // premultiplied: the lines add, the Learn More words cover what is behind them
+      // (the target's alpha is left alone)
+      blending: THREE.CustomBlending,
+      blendEquation: THREE.AddEquation,
+      blendSrc: THREE.OneFactor,
+      blendDst: THREE.OneMinusSrcAlphaFactor,
+      blendSrcAlpha: THREE.ZeroFactor,
+      blendDstAlpha: THREE.OneFactor,
       depthWrite: false,
       toneMapped: false,
     })

@@ -309,7 +309,7 @@ export default function create(): Chapter {
         p.faceMat.uniforms.uBright.value = faceB
         // the Learn More pill: lit on the plate in view, brighter while the pointer is on the plate
         btnHover[i] = damp(btnHover[i], i === hoverPlate ? 1 : 0, 8, dt)
-        p.faceMat.uniforms.uBtn.value = lerp(0.03 * louvreIn * (1 - louvreOut), mobile ? 0.8 : 0.72, sel * sel) * dim * (1 + 0.4 * btnHover[i])
+        ;(p.faceMat.uniforms.uBtn.value as THREE.Vector2).set(lerp(0.03 * louvreIn * (1 - louvreOut), mobile ? 0.8 : 0.72, sel * sel) * dim, btnHover[i])
         p.glowMat.uniforms.uBright.value = lerp(0.08, 0.24, sel) * dim
         // a light band crosses the etched lines once as the plate settles (gone by the anchor)
         const s = clamp((u - i - 0.1) / 0.38)

@@ -10,8 +10,12 @@ import { SERVICES } from '../../content'
  *   R channel  the crisp etched lines (sampled by the face plate: razor sharp)
  *   G channel  the same icon, thick and blurred (sampled by the glow plate
  *              inside the glass: light bleeding into the frost around it)
- *   B channel  the "Learn More" button, bottom right: a lit pill with its words
- *              knocked out (its own channel, so the plate can brighten it on hover)
+ *   B channel  the words of the "Learn More" button, bottom right: "Learn More"
+ *              and its arrow, solid. The face shader draws the lit pill itself
+ *              (a capsule, from `pill`) and these words over it as an opaque
+ *              STENCIL: they block the pill's light and the frost behind it, so
+ *              they read as dark letters however bright the pill swells
+ *              (the soft bloom of the pill in the frost is in G)
  *
  * The atlas is drawn opaque (black) with additive compositing, so the two
  * channels never premultiply into each other. Glyphs are designed in a
@@ -229,6 +233,11 @@ export interface Atlas {
   cellH: number
   /** redraw (after the label web font loads) */
   draw: () => void
+  /**
+   * the Learn More pill, the same in every cell, as fractions of the cell
+   * (y down): centre x, y and half extents w, h (a capsule: radius = h)
+   */
+  pill: { x: number; y: number; w: number; h: number }
   /** uv rectangle of cell i: [u0, v0, u1, v1] (v up, CanvasTexture flipY) */
   rect: (i: number) => [number, number, number, number]
 }
@@ -245,6 +254,7 @@ export function buildAtlas(cellW: number, cellH: number, weight = 1): Atlas {
   const g = canvas.getContext('2d')!
   // the labels: the site grotesk, bold (no monospace anywhere)
   const label = "'Schibsted Grotesk Variable', 'Schibsted Grotesk', system-ui, sans-serif"
+  const pill = { x: 0.8, y: 0.9, w: 0.15, h: 0.06 }
 
   const draw = () => {
     g.globalCompositeOperation = 'source-over'
@@ -283,18 +293,22 @@ export function buildAtlas(cellW: number, cellH: number, weight = 1): Atlas {
       g.font = `700 ${Math.round(3.5 * u)}px ${label}`
       spaced(g, svc.title.toUpperCase(), m + 3.2 * u, cellH - m - 2.6 * u, 0.36 * u)
 
-      // ---- the button, bottom right, level with the name: a lit pill (B, with a soft
-      // bloom in the frost, G), its words and arrow knocked out of it, like the site's
-      // white pill buttons
-      g.font = `600 ${Math.round(5.1 * u)}px ${label}`
+      // ---- the button, bottom right, level with the name, like the site's white pill
+      // buttons: a soft bloom of the pill in the frost (G), and its words and arrow (B),
+      // bold, as the stencil the face shader lays over the lit pill it draws
+      g.font = `700 ${Math.round(5.3 * u)}px ${label}`
       const words = 'Learn More'
       const tw = g.measureText(words).width
-      const aw = 3.7 * u // the arrow
+      const aw = 3.9 * u // the arrow
       const bh = 12.6 * u
-      const bw = 5.6 * u + tw + 2.9 * u + aw + 5.2 * u
+      const bw = 5.4 * u + tw + 2.7 * u + aw + 5.0 * u
       const bx = cellW - m - 1.6 * u - bw
       const cy = cellH - m - 3.9 * u // the name's middle
       const by = cy - bh / 2
+      pill.x = (bx + bw / 2) / cellW
+      pill.y = cy / cellH
+      pill.w = bw / 2 / cellW
+      pill.h = bh / 2 / cellH
       g.fillStyle = 'rgb(0,90,0)'
       g.shadowColor = 'rgb(0,200,0)'
       g.shadowBlur = 4 * u
@@ -302,19 +316,20 @@ export function buildAtlas(cellW: number, cellH: number, weight = 1): Atlas {
       g.shadowBlur = 0
       g.shadowColor = 'transparent'
       g.fillStyle = 'rgb(0,0,255)'
-      rrectFill(g, bx, by, bw, bh, bh / 2)
-      g.globalCompositeOperation = 'source-over'
-      g.fillStyle = '#000000'
-      g.strokeStyle = '#000000'
+      g.strokeStyle = 'rgb(0,0,255)'
       g.textBaseline = 'middle'
-      g.fillText(words, bx + 5.6 * u, cy + 0.2 * u)
-      const ax = bx + 5.6 * u + tw + 2.9 * u
-      g.lineWidth = 0.75 * u
+      g.fillText(words, bx + 5.4 * u, cy + 0.2 * u)
+      const ax = bx + 5.4 * u + tw + 2.7 * u
+      g.lineWidth = 0.95 * u
       g.lineCap = 'round'
       g.lineJoin = 'round'
-      poly(g, [[ax, cy], [ax + aw, cy]])
-      poly(g, [[ax + aw - 1.5 * u, cy - 1.5 * u], [ax + aw, cy], [ax + aw - 1.5 * u, cy + 1.5 * u]])
-      g.globalCompositeOperation = 'lighter'
+      g.beginPath()
+      g.moveTo(ax, cy)
+      g.lineTo(ax + aw, cy)
+      g.moveTo(ax + aw - 1.7 * u, cy - 1.7 * u)
+      g.lineTo(ax + aw, cy)
+      g.lineTo(ax + aw - 1.7 * u, cy + 1.7 * u)
+      g.stroke()
 
       // ---- the icon: a soft glow pass (G), then the crisp line (R)
       const gs = (cellH * 0.44) / 100 // icon box ≈ 44% of the cell height
@@ -351,5 +366,5 @@ export function buildAtlas(cellW: number, cellH: number, weight = 1): Atlas {
     const v0 = 1 - (r + 1) / ROWS
     return [u0, v0, u1, v1]
   }
-  return { canvas, cellW, cellH, draw, rect }
+  return { canvas, cellW, cellH, draw, rect, pill }
 }
