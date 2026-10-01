@@ -157,6 +157,45 @@
 /* ---------------- the results: three frosted tiles ---------------- */
 
 
+/* ---------------- desktop landscape: scaled up on wide screens (base.css:
+   --hud-px; keep the query in sync). Nothing here is a left column: the
+   headline is a corner heading on the gutter (under the brand), the placard
+   is centred under the mark; index.ts measures both, so the mark keeps clear. ---------------- */
+@media (min-width: 1024px) and (min-aspect-ratio: 5/4) and (min-height: 501px) {
+  .stage-process .pr-head {
+    max-width: min(calc(620 * var(--hud-px)), calc(100vw - 2 * var(--gutter)));
+    gap: calc(18 * var(--hud-px));
+  }
+  .stage-process .pr-card {
+    width: min(calc(880 * var(--hud-px)), calc(100vw - 2 * var(--gutter)));
+    padding: calc(22 * var(--hud-px)) calc(28 * var(--hud-px)) calc(20 * var(--hud-px));
+    gap: calc(18 * var(--hud-px));
+  }
+  .stage-process .pr-step {
+    column-gap: calc(36 * var(--hud-px));
+  }
+  .stage-process .pr-lead {
+    gap: calc(10 * var(--hud-px));
+  }
+  .stage-process .pr-idx {
+    font-size: calc(11 * var(--hud-px));
+  }
+  .stage-process .pr-title {
+    font-size: clamp(2rem, 3.1vw, calc(2.9 * var(--hud-rem)));
+  }
+  .stage-process .pr-track {
+    padding-top: calc(16 * var(--hud-px));
+    gap: calc(10 * var(--hud-px));
+  }
+  .stage-process .pr-seg {
+    gap: calc(9 * var(--hud-px));
+  }
+  .stage-process .pr-name {
+    gap: calc(8 * var(--hud-px));
+    font-size: calc(10.5 * var(--hud-px));
+  }
+}
+
 /* ---------------- narrower landscape: the placard stacks ---------------- */
 
 @media (max-width: 900px) and (min-aspect-ratio: 9/10) {

@@ -74,7 +74,39 @@ html {
   --safe-top: calc(clamp(80px, 10.5vh, 112px) + env(safe-area-inset-top, 0px));
   --safe-bottom: calc(clamp(82px, 10.5vh, 110px) + env(safe-area-inset-bottom, 0px));
 
+  /* WIDE DESKTOP (the story's stages only: see the .stage rule below). Off
+     here, so everything outside it (phones, tablets, portrait, short
+     landscape, the chrome, the service pages) keeps its exact sizes:
+       --hud-px            a pixel that grows on wide screens (1px here)
+       --hud-rem           a rem that grows with it (1rem here)
+       --col-left-center   the centre of the left half, where a chapter's
+                           left-column copy block is centred (0 here, so
+                           blocks keep the gutter) */
+  --hud-px: 1px;
+  --hud-rem: 1rem;
+  --col-left-center: 0px;
+
   color-scheme: dark;
+}
+
+/* Desktop landscape (≥ 1024 wide, wider than 5:4, not a phone on its side):
+   each chapter's left-column copy block is centred in the left half (the
+   block, not its text: copy stays left-aligned), and the stage's type and
+   spacing grow with the screen: 1x up to 1440 wide, then fluid to 1.5x at
+   2560, capped there (3440 ultrawides stay at 1.5x); a short window holds it
+   back (1x at 800 tall, 1.5x from 1400 tall), so the copy always fits the band.
+   A block centres itself with
+     left: max(var(--gutter), calc(var(--col-left-center) - <its width> / 2))
+   and scales with calc(<px> * var(--hud-px)) / calc(<rem> * var(--hud-rem)).
+   (No length ÷ length in calc(): Safari 15. Chapters repeat this query for
+   their desktop blocks: keep them in sync.) */
+@media (min-width: 1024px) and (min-aspect-ratio: 5/4) and (min-height: 501px) {
+  .stage {
+    --col-left-center: 25vw;
+    --hud-px: clamp(1px, min(calc(1px + (100vw - 1440px) / 2240), calc(1px + (100vh - 800px) / 1200)), 1.5px);
+    --hud-rem: calc(16 * var(--hud-px));
+    --radius: calc(22 * var(--hud-px));
+  }
 }
 
 /* Short landscape (a phone turned sideways after 'Continue anyway'): thin
@@ -254,7 +286,7 @@ a {
 .hud-label {
   font-family: var(--font-label);
   font-weight: var(--label-weight);
-  font-size: 11px;
+  font-size: calc(11 * var(--hud-px));
   letter-spacing: 0.055em;
   text-transform: uppercase;
   color: var(--fg-muted);
@@ -265,10 +297,10 @@ a {
 .hud-eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: calc(10 * var(--hud-px));
   font-family: var(--font-label);
   font-weight: var(--label-weight);
-  font-size: 11.5px;
+  font-size: calc(11.5 * var(--hud-px));
   letter-spacing: 0.077em;
   text-transform: uppercase;
   color: var(--fg);
@@ -276,8 +308,8 @@ a {
 }
 .hud-eyebrow::before {
   content: '';
-  width: 16px;
-  height: 6px;
+  width: calc(16 * var(--hud-px));
+  height: calc(6 * var(--hud-px));
   border-radius: 999px;
   background: var(--accent-grad);
   box-shadow: 0 0 12px rgba(255, 255, 255, 0.45);
@@ -288,7 +320,7 @@ a {
   font-weight: 560;
   letter-spacing: -0.052em;
   line-height: 0.94;
-  font-size: clamp(3rem, 8.2vw, 8.4rem);
+  font-size: clamp(3rem, 8.2vw, calc(8.4 * var(--hud-rem)));
   margin: 0;
   color: var(--fg);
   text-wrap: balance;
@@ -298,7 +330,7 @@ a {
   font-weight: 560;
   letter-spacing: -0.045em;
   line-height: 0.98;
-  font-size: clamp(2.1rem, 4.6vw, 4.4rem);
+  font-size: clamp(2.1rem, 4.6vw, calc(4.4 * var(--hud-rem)));
   margin: 0;
   color: var(--fg);
   text-wrap: balance;
@@ -323,7 +355,7 @@ a {
 
 .hud-body {
   font-family: var(--font-sans);
-  font-size: clamp(15px, 1.12vw, 17px);
+  font-size: clamp(15px, 1.12vw, calc(17 * var(--hud-px)));
   line-height: 1.6;
   color: var(--fg-muted);
   max-width: 42ch;
@@ -333,7 +365,7 @@ a {
 .hud-quote {
   font-family: var(--font-display);
   font-weight: 420;
-  font-size: clamp(1.35rem, 2.4vw, 2.3rem);
+  font-size: clamp(1.35rem, 2.4vw, calc(2.3 * var(--hud-rem)));
   line-height: 1.22;
   letter-spacing: -0.028em;
   color: var(--fg);
@@ -344,7 +376,7 @@ a {
 .hud-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: calc(6 * var(--hud-px));
   margin: 0;
   padding: 0;
   list-style: none;
@@ -352,11 +384,11 @@ a {
 .hud-tag {
   font-family: var(--font-label);
   font-weight: var(--label-weight);
-  font-size: 10.5px;
+  font-size: calc(10.5 * var(--hud-px));
   letter-spacing: 0.033em;
   text-transform: uppercase;
   color: var(--fg);
-  padding: 5px 10px;
+  padding: calc(5 * var(--hud-px)) calc(10 * var(--hud-px));
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -368,9 +400,9 @@ a {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: calc(10 * var(--hud-px));
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: calc(14 * var(--hud-px));
   font-weight: 560;
   letter-spacing: -0.01em;
   text-decoration: none;
@@ -378,7 +410,7 @@ a {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 52%),
     var(--signal);
-  padding: 13px 22px;
+  padding: calc(13 * var(--hud-px)) calc(22 * var(--hud-px));
   border: 0;
   border-radius: 999px;
   cursor: pointer;
@@ -427,7 +459,7 @@ a {
 /* the frosted glass card: translucent fill, bright top edge, a light-catching rim */
 .hud-panel {
   position: relative;
-  padding: 22px 24px;
+  padding: calc(22 * var(--hud-px)) calc(24 * var(--hud-px));
   background:
     linear-gradient(180deg, var(--glass-sheen), rgba(255, 255, 255, 0) 38%),
     var(--glass-fill);

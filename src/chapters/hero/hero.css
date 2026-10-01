@@ -1,21 +1,29 @@
 /* HERO — "Frost". Everything scoped under .stage-hero. Minimal copy, lots of black. */
 
+.stage-hero {
+  /* the headline's size: the desktop block below is measured in it */
+  --hf-fs: clamp(3rem, 7.2vw, calc(7.6 * var(--hud-rem)));
+}
+
 .stage-hero .hf-manifesto {
   color: rgba(246, 247, 249, 0.8);
   max-width: 36ch;
 }
 
-/* scroll hint: a hairline, a bead of light runs along it a few times (finite) */
+/* scroll hint: a hairline, a bead of light runs along it a few times (finite).
+   The bead runs by 'left' in the line's own percent, so it always clears the
+   end of the line however wide --hud-px makes it, and it rests off the line
+   (fill 'backwards': after its runs it drops back to the start, hidden). */
 .stage-hero .hf-hint {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
-  margin: 4px 0 0;
+  gap: calc(12 * var(--hud-px));
+  margin: calc(4 * var(--hud-px)) 0 0;
   color: var(--fg-muted);
 }
 .stage-hero .hf-hint-line {
   position: relative;
-  width: 48px;
+  width: calc(48 * var(--hud-px));
   height: 1px;
   background: rgba(255, 255, 255, 0.22);
   overflow: hidden;
@@ -24,20 +32,19 @@
   content: '';
   position: absolute;
   top: 0;
-  left: 0;
+  left: -20px;
   width: 18px;
   height: 1px;
   background: linear-gradient(90deg, rgba(255, 255, 255, 0), #ffffff, rgba(255, 255, 255, 0));
-  transform: translateX(-20px);
-  animation: hf-bead 2.8s cubic-bezier(0.16, 1, 0.3, 1) 1.6s 4 both;
+  animation: hf-bead 2.8s cubic-bezier(0.16, 1, 0.3, 1) 1.6s 4 backwards;
 }
 @keyframes hf-bead {
   0% {
-    transform: translateX(-20px);
+    left: -20px;
   }
   70%,
   100% {
-    transform: translateX(50px);
+    left: calc(100% + 2px);
   }
 }
 
@@ -57,7 +64,7 @@
 }
 .stage-hero .hf-payoff-inner {
   display: grid;
-  gap: 24px;
+  gap: calc(24 * var(--hud-px));
   justify-items: start;
 }
 /* everything under the headline comes into focus after it, one by one */
@@ -85,13 +92,37 @@
   transition-delay: 0.6s;
 }
 .stage-hero .hf-title {
-  font-size: clamp(3rem, 7.2vw, 7.6rem);
+  font-size: var(--hf-fs);
   line-height: 0.92;
 }
 .stage-hero .hf-ctas {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: calc(12 * var(--hud-px));
+}
+
+/* ---------------- desktop landscape: the block centred in the left half
+   (base.css: --col-left-center, --hud-px; keep the query in sync). Its width
+   is the headline's measure, in the headline's own size, so the box is the
+   block you see: two lines ('Make the / internet listen.', ~6em) below 1600
+   wide, where that already fills the half (the laptop look); three lines
+   ('Make the / internet / listen.', ~4em, as wide screens always broke it)
+   from there, a poster block that sits in the middle of the half. --lcol-w
+   is the widest line (what gets centred); the box is a touch wider so the
+   break never depends on a rounding. (If the headline's words change, these
+   em widths change with them.) ---------------- */
+@media (min-width: 1024px) and (min-aspect-ratio: 5/4) and (min-height: 501px) {
+  .stage-hero .hf-payoff {
+    --lcol-w: calc(var(--hf-fs) * 6);
+    width: calc(var(--hf-fs) * 6.2);
+    left: max(var(--gutter), calc(var(--col-left-center) - var(--lcol-w) / 2));
+  }
+}
+@media (min-width: 1600px) and (min-aspect-ratio: 5/4) and (min-height: 501px) {
+  .stage-hero .hf-payoff {
+    --lcol-w: calc(var(--hf-fs) * 3.97);
+    width: calc(var(--hf-fs) * 4.25);
+  }
 }
 
 /* ---------------- portrait: the mark above, copy below ---------------- */

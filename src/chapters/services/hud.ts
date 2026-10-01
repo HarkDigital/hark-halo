@@ -103,7 +103,8 @@ export class Hud {
       m.introTop = this.intro.offsetTop
       m.safeTop = this.probeTop.offsetTop
       m.safeBottom = h - (this.probeBottom.offsetTop + this.probeBottom.offsetHeight)
-      m.gutter = this.col.offsetLeft
+      // (the gutter itself: on desktop the column is centred in the left half, so its own left is not it)
+      m.gutter = this.probeTop.offsetLeft
       m.valid = m.colRight > 0 && m.cardTop > 0
     }
     return this.m

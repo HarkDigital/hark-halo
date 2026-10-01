@@ -168,6 +168,63 @@
   pointer-events: none;
 }
 
+/* ---------- desktop landscape: each copy state centred in the left half,
+   scaled up on wide screens (base.css: --col-left-center, --hud-px; keep the
+   query in sync). The two states centre by their own widths, with no width
+   to guess: A is as wide as its widest line (max-content), B as its steps;
+   'left: 0; right: 50%' plus auto margins puts either in the middle of the
+   left half (the 42vw cap keeps it clear of the gutter). index.ts measures
+   their offsets, so the sign is framed beside whichever is wider. ---------- */
+@media (min-width: 1024px) and (min-aspect-ratio: 5/4) and (min-height: 501px) {
+  .stage-shield {
+    --sh-col: min(calc(430 * var(--hud-px)), 36vw);
+  }
+  .stage-shield .sh-a,
+  .stage-shield .sh-b {
+    left: 0;
+    right: 50%;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: min(calc(560 * var(--hud-px)), 42vw);
+    gap: clamp(14px, 2.4vh, calc(26 * var(--hud-px)));
+  }
+  .stage-shield .sh-b {
+    width: var(--sh-col);
+    gap: clamp(12px, 2vh, calc(20 * var(--hud-px)));
+  }
+  .stage-shield .sh-title {
+    font-size: clamp(3rem, 7.4vw, calc(7.6 * var(--hud-rem)));
+  }
+  .stage-shield .sh-panel {
+    max-width: var(--sh-col);
+    padding: calc(20 * var(--hud-px)) calc(24 * var(--hud-px)) calc(21 * var(--hud-px));
+  }
+  .stage-shield .sh-steps {
+    width: var(--sh-col);
+    padding: calc(10 * var(--hud-px)) calc(22 * var(--hud-px));
+  }
+  .stage-shield .sh-step {
+    gap: calc(10 * var(--hud-px));
+    padding: calc(11 * var(--hud-px)) 0;
+  }
+  .stage-shield .sh-step-t {
+    font-size: clamp(1.05rem, 1.35vw, calc(1.3 * var(--hud-rem)));
+  }
+  .stage-shield .sh-step-mark {
+    width: calc(18 * var(--hud-px));
+    height: calc(18 * var(--hud-px));
+  }
+  .stage-shield .sh-step.is-done .sh-step-mark::after {
+    left: calc(6 * var(--hud-px));
+    top: calc(3.5 * var(--hud-px));
+    width: calc(4.5 * var(--hud-px));
+    height: calc(8.5 * var(--hud-px));
+  }
+  .stage-shield .sh-cta {
+    margin-top: calc(4 * var(--hud-px));
+  }
+}
+
 /* ---------- portrait: the pane above, copy below ---------- */
 
 @media (orientation: portrait) {

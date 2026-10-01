@@ -3,6 +3,12 @@
    Every selector is scoped under .stage-work.
    ------------------------------------------------------------------ */
 
+.stage-work {
+  /* the docks' widths (the desktop block below centres them by these) */
+  --wk-dock-w: min(calc(420 * var(--hud-px)), 34vw);
+  --wk-list-w: min(calc(460 * var(--hud-px)), 37vw);
+}
+
 .stage-work .wk-safe {
   position: absolute;
   top: var(--safe-top);
@@ -57,7 +63,7 @@
   left: var(--gutter);
   top: var(--safe-top);
   bottom: var(--safe-bottom);
-  width: min(420px, 34vw);
+  width: var(--wk-dock-w);
   display: grid;
   align-content: center;
   pointer-events: none;
@@ -66,7 +72,7 @@
   grid-area: 1 / 1;
 }
 .stage-work .wk-dock--list {
-  width: min(460px, 37vw);
+  width: var(--wk-list-w);
 }
 /* landscape: the card never outgrows the band between the chrome. If the
    nine rows can't fit, only the rows scroll (the wheel stays in the list,
@@ -224,6 +230,76 @@
 }
 .stage-work .wk-list .wk-cta {
   margin-top: 6px;
+}
+
+/* ---------------- desktop landscape: the card and the list centred in the
+   left half, everything scaled up on wide screens (base.css: --col-left-center,
+   --hud-px; keep the query in sync). The intro centres the same way, by its
+   ink rather than a guessed box ('left: 0; right: 50%' plus auto margins, as
+   shield): the headline's width is its own measure, 'Built to / be heard.'
+   (widest line 4.08em, 'Built to be' 4.21em), so 4.14em gives those two lines
+   in every browser (balanced or greedy) and the box is the block you see.
+   index.ts re-measures the words, so the drum keeps clear of them. ---------------- */
+@media (min-width: 1024px) and (min-aspect-ratio: 5/4) and (min-height: 501px) {
+  .stage-work .wk-dock {
+    left: max(var(--gutter), calc(var(--col-left-center) - var(--wk-dock-w) / 2));
+  }
+  .stage-work .wk-dock--list {
+    left: max(var(--gutter), calc(var(--col-left-center) - var(--wk-list-w) / 2));
+  }
+  .stage-work .wk-intro {
+    left: 0;
+    right: 50%;
+    margin-left: auto;
+    margin-right: auto;
+    width: max-content;
+    max-width: calc(50vw - 2 * var(--gutter));
+    gap: calc(20 * var(--hud-px));
+  }
+  .stage-work .wk-title {
+    width: 4.14em;
+    font-size: clamp(2.8rem, 6.4vw, calc(6.6 * var(--hud-rem)));
+  }
+  .stage-work .wk-count {
+    gap: calc(8 * var(--hud-px)) calc(14 * var(--hud-px));
+    margin-top: calc(4 * var(--hud-px));
+    font-size: calc(11.5 * var(--hud-px));
+  }
+  .stage-work .wk-card {
+    gap: calc(14 * var(--hud-px));
+    padding: calc(26 * var(--hud-px)) calc(28 * var(--hud-px)) calc(24 * var(--hud-px));
+  }
+  .stage-work .wk-name {
+    font-size: clamp(2rem, 3.2vw, calc(3.2 * var(--hud-rem)));
+  }
+  .stage-work .wk-cta {
+    gap: calc(10 * var(--hud-px)) calc(16 * var(--hud-px));
+    margin-top: calc(4 * var(--hud-px));
+  }
+  .stage-work .wk-list {
+    gap: calc(14 * var(--hud-px));
+    padding: calc(16 * var(--hud-px)) calc(26 * var(--hud-px)) calc(22 * var(--hud-px));
+  }
+  .stage-work .wk-rows {
+    margin: 0 calc(-10 * var(--hud-px));
+  }
+  .stage-work .wk-row {
+    gap: calc(12 * var(--hud-px));
+    padding: calc(7 * var(--hud-px)) calc(10 * var(--hud-px));
+    border-radius: calc(10 * var(--hud-px));
+  }
+  .stage-work .wk-rname {
+    font-size: calc(15 * var(--hud-px));
+  }
+  .stage-work .wk-rind {
+    font-size: calc(10.5 * var(--hud-px));
+  }
+  .stage-work .wk-arrow {
+    font-size: calc(13 * var(--hud-px));
+  }
+  .stage-work .wk-list .wk-cta {
+    margin-top: calc(6 * var(--hud-px));
+  }
 }
 
 /* ---------------- portrait: subject upper, copy docked low ---------------- */

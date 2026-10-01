@@ -3,14 +3,14 @@
 .stage-services {
   /* the plate in view's neon (index.ts sets it per service) */
   --et-neon: var(--neon-a, #ffffff);
-  --et-col: min(440px, 34vw);
+  --et-col: min(calc(440 * var(--hud-px)), 34vw);
   --et-ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* empty boxes on the safe bands: the camera fit reads their offsets (hud.ts) */
+/* empty boxes on the safe bands and the gutter: the camera fit reads their offsets (hud.ts) */
 .stage-services .et-probe {
   position: absolute;
-  left: 0;
+  left: var(--gutter);
   width: 1px;
   height: 1px;
   visibility: hidden;
@@ -243,6 +243,65 @@
 .stage-services .et-key:focus-visible {
   outline: 2px solid var(--paper);
   outline-offset: 1px;
+}
+
+/* ---------------- desktop landscape: the intro and the card centred in the
+   left half, scaled up on wide screens (base.css: --col-left-center, --hud-px;
+   keep the query in sync). The intro's width is its headline's measure ('Eleven
+   ways / to be heard.', ~5.35em, in the headline's own size), so the box is the
+   block you see. (Before the mid-size rules, which still win up to 1100.) ---------------- */
+@media (min-width: 1024px) and (min-aspect-ratio: 5/4) and (min-height: 501px) {
+  .stage-services {
+    --et-it-fs: clamp(3rem, 5.8vw, calc(6 * var(--hud-rem)));
+  }
+  .stage-services .et-intro {
+    --lcol-w: calc(var(--et-it-fs) * 5.35);
+    left: max(var(--gutter), calc(var(--col-left-center) - var(--lcol-w) / 2));
+    width: calc(var(--et-it-fs) * 5.8);
+    gap: calc(28 * var(--hud-px));
+  }
+  .stage-services .et-intro-title {
+    font-size: var(--et-it-fs);
+  }
+  .stage-services .et-col {
+    left: max(var(--gutter), calc(var(--col-left-center) - var(--et-col) / 2));
+  }
+  .stage-services .et-card {
+    gap: calc(18 * var(--hud-px));
+    padding: calc(24 * var(--hud-px)) calc(26 * var(--hud-px)) calc(16 * var(--hud-px));
+  }
+  .stage-services .et-card::after {
+    left: calc(24 * var(--hud-px));
+    right: calc(24 * var(--hud-px));
+  }
+  .stage-services .et-item {
+    gap: calc(14 * var(--hud-px));
+  }
+  .stage-services .et-title {
+    font-size: clamp(1.9rem, 2.8vw, calc(2.8 * var(--hud-rem)));
+  }
+  .stage-services .et-more {
+    gap: calc(10 * var(--hud-px));
+    margin-top: calc(2 * var(--hud-px));
+    padding: calc(6 * var(--hud-px)) 0;
+  }
+  .stage-services .et-keys {
+    gap: calc(3 * var(--hud-px));
+    padding-top: calc(12 * var(--hud-px));
+  }
+  .stage-services .et-key {
+    min-width: calc(24 * var(--hud-px));
+    min-height: calc(30 * var(--hud-px));
+  }
+  .stage-services .et-key::after {
+    width: calc(6 * var(--hud-px));
+    height: calc(6 * var(--hud-px));
+    margin: calc(-3 * var(--hud-px)) 0 0 calc(-3 * var(--hud-px));
+  }
+  .stage-services .et-key.is-on::after {
+    width: calc(18 * var(--hud-px));
+    margin-left: calc(-9 * var(--hud-px));
+  }
 }
 
 /* ---------------- mid-size landscape ---------------- */

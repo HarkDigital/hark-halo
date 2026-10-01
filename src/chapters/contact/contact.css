@@ -161,6 +161,52 @@
   will-change: opacity, transform;
 }
 
+/* ---- desktop landscape: the card centred in the left half, scaled up on
+   wide screens (base.css: --col-left-center, --hud-px; keep the query in
+   sync). hud.ts measures the card, so the mark takes the space right of it.
+   (The fit levels below still step it down on a short window.) */
+@media (min-width: 1024px) and (min-aspect-ratio: 5/4) and (min-height: 501px) {
+  .stage-contact .ct-wrap {
+    --ct-w: clamp(420px, 37vw, calc(560 * var(--hud-px)));
+    width: var(--ct-w);
+    left: max(var(--gutter), calc(var(--col-left-center) - var(--ct-w) / 2));
+  }
+  .stage-contact .ct-panel {
+    padding: clamp(26px, 2.8vw, calc(42 * var(--hud-px))) clamp(26px, 2.8vw, calc(42 * var(--hud-px))) clamp(22px, 2.3vw, calc(32 * var(--hud-px)));
+    border-radius: calc(28 * var(--hud-px));
+  }
+  .stage-contact .ct-eyebrow {
+    margin-bottom: clamp(16px, 1.7vw, calc(24 * var(--hud-px)));
+  }
+  .stage-contact .ct-title {
+    font-size: clamp(3.3rem, 6vw, calc(6.4 * var(--hud-rem)));
+    margin-bottom: clamp(14px, 1.5vw, calc(22 * var(--hud-px)));
+  }
+  .stage-contact .ct-body {
+    margin-bottom: clamp(22px, 2.2vw, calc(32 * var(--hud-px)));
+  }
+  .stage-contact .ct-form {
+    margin-bottom: calc(10 * var(--hud-px));
+    font-size: clamp(15px, 1.2vw, calc(18 * var(--hud-px)));
+    padding: calc(17 * var(--hud-px)) calc(24 * var(--hud-px));
+  }
+  .stage-contact .ct-rule {
+    margin: clamp(22px, 2.2vw, calc(30 * var(--hud-px))) 0 clamp(14px, 1.4vw, calc(18 * var(--hud-px)));
+  }
+  .stage-contact .ct-foot {
+    gap: calc(6 * var(--hud-px)) calc(18 * var(--hud-px));
+    margin-top: clamp(14px, 1.4vw, calc(20 * var(--hud-px)));
+  }
+  .stage-contact .ct-top {
+    gap: calc(5 * var(--hud-px));
+    font-size: calc(11 * var(--hud-px));
+    min-height: calc(24 * var(--hud-px));
+  }
+  .stage-contact .ct-legal {
+    font-size: calc(10.5 * var(--hud-px));
+  }
+}
+
 /* ---- fit levels (measured in hud.ts): short screens step the card down.
    Links never drop below a 24px-tall target (WCAG 2.5.8). */
 .stage-contact.ct-fit-1 .ct-title {

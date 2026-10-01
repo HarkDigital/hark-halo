@@ -222,6 +222,20 @@
   transform: none;
 }
 
+/* ---------------- desktop landscape: the small type scales with the rest of
+   the story on wide screens (base.css: --hud-px; keep the query in sync). The
+   card is centred, not a left column, and already sized by the viewport; the
+   quote is fitted to it in index.ts. ---------------- */
+@media (min-width: 1024px) and (min-aspect-ratio: 5/4) and (min-height: 501px) {
+  .stage-voices .vx-count {
+    font-size: calc(11 * var(--hud-px));
+  }
+  .stage-voices .vx-credit {
+    gap: calc(5 * var(--hud-px));
+    font-size: calc(11.5 * var(--hud-px));
+  }
+}
+
 /* ---------------- portrait: a tall card, the line across its foot ---------------- */
 
 @media (max-aspect-ratio: 1/1) {
