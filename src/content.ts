@@ -853,9 +853,9 @@ export const TESTIMONIALS: Testimonial[] = [
   },
   {
     quote:
-      'Mike took the time to fully understand our school’s needs and designed a site infrastructure that meets them perfectly. It has been met with rave reviews.',
-    name: 'MaryJane Kinkade',
-    company: 'Our Lady of Mercy Academy',
+      'Hark Digital delivers what you want in every partner – technical expertise, a collegial approach to work and a commitment to our success.',
+    name: 'John Miller',
+    company: 'Scribewise',
   },
   {
     quote:
