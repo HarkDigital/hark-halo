@@ -135,7 +135,7 @@ export function createContactForm(o: ContactFormOpts = {}): HTMLElement {
       ${CONTACT_FORM.turnstileSiteKey ? '<div class="cf-turnstile"></div>' : ''}
       <p class="cf-error" id="${id}-error" role="alert"></p>
       <button class="hud-btn cf-submit" type="submit"><span class="cf-submit-t">${submitLabel}</span> <span aria-hidden="true">→</span></button>
-      <p class="cf-note">${CONTACT_FORM.note}</p>
+      ${hack ? '' : `<p class="cf-note">${CONTACT_FORM.note}</p>`}
     </form>
     <div class="cf-done" role="status" hidden>
       <span class="cf-check" aria-hidden="true">✓</span>

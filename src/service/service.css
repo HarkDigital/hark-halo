@@ -321,39 +321,61 @@ html.is-svc.menu-open {
   }
 }
 
-/* the contact card's direct lines (page/shell.ts): the email · the phone */
+/* the contact card's direct lines (page/shell.ts): the email and the phone, one per
+   line with their icons */
 .svc-direct {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px 12px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(8 * var(--hud-px));
   margin: calc(18 * var(--hud-px)) 0 0;
   font-family: var(--font-sans);
   font-size: calc(15.5 * var(--hud-px));
   letter-spacing: -0.01em;
-  color: var(--fg-muted);
 }
 .svc-direct-a {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(10 * var(--hud-px));
+  padding: 3px 0;
   color: var(--fg);
   text-decoration: none;
+}
+.svc-direct-a > span:last-child {
   border-bottom: 1px solid rgba(255, 255, 255, 0.28);
-  padding: 4px 0 2px;
-  transition:
-    border-color 0.3s ease,
-    color 0.3s ease;
+  padding-bottom: 1px;
+  transition: border-color 0.3s ease;
+}
+.svc-direct-a-i {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 1.2em;
+  height: 1.2em;
+  color: var(--fg-muted);
+  transition: color 0.3s ease;
+}
+.svc-direct-a-i svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 .svc-direct-a:hover,
 .svc-direct-a:focus-visible {
   color: #ffffff;
+}
+.svc-direct-a:hover > span:last-child,
+.svc-direct-a:focus-visible > span:last-child {
   border-bottom-color: #ffffff;
+}
+.svc-direct-a:hover .svc-direct-a-i,
+.svc-direct-a:focus-visible .svc-direct-a-i {
+  color: #ffffff;
 }
 .svc-direct-a:focus-visible {
   outline: 2px solid var(--paper);
   outline-offset: 3px;
-  border-radius: 2px;
-}
-.svc-direct-a-sep {
-  color: var(--fg-faint);
+  border-radius: 4px;
 }
 
 /* ---------------- sections ---------------- */

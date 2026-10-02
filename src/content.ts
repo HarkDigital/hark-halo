@@ -74,7 +74,7 @@ export const SERVICES: Service[] = [
   {
     num: '02',
     slug: 'web-design',
-    title: 'Web Design',
+    title: 'Web Design & Development',
     blurb:
       'Beautiful, functional websites that promote your business and are easy to update. Modern frameworks, responsive on every device, built to convert visitors into customers.',
     tags: ['UI/UX', 'Responsive', 'CMS', 'Branding'],
@@ -935,7 +935,7 @@ export const CONTACT_FORM = {
   endpoint: '',
   turnstileSiteKey: '',
   services: [
-    'Web Design',
+    'Web Design & Development',
     'Software Development',
     'Ecommerce',
     'SEO / GEO',

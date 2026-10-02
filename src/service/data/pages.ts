@@ -68,7 +68,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
   {
     slug: 'web-design',
     num: '02',
-    title: 'Web Design',
+    title: 'Web Design & Development',
     scene: 'blueprint',
     headline: 'Beautiful. Functional.',
     headlineAccent: 'Yours.',
