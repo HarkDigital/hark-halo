@@ -1,4 +1,5 @@
 import { BRAND, CONTACT, PORTFOLIO, PROCESS, SECTIONS, SECURITY, SERVICE_CTA, SERVICES, TESTIMONIALS, WORK, portfolioUrl, serviceUrl } from '../content'
+import { directHtml } from '../kit/contact'
 import { isPreview } from '../kit/work'
 
 /*
@@ -74,6 +75,7 @@ const COPY: Record<string, () => string> = {
     <h2 tabindex="0">${esc(CONTACT.title)}</h2>
     <p>${esc(CONTACT.body)}</p>
     <p><button type="button" data-contact-form>Contact Us</button></p>
+    <p>${directHtml('sr-direct')}</p>
     <p>© ${new Date().getFullYear()} ${esc(BRAND.name)} · ${esc(BRAND.locale)}</p>
     <p><a href="#hero" data-land="hero">Back to top</a></p>`,
 }

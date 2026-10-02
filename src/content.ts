@@ -962,4 +962,11 @@ export const CONTACT = {
   title: 'Say hello.',
   body: 'Tell us what you are building, fixing, or dreaming up.',
   href: 'mailto:info@hark.digital?subject=New%20project',
+  /** shown under the card's button (home, service pages, portfolio, copy layer) */
+  email: 'info@hark.digital',
+  phone: '(856) 818-HARK (4275)',
+  /** the phone's digits, for tel: */
+  tel: '+18568184275',
+  /** spoken: the vanity letters as the digits a caller dials */
+  phoneSpoken: '(856) 818-4275',
 }

@@ -321,6 +321,41 @@ html.is-svc.menu-open {
   }
 }
 
+/* the contact card's direct lines (page/shell.ts): the email · the phone */
+.svc-direct {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin: calc(18 * var(--hud-px)) 0 0;
+  font-family: var(--font-sans);
+  font-size: calc(15.5 * var(--hud-px));
+  letter-spacing: -0.01em;
+  color: var(--fg-muted);
+}
+.svc-direct-a {
+  color: var(--fg);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.28);
+  padding: 4px 0 2px;
+  transition:
+    border-color 0.3s ease,
+    color 0.3s ease;
+}
+.svc-direct-a:hover,
+.svc-direct-a:focus-visible {
+  color: #ffffff;
+  border-bottom-color: #ffffff;
+}
+.svc-direct-a:focus-visible {
+  outline: 2px solid var(--paper);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+.svc-direct-a-sep {
+  color: var(--fg-faint);
+}
+
 /* ---------------- sections ---------------- */
 .svc-sec {
   max-width: var(--svc-max);

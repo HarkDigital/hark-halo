@@ -1,4 +1,5 @@
 import { BRAND, CONTACT, portfolioUrl } from '../content'
+import { directHtml } from '../kit/contact'
 import { createContactForm } from '../ui/contactForm'
 import { mountNeonFrame } from '../service/neonFrame'
 import { logoSvg } from '../ui/mark'
@@ -108,6 +109,7 @@ export function contactHtml(): string {
             <p class="hud-eyebrow svc-rv" data-rv="wipe">${esc(CONTACT.eyebrow)}</p>
             <h2 class="hud-title svc-contact-t svc-rv" data-words id="svc-contact-h">Say <em>hello.</em></h2>
             <p class="hud-body svc-rv" data-rv="wipe" style="--d:2">${esc(CONTACT.body)}</p>
+            <p class="svc-direct svc-rv" data-rv="wipe" style="--d:3">${directHtml('svc-direct-a')}</p>
           </div>
           <div class="svc-contact-form"></div>
         </div>

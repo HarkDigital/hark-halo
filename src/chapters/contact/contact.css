@@ -67,6 +67,42 @@
   transform: translateX(4px);
 }
 
+/* ---- or directly: the email · the phone, under the button */
+.stage-contact .ct-direct {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin: 8px 0 0;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  color: var(--fg-muted);
+}
+.stage-contact .ct-link {
+  color: var(--fg);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.28);
+  padding: 4px 0 2px;
+  transition:
+    border-color 0.3s ease,
+    color 0.3s ease;
+}
+.stage-contact .ct-link:hover,
+.stage-contact .ct-link:focus-visible {
+  color: #ffffff;
+  border-bottom-color: #ffffff;
+}
+.stage-contact .ct-link:focus-visible {
+  outline: 2px solid var(--paper);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+.stage-contact .ct-link-sep {
+  color: var(--fg-faint);
+}
+
 .stage-contact .ct-go {
   display: inline-block;
   transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
@@ -190,6 +226,11 @@
     font-size: clamp(15px, 1.2vw, calc(18 * var(--hud-px)));
     padding: calc(17 * var(--hud-px)) calc(24 * var(--hud-px));
   }
+  .stage-contact .ct-direct {
+    gap: calc(4 * var(--hud-px)) calc(12 * var(--hud-px));
+    margin-top: calc(8 * var(--hud-px));
+    font-size: calc(15 * var(--hud-px));
+  }
   .stage-contact .ct-rule {
     margin: clamp(22px, 2.2vw, calc(30 * var(--hud-px))) 0 clamp(14px, 1.4vw, calc(18 * var(--hud-px)));
   }
@@ -261,6 +302,10 @@
 
 .stage-contact.ct-fit-3 .ct-rule {
   margin: 12px 0 8px;
+}
+.stage-contact.ct-fit-3 .ct-direct {
+  margin-top: 2px;
+  font-size: 13px;
 }
 
 .stage-contact.ct-fit-3 .ct-legal {

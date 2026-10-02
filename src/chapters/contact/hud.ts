@@ -1,9 +1,10 @@
 import { el, rise } from '../../core/dom'
 import { BRAND, CONTACT } from '../../content'
+import { directHtml } from '../../kit/contact'
 
 /*
  * The contact panel: one frosted glass card on black (left on landscape,
- * along the bottom on portrait): the headline, the body, "Contact Us"
+ * along the bottom on portrait): the headline, the body, "Contact Us", the email · phone
  * (the form), Back to top and the colophon. (No address or Copy pill, no
  * sister concepts: the owner's call, Sep 2026.)
  *
@@ -70,6 +71,10 @@ export function buildHud(stage: HTMLElement): Hud {
   formBtn.type = 'button'
   formBtn.setAttribute('data-contact-form', '')
   formBtn.innerHTML = 'Contact Us <span class="ct-go" aria-hidden="true">→</span>'
+
+  // or directly: the email and the phone
+  const direct = el('p', 'ct-direct', undefined, panel)
+  direct.innerHTML = directHtml('ct-link')
 
   el('hr', 'hud-rule ct-rule', undefined, panel)
 
