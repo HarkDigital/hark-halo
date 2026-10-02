@@ -7,7 +7,7 @@ import { SECTIONS, SERVICE_CTA, SERVICES, serviceUrl } from '../../content'
  * ease-outs), so wherever the scroll rests the copy is settled and exact.
  *
  *   intro   eyebrow + "Eleven ways to be heard."
- *   card    frosted glass: NN / 11 · title · blurb · tags · the service's own
+ *   card    frosted glass: NN / 11 · title · blurb · the service's own
  *           page ("Explore the service →", src/service/*) · 01–11 index
  *
  * All eleven items share one grid cell, so the card never changes size.
@@ -64,8 +64,6 @@ export class Hud {
       const root = el('div', 'et-item', undefined, stack)
       const title = rise(el('h3', 'hud-h2 et-title', undefined, root), s.title)
       el('p', 'hud-body et-blurb', s.blurb, root)
-      const tags = el('ul', 'hud-tags et-tags', undefined, root)
-      for (const t of s.tags) el('li', 'hud-tag', t, tags)
       const more = el('a', 'hud-label et-more', undefined, root)
       more.href = serviceUrl(s.slug)
       el('span', '', SERVICE_CTA, more)

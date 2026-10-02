@@ -164,8 +164,7 @@ function render(i: number) {
         <p class="hud-eyebrow svc-rv" data-rv="wipe">${esc(page.title)}</p>
         <h1 class="hud-title svc-h1 svc-rv${long > 30 ? ' is-long' : ''}" data-words id="svc-h1">${headline}</h1>
         <p class="hud-body svc-lede svc-rv" data-rv="wipe" style="--d:3">${esc(page.lede)}</p>
-        ${svc ? `<ul class="hud-tags svc-tags svc-rv" data-rv="pop" style="--d:5" aria-label="Includes">${svc.tags.map((t, k) => `<li class="hud-tag" style="--k:${k}">${esc(t)}</li>`).join('')}</ul>` : ''}
-        <div class="svc-ctas svc-rv" style="--d:7">
+        <div class="svc-ctas svc-rv" style="--d:5">
           <a class="hud-btn" href="#svc-contact">Start a project</a>
           <a class="hud-btn hud-btn--ghost" href="${back}"><span aria-hidden="true">←</span> All services</a>
         </div>
@@ -230,9 +229,9 @@ function render(i: number) {
 /**
  * The hero copy's visible width, which service.css centres in the left half on
  * desktop (--svc-copy-vis on .svc-hero): from the box's left edge to the
- * furthest of its eyebrow, headline words, lede lines, tags and buttons.
- * Layout edges, not the entrances' transforms: a tag pops in from scale(0.8)
- * about its centre, so its centre and layout width give where it comes to rest.
+ * furthest of its eyebrow, headline words, lede lines and buttons.
+ * Layout edges, not the entrances' transforms: the centre and layout width of
+ * each give where it comes to rest.
  * Only the block's position depends on it, never its width, so it settles in
  * one pass; measured again once the font is in and on every resize (the type
  * can change size while the box keeps its width).
@@ -246,7 +245,7 @@ function fitHeroCopy() {
   const measure = () => {
     const left = copy.getBoundingClientRect().left
     let right = left
-    copy.querySelectorAll<HTMLElement>('.hud-eyebrow, .rise-w, .hud-tag, .hud-btn').forEach(el => {
+    copy.querySelectorAll<HTMLElement>('.hud-eyebrow, .rise-w, .hud-btn').forEach(el => {
       const r = el.getBoundingClientRect()
       right = Math.max(right, (r.left + r.right) / 2 + el.offsetWidth / 2)
     })

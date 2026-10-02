@@ -177,9 +177,6 @@ html.is-svc.menu-open {
   font-size: clamp(16px, 1.25vw, calc(18.5 * var(--hud-px)));
   color: rgba(246, 247, 249, 0.82);
 }
-.svc-tags {
-  margin-top: calc(22 * var(--hud-px));
-}
 .svc-ctas {
   display: flex;
   flex-wrap: wrap;
@@ -319,7 +316,6 @@ html.is-svc.menu-open {
     font-size: clamp(16px, 2.05vw, 19px);
     text-wrap: balance;
   }
-  .svc-tags,
   .svc-ctas {
     justify-content: center;
   }
@@ -848,7 +844,6 @@ html.is-svc.menu-open {
      step    a line of current runs along the steps, lighting each one's node
      stat    the big figure strikes on like a neon sign (one stutter)
      row     FAQ rows slide in one by one, the plus spins in
-     pop     the tags pop in one by one
      side    previous / next come in from their own sides
      list    the footer's services come in one by one
    --d staggers siblings. */
@@ -1161,27 +1156,6 @@ html.is-svc.menu-open {
   from {
     transform: rotate(-180deg) scale(0.4);
   }
-}
-
-/* pop: the tags, one by one */
-.svc-rv[data-rv='pop'] {
-  opacity: 1;
-  transform: none;
-}
-.svc-rv[data-rv='pop'] > li {
-  opacity: 0;
-  transform: scale(0.8);
-  filter: blur(4px);
-  transition:
-    opacity 0.5s ease,
-    transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1),
-    filter 0.6s ease;
-  transition-delay: calc(var(--d, 0) * 80ms + var(--k, 0) * 70ms);
-}
-.svc-rv[data-rv='pop'].is-in > li {
-  opacity: 1;
-  transform: none;
-  filter: none;
 }
 
 /* side: previous from the left, next from the right */
