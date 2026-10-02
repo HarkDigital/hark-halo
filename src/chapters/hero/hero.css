@@ -10,41 +10,40 @@
   max-width: 36ch;
 }
 
-/* scroll hint: a hairline, a bead of light runs along it a few times (finite).
-   The bead runs by 'left' in the line's own percent, so it always clears the
-   end of the line however wide --hud-px makes it, and it rests off the line
-   (fill 'backwards': after its runs it drops back to the start, hidden). */
+/* scroll hint: "Scroll down to navigate" with a down arrow beneath it that
+   bounces gently (transform only, in % of its own height so it scales with
+   --hud-px; Motion off stops it, base.css). */
 .stage-hero .hf-hint {
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
-  gap: calc(12 * var(--hud-px));
+  justify-self: start;
+  gap: calc(10 * var(--hud-px));
   margin: calc(4 * var(--hud-px)) 0 0;
   color: var(--fg-muted);
 }
-.stage-hero .hf-hint-line {
-  position: relative;
-  width: calc(48 * var(--hud-px));
-  height: 1px;
-  background: rgba(255, 255, 255, 0.22);
-  overflow: hidden;
+.stage-hero .hf-hint-arrow {
+  display: block;
+  width: calc(14 * var(--hud-px));
+  height: calc(20 * var(--hud-px));
+  color: rgba(255, 255, 255, 0.72);
+  animation: hf-bounce 1.8s cubic-bezier(0.45, 0, 0.55, 1) 1.2s infinite;
 }
-.stage-hero .hf-hint-line::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -20px;
-  width: 18px;
-  height: 1px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0), #ffffff, rgba(255, 255, 255, 0));
-  animation: hf-bead 2.8s cubic-bezier(0.16, 1, 0.3, 1) 1.6s 4 backwards;
+.stage-hero .hf-hint-arrow svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
-@keyframes hf-bead {
-  0% {
-    left: -20px;
-  }
-  70%,
+@keyframes hf-bounce {
+  0%,
   100% {
-    left: calc(100% + 2px);
+    transform: translate3d(0, 0, 0);
+  }
+  45% {
+    transform: translate3d(0, 35%, 0);
+  }
+  70% {
+    transform: translate3d(0, -5%, 0);
   }
 }
 

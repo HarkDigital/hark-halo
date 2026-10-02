@@ -310,8 +310,10 @@ export default function create(): Chapter {
         window.__hark.land('contact')
       })
       const hint = el('p', 'hud-label hf-hint', undefined, inner)
-      el('span', 'hf-hint-line', undefined, hint).setAttribute('aria-hidden', 'true')
       el('span', '', MICROCOPY.scrollHint, hint)
+      const arrow = el('span', 'hf-hint-arrow', undefined, hint)
+      arrow.setAttribute('aria-hidden', 'true')
+      arrow.innerHTML = '<svg viewBox="0 0 14 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 1.5v16M1.5 12.5 7 18l5.5-5.5"/></svg>'
 
       const onReveal = () => {
         if (revealAt < 0) revealAt = now()
