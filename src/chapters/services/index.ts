@@ -24,8 +24,8 @@ import './services.css'
  *
  *   0.000–0.205  intro (0.9 vh): the hero's segue clears (src/core/post.ts);
  *                the louvres open out of hairlines, the whole column hangs in
- *                its backlight, the camera drifts in. "Eleven ways to be
- *                heard." rises at 0.068 and holds to 0.217 (landing 0.15)
+ *                its backlight, the camera drifts in. "Loud and clear."
+ *                rises at 0.068 and holds to 0.217 (landing 0.15)
  *   0.205–0.930  eleven plates (~0.066 each): part → turn → settle → hold
  *   0.930–1.000  the last plate returns; the louvres close to hairlines of
  *                light and the camera pulls back into black
@@ -400,8 +400,8 @@ export default function create(): Chapter {
       if (slot.ok) w.focus.set(slot.x + Math.sin(cyaw) * 0.25, slot.y + pitch * 0.2)
       w.halo = (0.4 + 0.3 * open * swell) * (1 - 0.6 * louvreOut)
       w.haloSize = lerp(1.3, 1.0, open)
-      w.slits = 0.14 * (1 - louvreOut)
-      w.slitAngle = 0
+      // no vertical light slits on the back wall here (Mike, 2026-10-02)
+      w.slits = 0
       // the light sweep: while a plate turns in, the studio swings away and back
       // (sin(π·frac) is 0 at every rest) so the strips run along its bevels
       const sweep = Math.sin(Math.PI * (f - Math.floor(f)))

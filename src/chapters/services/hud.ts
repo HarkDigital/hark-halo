@@ -6,7 +6,7 @@ import { SECTIONS, SERVICE_CTA, SERVICES, serviceUrl } from '../../content'
  * plate); CSS decides HOW it arrives (words come into focus, long
  * ease-outs), so wherever the scroll rests the copy is settled and exact.
  *
- *   intro   eyebrow + "Eleven ways to be heard."
+ *   intro   eyebrow + "Loud and clear."
  *   card    frosted glass: NN / 11 · title · blurb · the service's own
  *           page ("Explore the service →", src/service/*) · 01–11 index
  *
@@ -54,7 +54,7 @@ export class Hud {
     /* intro */
     this.intro = el('div', 'et-intro', undefined, stage)
     el('p', 'hud-eyebrow et-intro-eyebrow', SECTIONS.services.eyebrow, this.intro)
-    this.introTitle = rise(el('h2', 'hud-title et-intro-title', undefined, this.intro), 'Eleven ways to be <em>heard.</em>')
+    this.introTitle = rise(el('h2', 'hud-title et-intro-title', undefined, this.intro), SECTIONS.services.title)
 
     /* the card */
     this.col = el('div', 'et-col', undefined, stage)

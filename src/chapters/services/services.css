@@ -247,17 +247,18 @@
 
 /* ---------------- desktop landscape: the intro and the card centred in the
    left half, scaled up on wide screens (base.css: --col-left-center, --hud-px;
-   keep the query in sync). The intro's width is its headline's measure ('Eleven
-   ways / to be heard.', ~5.35em, in the headline's own size), so the box is the
-   block you see. (Before the mid-size rules, which still win up to 1100.) ---------------- */
+   keep the query in sync). The intro's width is its headline's measure ('Loud
+   and / clear.', 3.94em in the headline's own size; the box, 4.2em, always breaks
+   after 'and' since the whole line is 6.41em), so the box is the block you see.
+   Re-measure both if the headline changes. (Before the mid-size rules, which still win up to 1100.) ---------------- */
 @media (min-width: 1024px) and (min-aspect-ratio: 5/4) and (min-height: 501px) {
   .stage-services {
     --et-it-fs: clamp(3rem, 5.8vw, calc(6 * var(--hud-rem)));
   }
   .stage-services .et-intro {
-    --lcol-w: calc(var(--et-it-fs) * 5.35);
+    --lcol-w: calc(var(--et-it-fs) * 3.95);
     left: max(var(--gutter), calc(var(--col-left-center) - var(--lcol-w) / 2));
-    width: calc(var(--et-it-fs) * 5.8);
+    width: calc(var(--et-it-fs) * 4.2);
     gap: calc(28 * var(--hud-px));
   }
   .stage-services .et-intro-title {

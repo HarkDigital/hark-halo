@@ -63,8 +63,9 @@ differs from the existing rows.
     label it **Preview**, never "live".
   - Use **US English** (center, not centre; no Britishisms).
   - Don't repeat the tagline everywhere. Use the original section headlines:
-    "Built to be heard.", "Eleven ways to be heard.", "We listen. They talk.",
-    "We listen first. Then we build.", "Hacked? Breathe.", "Say hello."
+    "Built to be heard.", "Loud and clear." (services: never a count of
+    services), "They talk. We Listen.", "First we listen. Then we build.",
+    "Hacked? Breathe.", "Say hello."
   - Give each concept its own microcopy (`MICROCOPY` in content.ts).
 - The site must be **noindex**. The deploy workflow injects it; the concept
   must never compete with hark.digital in search.
