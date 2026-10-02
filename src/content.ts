@@ -823,6 +823,12 @@ export interface Testimonial {
 export const TESTIMONIALS: Testimonial[] = [
   {
     quote:
+      'Hark Digital delivers what you want in every partner – technical expertise, a collegial approach to work and a commitment to our success.',
+    name: 'John Miller',
+    company: 'Scribewise',
+  },
+  {
+    quote:
       'Mike has exceptional technical ability but at his core he is an artist. He brilliantly created a clean, concise and modern website that has significantly bolstered our business.',
     name: 'Andrew Fabbri',
     company: 'Fabbri Builders',
@@ -846,16 +852,11 @@ export const TESTIMONIALS: Testimonial[] = [
     company: 'Bellview Winery',
   },
   {
+    // an excerpt of Alicia's review (the full text is longer than the card holds)
     quote:
-      'He brought us out of the 90s and now we have a modern, swanky website that I could not be happier with. Glass is tricky to photograph but he knocked it out of the park.',
-    name: 'Christina Rossi',
-    company: 'PEG Glass',
-  },
-  {
-    quote:
-      'Hark Digital delivers what you want in every partner – technical expertise, a collegial approach to work and a commitment to our success.',
-    name: 'John Miller',
-    company: 'Scribewise',
+      'From the very first interaction I had with Mike, he was attentive, professional, and full of creative ideas that truly brought our vision to life. … It’s clear that he puts pride in his work, and it shows.',
+    name: 'Alicia Fichera',
+    company: 'DNS Solutions',
   },
   {
     quote:
