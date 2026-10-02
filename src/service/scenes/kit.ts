@@ -57,8 +57,14 @@ export interface Pointer {
 }
 
 export interface Scene {
-  /** once per (re)size, CSS px */
-  init(w: number, h: number): void
+  /**
+   * once per (re)size, CSS px. `framed`: the art is a band above centred copy
+   * (tablets, and windows squarer than 5:4; service.css): below the header, nothing
+   * beside it and possibly short, so the drawing stays centred and inside it.
+   * Otherwise the art is a full screen tall, right of the copy (or above it on
+   * a phone).
+   */
+  init(w: number, h: number, framed: boolean): void
   /** every frame; dt in seconds (clamped), t in seconds */
   frame(pen: Pen, w: number, h: number, pointer: Pointer, dt: number, t: number): void
 }

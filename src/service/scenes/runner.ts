@@ -1,10 +1,10 @@
 import { Pen, type Pointer, type Scene } from './kit'
 
 /*
- * Runs a hero scene in `host` (the .svc-art box beside the copy): three
- * stacked canvases, the sharp one (device pixels) over two bloom layers (the
- * glow, drawn at half size, and a haze copied from it at a quarter), which
- * CSS blurs and screens together (service.css).
+ * Runs a hero scene in `host` (the .svc-art box beside the copy, or above
+ * it): three stacked canvases, the sharp one (device pixels) over two bloom
+ * layers (the glow, drawn at half size, and a haze copied from it at a
+ * quarter), which CSS blurs and screens together (service.css).
  *
  * The pointer is tracked across the window (like the classic site) but only
  * counts as `inside` over the art; a touch counts while the finger is down.
@@ -15,6 +15,12 @@ import { Pen, type Pointer, type Scene } from './kit'
  * grows with it: the scene draws in the laptop's pixels (w, h are the box
  * over k) and the canvases scale them by k, so strokes, gaps and panels grow
  * in step with the copy beside them. k is 1 everywhere else.
+ * On tablets (and windows squarer than 5:4) the box is a band above the
+ * centred copy, sized by CSS to the room the copy leaves (service.css); the
+ * box says so with --svc-art-framed: 1, and the scene is told (Scene.init's
+ * `framed`) so it keeps its drawing centred and inside the band. Read on
+ * every resize: a window crossing the breakpoint changes the box, so the
+ * observer catches it.
  * `?autopilot` drives a synthetic cursor (for headless screenshots).
  */
 
@@ -51,6 +57,7 @@ export function runScene(host: HTMLElement, scene: Scene, o: { reduced: boolean 
   let k = 1
   let w = 0
   let h = 0
+  let framed = false
   let raf = 0
   let running = false
   let onScreen = false
@@ -118,18 +125,20 @@ export function runScene(host: HTMLElement, scene: Scene, o: { reduced: boolean 
     const nw = Math.max(1, Math.round(r.width / nk))
     const nh = Math.max(1, Math.round(r.height / nk))
     const nd = Math.min(window.devicePixelRatio || 1, 2)
-    if (nw === w && nh === h && nd === dpr && nk === k) return
+    const nf = getComputedStyle(host).getPropertyValue('--svc-art-framed').trim() === '1'
+    if (nw === w && nh === h && nd === dpr && nk === k && nf === framed) return
     w = nw
     h = nh
     dpr = nd
     k = nk
+    framed = nf
     coreC.width = Math.round(w * k * dpr)
     coreC.height = Math.round(h * k * dpr)
     glowC.width = Math.max(1, Math.round(w * k * GLOW))
     glowC.height = Math.max(1, Math.round(h * k * GLOW))
     hazeC.width = Math.max(1, Math.round(w * k * HAZE))
     hazeC.height = Math.max(1, Math.round(h * k * HAZE))
-    scene.init(w, h)
+    scene.init(w, h, framed)
     if (o.reduced) {
       // settle the simulation, then one still frame
       for (let i = 0; i <= 180; i++) draw(1 / 60, i / 60)

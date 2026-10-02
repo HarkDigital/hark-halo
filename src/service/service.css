@@ -209,7 +209,11 @@ html.is-svc.menu-open {
   }
 }
 
-@media (orientation: portrait), (max-width: 820px) {
+/* phones (and portrait, which tablets take over below): the art fills the top and
+   the copy sits under it. A phone on its side up to 820 wide stays here too; a
+   landscape window that size and taller than a phone keeps the copy beside the
+   art, as wider ones do (stacked, its copy ran off the screen). */
+@media (orientation: portrait), (max-width: 720px), (max-width: 820px) and (max-height: 500px) {
   .svc-hero {
     align-items: flex-end;
     padding-top: 52vh;
@@ -222,7 +226,6 @@ html.is-svc.menu-open {
   .svc-hero-scrim {
     background: linear-gradient(0deg, #000000 0%, rgba(0, 0, 0, 0.9) 42%, rgba(0, 0, 0, 0.35) 62%, rgba(0, 0, 0, 0) 76%);
   }
-  /* phones / portrait: the art fills the top, above the copy */
   .svc-art {
     left: 0;
     height: 62vh;
@@ -237,6 +240,88 @@ html.is-svc.menu-open {
   }
   .svc-h1.is-long {
     font-size: clamp(2rem, 8.6vw, 2.7rem);
+  }
+}
+
+/* landscape windows short of the desktop query (721 to 1023 wide, taller than
+   a phone on its side; squarer ones are centred, below): the copy beside the
+   art, as on a laptop, but here the copy is half the window, so the art starts
+   at its right end instead of 80px under it (the scene ran behind the lede). */
+@media (min-width: 721px) and (max-width: 1023px) and (min-height: 501px) {
+  .svc-art {
+    left: calc(var(--gutter) + min(640px, 50vw) - 16px);
+  }
+}
+
+/* tablets (portrait) and narrow or squarish desktop windows: wider than a
+   phone (> 720) and squarer than 5:4, which is just where the desktop query
+   above lets go (landscape wider than 5:4 keeps the copy beside the art).
+   One centred column: the art as a band across the full width, the copy
+   centred under it, text and all, the two composed as one unit on the first
+   screen. The band is a flex item that takes the height the copy leaves
+   under the nav, between a floor and a ceiling: on a tall screen it stops at
+   the ceiling and the pair centres in the room; on a shorter one the art
+   gives way first and the copy stays whole. The scene is told it is framed
+   (--svc-art-framed, read by scenes/runner.ts), so it keeps its drawing
+   centred and inside the band. 12499/10000 is a hair under 5:4: a window at
+   exactly 5:4 is the desktop's (or, under 1024 wide, beside), never both.
+   (No range syntax: Safari 15.) */
+@media (min-width: 721px) and (max-aspect-ratio: 12499/10000) {
+  .svc-hero {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: calc(var(--ch-y) + var(--ch-h) + clamp(8px, 2vh, 28px)) var(--gutter) clamp(56px, 9vh, 104px);
+    text-align: center;
+  }
+  .svc-art {
+    --svc-art-framed: 1;
+    position: relative;
+    top: auto;
+    right: auto;
+    left: auto;
+    flex: 1 1 0;
+    align-self: stretch;
+    height: auto;
+    min-height: 120px;
+    max-height: min(640px, 72vw);
+    margin: 0 calc(-1 * var(--gutter)) clamp(4px, 1.4vh, 16px);
+    -webkit-mask-image:
+      linear-gradient(90deg, transparent 0, #000 14%, #000 86%, transparent 100%),
+      linear-gradient(180deg, transparent 0, #000 12%, #000 86%, transparent 100%);
+    -webkit-mask-composite: source-in;
+    mask-image:
+      linear-gradient(90deg, transparent 0, #000 14%, #000 86%, transparent 100%),
+      linear-gradient(180deg, transparent 0, #000 12%, #000 86%, transparent 100%);
+    mask-composite: intersect;
+  }
+  .svc-hero-scrim {
+    display: none;
+  }
+  .svc-hero-copy {
+    flex: none;
+    width: 100%;
+    max-width: 880px;
+  }
+  .svc-h1 {
+    max-width: 11em;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: clamp(2.6rem, min(7.2vw, 7.6vh), 5.6rem);
+  }
+  .svc-h1.is-long {
+    font-size: clamp(2.3rem, min(5.8vw, 6.2vh), 4.5rem);
+  }
+  .svc-lede {
+    max-width: 34em;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: clamp(16px, 2.05vw, 19px);
+    text-wrap: balance;
+  }
+  .svc-tags,
+  .svc-ctas {
+    justify-content: center;
   }
 }
 

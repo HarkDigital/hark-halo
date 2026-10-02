@@ -19,9 +19,11 @@ const tone = (v: number): RGB => (v < 0.6 ? mix(NC, NB, Math.max(0, v - 0.2) / 0
 export function velocity(): Scene {
   let value = 0.2
   let streaks: Streak[] = []
+  let mid = 0.52 // a touch right of centre beside the copy; centred when framed
 
   return {
-    init() {
+    init(_w, _h, framed) {
+      mid = framed ? 0.5 : 0.52
       value = 0.2
       streaks = Array.from({ length: 64 }, () => ({
         a: Math.random() * Math.PI * 2,
@@ -32,7 +34,7 @@ export function velocity(): Scene {
     },
 
     frame(pen, w, h, pointer, dt, t) {
-      const cx = w * 0.52
+      const cx = w * mid
       const cy = h * 0.5
       const R = Math.min(w, h) * 0.3
 

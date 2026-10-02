@@ -9,16 +9,18 @@ export function aerial(): Scene {
   let dx = 0
   let dy = 0
   let trail: { x: number; y: number }[] = []
+  let mid = 0.54 // a touch right of centre beside the copy; centred when framed
 
   return {
-    init(w, h) {
+    init(w, h, framed) {
+      mid = framed ? 0.5 : 0.54
       dx = w / 2
       dy = h / 2
       trail = []
     },
 
     frame(pen, w, h, pointer, dt, t) {
-      const cx = w * 0.54
+      const cx = w * mid
       const cy = h * 0.48
 
       // the terrain: wobbling contour rings

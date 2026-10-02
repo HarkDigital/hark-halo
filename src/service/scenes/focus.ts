@@ -33,9 +33,10 @@ export function focus(): Scene {
   const shape = (b: Box, grow = 0) => (b.diamond ? P.diamond(b.x + b.w / 2, b.y + b.h / 2, b.w * 0.72 + grow) : P.rect(b.x - grow / 2, b.y - grow / 2, b.w + grow, b.h + grow))
 
   return {
-    init(w, h) {
-      // a page wireframe, centred and sized to the art
-      const pw = Math.min(w * 0.76, 560)
+    init(w, h, framed) {
+      // a page wireframe, centred and sized to the art (framed: inside the band too, its
+      // height at most 0.7 of it, so the faded edges leave the focus ring clear)
+      const pw = Math.min(w * 0.76, 560, framed ? (h * 0.7) / 0.66 : Infinity)
       const u = pw / 100
       const ph = 66 * u
       const px = (w - pw) / 2

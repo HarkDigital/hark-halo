@@ -24,10 +24,14 @@ export function commerce(): Scene {
   let acc = 0
   let lastHoverPing = 0
   const STEP = 0.38
+  // how far across the line runs: room on the right for the head's rings (framed, the band's
+  // edges fade, so the head stops short of them)
+  let reach = 0.9
 
   return {
-    init(w) {
-      const n = Math.max(30, Math.floor((w * 0.9) / 24))
+    init(w, _h, framed) {
+      reach = framed ? 0.82 : 0.9
+      const n = Math.max(30, Math.floor((w * reach) / 24))
       let v = 0.5
       values = Array.from({ length: n }, () => (v = nextValue(v)))
       pings = []
@@ -39,10 +43,10 @@ export function commerce(): Scene {
         acc -= STEP
         values.push(nextValue(values[values.length - 1]))
         values.shift()
-        if (Math.random() < 0.3) pings.push({ x: w * 0.9, age: 0 })
+        if (Math.random() < 0.3) pings.push({ x: w * reach, age: 0 })
       }
 
-      const cw = w * 0.9 // the chart's width (room on the right for the head's rings)
+      const cw = w * reach // the chart's width
       const pad = h * 0.22
       const toY = (v: number) => h - pad - v * (h - pad * 2)
       const dx = cw / (values.length - 1)

@@ -46,13 +46,18 @@ export function blueprint(): Scene {
   let boxes: Box[] = []
   let cycleStart = -1
   let dots = new Path2D()
+  let framed = false
   const CYCLE = 9
 
   const generate = (w: number, h: number, t: number) => {
     const m = Math.min(w, h) * 0.1
-    const top = Math.max(m, h * 0.15) // clear of the header
-    const gw = w - m * 2
+    // clear of the header (framed, the band is below it already)
+    const top = framed ? m : Math.max(m, h * 0.15)
     const gh = h - top - m
+    // framed, the band's sides fade, and a short band would stretch the page into a strip: it
+    // keeps in from the sides and no wider than a page is (1.8 x its height), centred
+    const gw = framed ? Math.min(w - Math.max(m, w * 0.12) * 2, gh * 1.8) : w - m * 2
+    const mx = framed ? (w - gw) / 2 : m
     boxes = []
     let delay = 0
     const add = (x: number, y: number, bw: number, bh: number, cross = false) => {
@@ -60,27 +65,44 @@ export function blueprint(): Scene {
       delay += 0.22
     }
     // header + nav pill
-    add(m, top, gw, gh * 0.1)
-    add(m + gw * 0.8, top + gh * 0.02, gw * 0.18, gh * 0.06)
+    add(mx, top, gw, gh * 0.1)
+    add(mx + gw * 0.8, top + gh * 0.02, gw * 0.18, gh * 0.06)
     // hero split (random ratio): the image side gets an X placeholder
     const split = 0.5 + Math.random() * 0.2
-    const heroH = gh * (0.3 + Math.random() * 0.12)
-    add(m, top + gh * 0.13, gw * split - 10, heroH)
-    add(m + gw * split + 10, top + gh * 0.13, gw * (1 - split) - 10, heroH, true)
+    // framed in a short band, a shallower hero leaves the column cards a usable height
+    const heroH = gh * (framed && gh < 220 ? 0.26 + Math.random() * 0.08 : 0.3 + Math.random() * 0.12)
+    // (framed and short, the hairline under the header is kept wide enough that the glow doesn't fuse it)
+    const heroY = framed ? top + gh * 0.1 + Math.max(gh * 0.03, 8) : top + gh * 0.13
+    add(mx, heroY, gw * split - 10, heroH)
+    add(mx + gw * split + 10, heroY, gw * (1 - split) - 10, heroH, true)
     // column cards
-    const colY = top + gh * 0.13 + heroH + 24
     const nCols = 3 + Math.floor(Math.random() * 2)
-    const colH = Math.max(60, gh - (colY - top) - gh * 0.12)
+    let colY: number
+    let colH: number
+    let colGap = 20
+    if (framed) {
+      // framed, the band can be short: the row fits between the hero and the footer bar (no
+      // fixed floor that would run it through the footer and into the band's faded bottom edge)
+      const gap = Math.min(24, gh * 0.08)
+      const footTop = top + gh * 0.93
+      colY = heroY + heroH + gap
+      colH = Math.max(gh * 0.12, footTop - Math.max(gh * 0.05, 8) - colY)
+      colGap = Math.min(20, gw * 0.045)
+    } else {
+      colY = top + gh * 0.13 + heroH + 24
+      colH = Math.max(60, gh - (colY - top) - gh * 0.12)
+    }
     for (let i = 0; i < nCols; i++) {
-      const cw = (gw - (nCols - 1) * 20) / nCols
-      add(m + i * (cw + 20), colY, cw, colH, Math.random() < 0.3)
+      const cw = (gw - (nCols - 1) * colGap) / nCols
+      add(mx + i * (cw + colGap), colY, cw, colH, Math.random() < 0.3)
     }
     // footer bar
-    add(m, top + gh - gh * 0.07, gw, gh * 0.07)
+    add(mx, top + gh - gh * 0.07, gw, gh * 0.07)
   }
 
   return {
-    init(w, h) {
+    init(w, h, f) {
+      framed = f
       boxes = []
       cycleStart = -1
       dots = new Path2D()

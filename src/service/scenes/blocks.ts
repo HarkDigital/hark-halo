@@ -43,9 +43,10 @@ export function blocks(): Scene {
   }
 
   return {
-    init(w, h) {
-      // a page layout: header, hero, text bars, three cards, footer
-      const pw = Math.min(w * 0.76, 560)
+    init(w, h, framed) {
+      // a page layout: header, hero, text bars, three cards, footer (framed: inside the
+      // band too, its height at most 0.7 of it)
+      const pw = Math.min(w * 0.76, 560, framed ? (h * 0.7) / 0.68 : Infinity)
       const u = pw / 100
       const ph = 68 * u
       const px = (w - pw) / 2
