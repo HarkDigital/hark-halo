@@ -383,9 +383,6 @@
     font-size: 13px;
     line-height: 1.2;
   }
-  .stage-work .wk-card .wk-tags {
-    display: none;
-  }
   .stage-work .wk-card {
     gap: 8px;
   }
@@ -450,9 +447,6 @@
   .stage-work .wk-blurb {
     font-size: 13px;
     line-height: 1.45;
-  }
-  .stage-work .wk-card .wk-tags {
-    display: none;
   }
   .stage-work .hud-btn {
     padding: 9px 16px;

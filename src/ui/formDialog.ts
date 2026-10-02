@@ -7,7 +7,7 @@ import { REDUCED_MOTION } from '../kit/motion'
 
 /*
  * The contact form as a frosted dialog over the story (the contact chapter's
- * "Send a message", and the copy layer's). Opened by any
+ * "Contact Us", and the copy layer's). Opened by any
  * [data-contact-form] element (main.ts delegates the click).
  *
  * Modal: the page layers behind go inert (ui/inert, with its no-`inert`

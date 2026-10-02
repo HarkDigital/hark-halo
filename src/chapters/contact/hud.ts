@@ -3,7 +3,7 @@ import { BRAND, CONTACT } from '../../content'
 
 /*
  * The contact panel: one frosted glass card on black (left on landscape,
- * along the bottom on portrait): the headline, the body, "Send a message"
+ * along the bottom on portrait): the headline, the body, "Contact Us"
  * (the form), Back to top and the colophon. (No address or Copy pill, no
  * sister concepts: the owner's call, Sep 2026.)
  *
@@ -31,7 +31,7 @@ export interface Hud {
   dirty: boolean
   /** performance.now() of the last copy (none now: kept for the mark's glint, never fires) */
   copiedAt: number
-  /** the pointer / focus is on "Send a message" (the halo swells) */
+  /** the pointer / focus is on "Contact Us" (the halo swells) */
   hover: boolean
 }
 
@@ -69,7 +69,7 @@ export function buildHud(stage: HTMLElement): Hud {
   const formBtn = el('button', 'hud-btn ct-form', undefined, panel)
   formBtn.type = 'button'
   formBtn.setAttribute('data-contact-form', '')
-  formBtn.innerHTML = 'Send a message <span class="ct-go" aria-hidden="true">→</span>'
+  formBtn.innerHTML = 'Contact Us <span class="ct-go" aria-hidden="true">→</span>'
 
   el('hr', 'hud-rule ct-rule', undefined, panel)
 

@@ -155,7 +155,7 @@ export default function create(): Chapter {
 
     async init(ctx: ChapterContext) {
       hud = buildHud(ctx.stage)
-      // the sign-off, set like the hero's headline: gradient accent on the last word
+      // the sign-off, set like the hero's headline
       const words = BRAND.tagline.split(' ')
       const last = words.pop() ?? ''
       sign = rise(el('p', 'hud-h2 ct-sign', undefined, ctx.stage), `${words.join(' ')} <em>${last}</em>`)

@@ -52,19 +52,6 @@
   gap: 10px;
   align-content: end;
 }
-/* the index: "01 / 04", like a part number on a drawing */
-.stage-process .pr-idx {
-  margin: 0;
-  font-family: var(--font-label);
-  font-weight: var(--label-weight);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  color: var(--fg-faint);
-  font-variant-numeric: tabular-nums;
-}
-.stage-process .pr-idx-n {
-  color: var(--fg);
-}
 .stage-process .pr-title {
   font-family: var(--font-display);
   font-weight: 560;
@@ -94,7 +81,8 @@
     transform 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.12s;
 }
 
-/* the 4-step track: hairlines that fill with light */
+/* the 4-step track: glass tubes that light with neon as each step fills, in the
+   lights' three neons by turn (a, b, c, a) */
 .stage-process .pr-track {
   list-style: none;
   margin: 0;
@@ -105,25 +93,47 @@
   gap: 10px;
 }
 .stage-process .pr-seg {
+  --pr-n: var(--neon-a, #27ff86);
+  --pr-n-rgb: var(--neon-a-rgb, 39, 255, 134);
   display: grid;
-  gap: 9px;
+  gap: 11px;
   min-width: 0;
 }
-.stage-process .pr-bar {
-  display: block;
-  height: 2px;
-  border-radius: 999px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.14);
+.stage-process .pr-seg:nth-child(3n + 2) {
+  --pr-n: var(--neon-b, #2f78ff);
+  --pr-n-rgb: var(--neon-b-rgb, 47, 120, 255);
 }
+.stage-process .pr-seg:nth-child(3n + 3) {
+  --pr-n: var(--neon-c, #b24bff);
+  --pr-n-rgb: var(--neon-c-rgb, 178, 75, 255);
+}
+/* the unlit tube: dark glass, a highlight along its top, a faint rim */
+.stage-process .pr-bar {
+  position: relative;
+  display: block;
+  height: 5px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03) 60%, rgba(255, 255, 255, 0.06));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+/* the gas glow: a drop-shadow on an untransformed wrapper, so the light blooms
+   evenly off however much of the tube is lit */
+.stage-process .pr-glow {
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  filter: drop-shadow(0 0 2px rgba(var(--pr-n-rgb), 0.95)) drop-shadow(0 0 7px rgba(var(--pr-n-rgb), 0.6));
+}
+/* the lit gas: a white-hot core fading to the neon at the glass */
 .stage-process .pr-fill {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #8d949e, #ffffff);
+  background: linear-gradient(180deg, var(--pr-n) 0%, #ffffff 42%, #ffffff 58%, var(--pr-n) 100%);
   transform-origin: 0 50%;
   transform: scaleX(0);
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.55);
 }
 .stage-process .pr-name {
   display: flex;
@@ -138,10 +148,6 @@
   white-space: nowrap;
   overflow: hidden;
   transition: color 0.4s ease;
-}
-.stage-process .pr-name-n {
-  font-variant-numeric: tabular-nums;
-  opacity: 0.7;
 }
 .stage-process .pr-name-t {
   overflow: hidden;
@@ -177,9 +183,6 @@
   .stage-process .pr-lead {
     gap: calc(10 * var(--hud-px));
   }
-  .stage-process .pr-idx {
-    font-size: calc(11 * var(--hud-px));
-  }
   .stage-process .pr-title {
     font-size: clamp(2rem, 3.1vw, calc(2.9 * var(--hud-rem)));
   }
@@ -188,7 +191,10 @@
     gap: calc(10 * var(--hud-px));
   }
   .stage-process .pr-seg {
-    gap: calc(9 * var(--hud-px));
+    gap: calc(11 * var(--hud-px));
+  }
+  .stage-process .pr-bar {
+    height: calc(5 * var(--hud-px));
   }
   .stage-process .pr-name {
     gap: calc(8 * var(--hud-px));

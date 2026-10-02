@@ -5,7 +5,7 @@
    where it makes frost glow. The page is frosted glass on black — panels
    with a soft sandblasted fill, a razor-thin bright top edge and a
    light-catching rim; white type in Schibsted Grotesk (upright only, never
-   italic: accent words are lit by a gradient instead), and bold
+   italic, and accent words plain white like the rest), and bold
    tracked-caps labels in the same grotesk. Monochrome on purpose: the Hark brand is the
    monochrome mark (no green). Headlines come INTO FOCUS (blur → sharp).
 
@@ -340,22 +340,16 @@ a {
   color: var(--fg);
   text-wrap: balance;
 }
-/* <em> = the accent words, lit like light through tinted glass */
+/* <em> = the accent words: set exactly like the words around them (Mike,
+   2026-10-02: no italics, and no gradient either) */
 .hud-title em,
 .hud-h2 em {
   font-style: normal;
-  color: var(--signal);
-  background: var(--accent-grad);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  padding-right: 0.04em; /* keep the clipped gradient off the last glyph's edge */
+  color: inherit;
 }
 .is-light .hud-title em,
 .is-light .hud-h2 em {
-  background: none;
-  -webkit-text-fill-color: currentColor;
-  color: var(--signal-deep);
+  color: inherit;
 }
 
 .hud-body {
@@ -593,14 +587,6 @@ a {
 .rise:not(.is-in) .rise-w > span {
   transition-duration: 0.3s, 0.3s, 0.25s;
   transition-delay: 0s;
-}
-/* keep the gradient <em> painting per word — on the inner <em>, never on the
-   element that animates filter/transform (WebKit can drop clipped text there) */
-.rise .rise-w > span > em {
-  background: var(--accent-grad);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 /* ---------------- accessible copy layer (src/core/srContent.ts) ---------------- */

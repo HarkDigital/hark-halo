@@ -266,9 +266,6 @@ export default function create(): Chapter {
       PROCESS.forEach((p, i) => {
         const s = el('div', 'pr-step', undefined, steps)
         const lead = el('div', 'pr-lead', undefined, s)
-        const idx = el('p', 'pr-idx', undefined, lead)
-        el('span', 'pr-idx-n', String(i + 1).padStart(2, '0'), idx)
-        el('span', 'pr-idx-of', ` / ${String(PROCESS.length).padStart(2, '0')}`, idx)
         stepTitles.push(rise(el('h3', 'pr-title', undefined, lead), p.title))
         el('p', 'hud-body pr-text', p.text, s)
         stepEls.push(s)
@@ -276,10 +273,11 @@ export default function create(): Chapter {
       const track = el('ol', 'pr-track', undefined, cardEl)
       PROCESS.forEach((p, i) => {
         const li = el('li', 'pr-seg', undefined, track)
+        // a glass tube that lights with neon as the step fills: the glow sits on
+        // a wrapper so it blooms off the lit length, not the scaled shape
         const bar = el('span', 'pr-bar', undefined, li)
-        fills.push(el('span', 'pr-fill', undefined, bar))
+        fills.push(el('span', 'pr-fill', undefined, el('span', 'pr-glow', undefined, bar)))
         const name = el('span', 'pr-name', undefined, li)
-        el('span', 'pr-name-n', String(i + 1).padStart(2, '0'), name)
         el('span', 'pr-name-t', p.title, name)
         segs.push(li)
       })

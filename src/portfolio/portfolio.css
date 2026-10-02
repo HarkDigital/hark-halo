@@ -861,12 +861,7 @@
 }
 .pf-name em {
   font-style: normal;
-  color: var(--signal);
-  background: var(--accent-grad);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  padding-right: 0.04em;
+  color: inherit;
 }
 /* a prominent site's placard has the room for larger type (beside its screen) */
 @media (min-width: 721px) {

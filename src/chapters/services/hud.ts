@@ -64,7 +64,7 @@ export class Hud {
       const root = el('div', 'et-item', undefined, stack)
       const title = rise(el('h3', 'hud-h2 et-title', undefined, root), s.title)
       el('p', 'hud-body et-blurb', s.blurb, root)
-      const more = el('a', 'hud-label et-more', undefined, root)
+      const more = el('a', 'hud-btn et-more', undefined, root)
       more.href = serviceUrl(s.slug)
       el('span', '', SERVICE_CTA, more)
       el('span', 'et-more-arrow', '→', more).setAttribute('aria-hidden', 'true')

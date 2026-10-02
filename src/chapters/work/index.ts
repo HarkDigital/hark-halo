@@ -492,8 +492,6 @@ class Work implements Chapter {
     el('span', 'hud-label wk-ind', w.industry, meta)
     const name = rise(el('h3', 'hud-h2 wk-name', undefined, root), esc(w.name)) // (plain: no accent last word)
     el('p', 'hud-body wk-blurb', w.blurb, root)
-    const tags = el('ul', 'hud-tags wk-tags', undefined, root)
-    for (const t of w.tags) el('li', 'hud-tag', t, tags)
     const cta = el('div', 'wk-cta', undefined, root)
     const a = el('a', 'hud-btn wk-visit', 'Visit site ↗', cta)
     a.href = w.url

@@ -42,7 +42,7 @@ declare global {
 
 installPrintPolyfills()
 applyLightsCss()
-// "Send a message" anywhere (the contact card, the copy layer, the static page) opens the form
+// "Contact Us" anywhere (the contact card, the copy layer, the static page) opens the form
 document.addEventListener('click', e => {
   const b = (e.target as HTMLElement | null)?.closest?.<HTMLElement>('[data-contact-form]')
   if (!b) return

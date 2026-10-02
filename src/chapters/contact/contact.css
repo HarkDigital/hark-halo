@@ -148,7 +148,7 @@
 }
 
 /* ---- the sign-off beneath the re-frosted mark: display type (hud-h2) with
-   the hero's gradient accent. Placed from index.ts; its font-size is stepped
+   the hero's headline. Placed from index.ts; its font-size is stepped
    down there only when the art area is too narrow for it. */
 .stage-contact .ct-sign {
   position: absolute;

@@ -829,11 +829,7 @@ html.menu-open #stages {
 }
 .ch-ml.is-now .ch-ml-name {
   font-style: normal;
-  background: var(--accent-grad);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  padding-right: 0.06em;
+  color: #ffffff;
 }
 /* the section you are in: a lit glass bead before its name */
 .ch-ml.is-now::before {
@@ -1205,11 +1201,7 @@ html.menu-open #stages {
 }
 .rot-title em {
   font-style: normal;
-  background: var(--accent-grad);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  padding-right: 0.06em;
+  color: inherit;
 }
 .rot-sub {
   margin: 0;
