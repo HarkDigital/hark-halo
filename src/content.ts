@@ -202,7 +202,7 @@ export const WORK: WorkItem[] = [
     url: 'https://clc.harktest.com/',
     industry: 'Real Estate Investment',
     blurb: 'National real estate platform, 345+ properties across 32 states, $2B+ deployed.',
-    tags: ['Web Design', 'SEO'],
+    tags: ['Web Design/Development', 'SEO/GEO', 'Software Development'],
     featured: true,
   },
   {
@@ -211,7 +211,7 @@ export const WORK: WorkItem[] = [
     url: 'https://comtecsystems.net/',
     industry: 'Telecom / UCaaS',
     blurb: 'Cloud voice and unified communications, with customer and partner portals.',
-    tags: ['Web Design', 'Software', 'SEO'],
+    tags: ['Web Design/Development', 'Software', 'SEO/GEO'],
     featured: true,
   },
   {
@@ -220,7 +220,7 @@ export const WORK: WorkItem[] = [
     url: 'https://soldbyatlas.com/',
     industry: 'Real Estate',
     blurb: 'Full IDX-powered listing search for a brokerage that rethinks real estate.',
-    tags: ['Web Design', 'IDX Search'],
+    tags: ['Web Design/Development'],
     featured: true,
   },
   {
@@ -229,7 +229,7 @@ export const WORK: WorkItem[] = [
     url: 'https://jomarcorp.com/',
     industry: 'Industrial Manufacturing',
     blurb: 'Global leader in injection blow molding machines, selling worldwide.',
-    tags: ['Web Design', 'SEO'],
+    tags: ['Web Design/Development', 'SEO/GEO'],
     featured: true,
   },
   {
@@ -238,7 +238,7 @@ export const WORK: WorkItem[] = [
     url: 'https://tixforgood.org/',
     industry: 'Nonprofit Platform',
     blurb: 'Donor appreciation network connecting brands, nonprofits, and donors.',
-    tags: ['Web Design', 'Software'],
+    tags: ['Web Design/Development', 'Software'],
     featured: true,
   },
   {
@@ -247,7 +247,7 @@ export const WORK: WorkItem[] = [
     url: 'https://amplifierfundraising.org/',
     industry: 'Nonprofit Fundraising',
     blurb: 'Professional fundraising that encourages good: auctions, ambassadors, and more.',
-    tags: ['Web Design', 'Branding'],
+    tags: ['Web Design/Development', 'Branding'],
     featured: true,
   },
   {
@@ -256,7 +256,7 @@ export const WORK: WorkItem[] = [
     url: 'https://scribewise.com/',
     industry: 'Marketing & PR',
     blurb: 'Thought leadership marketing and GEO for professional services firms.',
-    tags: ['Web Design'],
+    tags: ['Web Design/Development', 'Software Development'],
     featured: false,
   },
   {
@@ -265,7 +265,7 @@ export const WORK: WorkItem[] = [
     url: 'https://acctrans.net/',
     industry: 'Trucking & Logistics',
     blurb: 'Long-haul freight, fleet showcase, and CDL-A driver recruiting.',
-    tags: ['Web Design', 'SEO'],
+    tags: ['Web Design/Development', 'SEO/GEO'],
     featured: false,
   },
   {
@@ -274,16 +274,16 @@ export const WORK: WorkItem[] = [
     url: 'https://reliablepowerplus.com/',
     industry: 'Generators',
     blurb: 'Standby generator installation and service across the Philadelphia region.',
-    tags: ['Web Design', 'SEO'],
+    tags: ['Web Design/Development', 'SEO/GEO'],
     featured: false,
   },
   {
     id: 'schwing',
-    name: 'SCHWING Technologies NA',
+    name: 'SCHWING Technologies',
     url: 'https://schwing.tech/',
     industry: 'Industrial Manufacturing',
     blurb: 'High-temperature thermal cleaning systems for global manufacturers.',
-    tags: ['Web Design', 'SEO'],
+    tags: ['Web Design/Development', 'SEO/GEO'],
     featured: false,
   },
   {
@@ -292,7 +292,7 @@ export const WORK: WorkItem[] = [
     url: 'https://tricitykitchen.com/',
     industry: 'Kitchen & Bath',
     blurb: 'Cabinetry, countertops, and two showrooms serving the Mid-Atlantic.',
-    tags: ['Web Design', 'SEO'],
+    tags: ['Web Design/Development', 'SEO/GEO'],
     featured: false,
   },
   {
@@ -301,7 +301,7 @@ export const WORK: WorkItem[] = [
     url: 'https://cumberlandinternalmedicine.com/',
     industry: 'Healthcare',
     blurb: '30 years of primary care and infectious disease expertise in the Philadelphia region.',
-    tags: ['Web Design', 'SEO'],
+    tags: ['Web Design/Development', 'SEO/GEO'],
     featured: false,
   },
   {
@@ -310,7 +310,7 @@ export const WORK: WorkItem[] = [
     url: 'https://hainesfamilydental.com/',
     industry: 'Dentistry',
     blurb: 'Creating healthy smiles with a modern, welcoming practice site.',
-    tags: ['Web Design', 'SEO'],
+    tags: ['Web Design/Development', 'SEO/GEO'],
     featured: false,
   },
   {
@@ -319,7 +319,7 @@ export const WORK: WorkItem[] = [
     url: 'http://ogrenconstruction.com/',
     industry: 'Construction',
     blurb: 'Enthusiasm and passion down to the last detail, in commercial construction.',
-    tags: ['Web Design', 'Photography'],
+    tags: ['Web Design/Development', 'Photography'],
     featured: false,
   },
   {
@@ -328,7 +328,7 @@ export const WORK: WorkItem[] = [
     url: 'https://outercoastalplain.com/',
     industry: 'Wine & Viticulture',
     blurb: "Trade association for one of America's most surprising wine regions.",
-    tags: ['Web Design'],
+    tags: ['Web Design/Development'],
     featured: false,
   },
 ]
@@ -347,7 +347,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://djwagner.com/',
     industry: 'Commercial HVAC',
     blurb: 'Commercial HVAC design-build and sheet metal fabrication since 1989.',
-    tags: ['Web Design'],
+    tags: ['Web Design/Development'],
     featured: false,
   },
   {
@@ -356,7 +356,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://fourx.ventures/',
     industry: 'Growth Advisory / Investment',
     blurb: 'Strategic investor helping founder-led companies scale, raise capital, or exit.',
-    tags: ['Web Design'],
+    tags: ['Web Design/Development'],
     featured: false,
   },
   {
@@ -365,7 +365,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://crabbyjacksnj.com/',
     industry: 'Restaurant & Bar',
     blurb: 'Bayside bar behind the Crab Trap, with live music seven nights a week.',
-    tags: ['Web Design', 'Events'],
+    tags: ['Web Design/Development', 'Events'],
     featured: false,
   },
   {
@@ -374,7 +374,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://cynthiarobertssalon.com/',
     industry: 'Salon & Spa',
     blurb: 'Full-service hair and nail salon in Vineland since 1996, with eGift cards.',
-    tags: ['Web Design', 'Booking'],
+    tags: ['Web Design/Development', 'Booking'],
     featured: false,
   },
   {
@@ -383,7 +383,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://dnssolutionsnj.com/',
     industry: 'Security Systems',
     blurb: 'Security, fire, and camera systems for both homes and businesses.',
-    tags: ['Web Design'],
+    tags: ['Web Design/Development'],
     featured: false,
   },
   {
@@ -392,7 +392,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://nefloors.com/',
     industry: 'Athletic & Commercial Flooring',
     blurb: 'Athletic and commercial flooring since 1995, with 24/7 emergency response.',
-    tags: ['Web Design'],
+    tags: ['Web Design/Development', 'Software Development', 'AI Consulting'],
     featured: false,
   },
   {
@@ -401,7 +401,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://eastlyngolf.com/',
     industry: 'Golf Course & Event Venue',
     blurb: 'Nine-hole golf course and wedding venue in Vineland, with online tee times.',
-    tags: ['Web Design', 'Ecommerce', 'Booking'],
+    tags: ['Web Design/Development', 'Ecommerce', 'Booking'],
     featured: false,
   },
   {
@@ -410,7 +410,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://www.fairacres.org/',
     industry: 'Skilled Nursing / Senior Care',
     blurb: 'County-owned skilled nursing and rehab, serving Delaware County for 200+ years.',
-    tags: ['Web Design', 'Events'],
+    tags: ['Web Design/Development', 'Drone Video'],
     featured: false,
   },
   {
@@ -419,7 +419,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://fabbribuilders.com/',
     industry: 'Construction / Design-Build',
     blurb: 'Design-build and general contracting since 1968, and a Varco-Pruden dealer.',
-    tags: ['Web Design'],
+    tags: ['Web Design/Development'],
     featured: false,
   },
   {
@@ -428,7 +428,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://epacdevco.com/',
     industry: 'Affordable Housing Development',
     blurb: 'Affordable senior housing and community redevelopment, built in-house.',
-    tags: ['Web Design'],
+    tags: ['Web Design/Development'],
     featured: false,
   },
   {
@@ -437,7 +437,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://founderspay.com/',
     industry: 'Payments / Merchant Services',
     blurb: 'Merchant services and Clover point of sale for retail and restaurants.',
-    tags: ['Web Design', 'Software'],
+    tags: ['Web Design/Development', 'Software'],
     featured: false,
   },
   {
@@ -446,7 +446,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://grassngravel.com/',
     industry: 'Musician / Band',
     blurb: 'South Jersey alt-country, roots rock, and folk band, with a self-titled album.',
-    tags: ['Web Design'],
+    tags: ['Web Design/Development'],
     featured: false,
   },
   {
@@ -455,7 +455,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://mosaicgiving.org/',
     industry: 'Nonprofit',
     blurb: 'Giving and events that support South Jersey seniors and dementia caregivers.',
-    tags: ['Web Design', 'Donations', 'Events'],
+    tags: ['Web Design/Development', 'Donations', 'Events'],
     featured: false,
   },
   {
@@ -464,7 +464,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://mydominicks.com/',
     industry: 'Pizzeria',
     blurb: 'Family-owned Vineland pizzeria since 1989, with online ordering.',
-    tags: ['Web Design', 'Online Ordering'],
+    tags: ['Web Design/Development', 'Online Ordering'],
     featured: false,
   },
   {
@@ -473,7 +473,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://njroadtests.com/',
     industry: 'Driving School',
     blurb: 'Rental cars for MVC road tests in Delanco, booked online by time slot.',
-    tags: ['Web Design', 'Booking'],
+    tags: ['Web Design/Development', 'Booking'],
     featured: false,
   },
   {
@@ -482,7 +482,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://pier4hotel.com/',
     industry: 'Hotel',
     blurb: 'Family-run bayfront hotel in Somers Point, minutes from Ocean City’s boardwalk.',
-    tags: ['Web Design'],
+    tags: ['Web Design/Development'],
     featured: false,
   },
   {
@@ -491,7 +491,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://ridgeroller.com/',
     industry: 'Disc Golf Equipment',
     blurb: 'Modular disc golf carts and backpacks, designed and handmade in the USA.',
-    tags: ['Web Design', 'Ecommerce'],
+    tags: ['Web Design/Development', 'Ecommerce'],
     featured: false,
   },
   {
@@ -500,7 +500,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://tasteofearth.co/',
     industry: 'Cannabis Dispensary',
     blurb: 'Cannabis dispensary in Buena, with online pre-orders and a rewards program.',
-    tags: ['Web Design', 'Ecommerce'],
+    tags: ['Web Design/Development', 'Ecommerce'],
     featured: false,
   },
   {
@@ -509,7 +509,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://thecrabtrap.com/',
     industry: 'Seafood Restaurant',
     blurb: 'Jersey Shore seafood landmark in Somers Point, with live entertainment.',
-    tags: ['Web Design', 'Ecommerce', 'Events'],
+    tags: ['Web Design/Development', 'Ecommerce', 'Events'],
     featured: false,
   },
   {
@@ -518,7 +518,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://villafazzolari.com/',
     industry: 'Italian Restaurant',
     blurb: 'Family-owned Italian restaurant and sports bar in Buena Vista, with take-out.',
-    tags: ['Web Design', 'Online Ordering', 'Booking'],
+    tags: ['Web Design/Development', 'Online Ordering', 'Booking'],
     featured: false,
   },
   {
@@ -527,7 +527,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://shrivers.com/',
     industry: 'Candy & Confections',
     blurb: 'Salt water taffy and fudge, on the Ocean City boardwalk since 1898.',
-    tags: ['Web Design', 'Ecommerce'],
+    tags: ['Web Design/Development', 'Ecommerce', 'AI Consulting', 'Software Development'],
     featured: false,
   },
   {
@@ -536,7 +536,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://bageluniversity.net/',
     industry: 'Bagel Shop',
     blurb: 'Vineland bagel shop, with online ordering and DoorDash delivery.',
-    tags: ['Web Design', 'Online Ordering'],
+    tags: ['Web Design/Development', 'Online Ordering'],
     featured: false,
   },
   {
@@ -545,7 +545,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://andujarlaw.com/',
     industry: 'Law Firm',
     blurb: 'Bilingual South Jersey attorney for criminal defense, traffic, and family law.',
-    tags: ['Web Design'],
+    tags: ['Web Design/Development'],
     featured: false,
   },
   {
@@ -554,7 +554,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://buenagardens.com/',
     industry: 'Senior Living',
     blurb: 'Affordable independent apartments for seniors 55 and older in Sicklerville.',
-    tags: ['Web Design'],
+    tags: ['Web Design/Development'],
     featured: false,
   },
   {
@@ -563,7 +563,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://ccgcnj.org/',
     industry: 'Mental Health Nonprofit',
     blurb: 'Community mental health agency serving Cumberland County for over 60 years.',
-    tags: ['Web Design', 'Donations', 'Events'],
+    tags: ['Web Design/Development', 'Donations', 'Events'],
     featured: false,
   },
   {
@@ -572,7 +572,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://corepropertyservice.com/',
     industry: 'Landscaping',
     blurb: 'Landscape design, lawn maintenance, and seasonal cleanup across South Jersey.',
-    tags: ['Web Design'],
+    tags: ['Web Design/Development'],
     featured: false,
   },
   {
@@ -581,7 +581,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://doubleeaglesaloon.com/',
     industry: 'Restaurant & Bar',
     blurb: 'Vineland saloon serving slow-smoked barbecue and burgers, with online ordering.',
-    tags: ['Web Design', 'Online Ordering'],
+    tags: ['Web Design/Development', 'Online Ordering'],
     featured: false,
   },
   {
@@ -590,7 +590,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://eaglepalletco.com/',
     industry: 'Pallet Manufacturing',
     blurb: 'New, recycled, and heat-treated pallets from Millville and Vineland since 2003.',
-    tags: ['Web Design'],
+    tags: ['Web Design/Development'],
     featured: false,
   },
   {
@@ -599,7 +599,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://hangontoyourshorts.com/',
     industry: 'Film Festival',
     blurb: 'Annual short film festival in Red Bank, plus a screenplay competition.',
-    tags: ['Web Design', 'Events'],
+    tags: ['Web Design/Development'],
     featured: false,
   },
   {
@@ -608,7 +608,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://gregjonesproject.com/',
     industry: 'Musician / Band',
     blurb: 'South Jersey singer-songwriter and his band, with the album Volume One.',
-    tags: ['Web Design'],
+    tags: ['Web Design/Development'],
     featured: false,
   },
   {
@@ -617,7 +617,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://knightsinsurance.org/',
     industry: 'Insurance',
     blurb: 'Catholic life insurance, long-term care, and annuities from a Virginia agency.',
-    tags: ['Web Design', 'Events'],
+    tags: ['Web Design/Development', 'Events'],
     featured: false,
   },
   // (public/work/libertypoint.webp is from a Wayback Machine snapshot: the live site was
@@ -628,7 +628,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://libertypointsolutions.com/',
     industry: 'Wealth Management',
     blurb: 'Multigenerational wealth management and family governance, based in Vineland.',
-    tags: ['Web Design'],
+    tags: ['Web Design/Development'],
     featured: false,
   },
   {
@@ -637,7 +637,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://mahsnj.com/',
     industry: 'Garage Doors & Shutters',
     blurb: 'Garage doors, hurricane shutters, and screens for the Jersey Shore since 2017.',
-    tags: ['Web Design'],
+    tags: ['Web Design/Development'],
     featured: false,
   },
   {
@@ -646,7 +646,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://midatlanticeng.com/',
     industry: 'Engineering',
     blurb: 'Civil, environmental, and marine engineering, plus architecture and surveying.',
-    tags: ['Web Design'],
+    tags: ['Web Design/Development'],
     featured: false,
   },
   {
@@ -655,7 +655,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://mmk9training.com/',
     industry: 'Dog Training',
     blurb: 'Reward-based balanced dog training and boot camps in Egg Harbor Township.',
-    tags: ['Web Design'],
+    tags: ['Web Design/Development'],
     featured: false,
   },
   {
@@ -664,7 +664,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://missiontransitions.com/',
     industry: 'Senior Transition Services',
     blurb: 'Aging-in-place, relocation, and care management for the Philadelphia region.',
-    tags: ['Web Design'],
+    tags: ['Web Design/Development'],
     featured: false,
   },
   {
@@ -673,16 +673,16 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://newcombseniorapartments.com/',
     industry: 'Senior Living',
     blurb: 'Affordable independent apartments for seniors 55 and older in Vineland.',
-    tags: ['Web Design'],
+    tags: ['Web Design/Development'],
     featured: false,
   },
   {
     id: 'northeastenergy',
     name: 'Northeast Energy Center',
     url: 'https://northeastenergycenter.com/',
-    industry: 'Energy / LNG',
+    industry: 'Energy',
     blurb: 'Liquefied natural gas project in Charlton, Massachusetts, serving New England.',
-    tags: ['Web Design'],
+    tags: ['Web Design/Development'],
     featured: false,
   },
   {
@@ -691,7 +691,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://onepartsocial.com/',
     industry: 'Social Media Marketing',
     blurb: 'Woman-owned social media agency serving Philadelphia and the Jersey Shore.',
-    tags: ['Web Design'],
+    tags: ['Web Design/Development'],
     featured: false,
   },
   {
@@ -700,7 +700,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://paddockpulse.org/',
     industry: 'Horse Racing Game',
     blurb: 'Browser horse racing game where players breed, train, and race a stable.',
-    tags: ['Web Design', 'Software'],
+    tags: ['Web Design/Development', 'Software'],
     featured: false,
   },
   {
@@ -709,7 +709,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://phade.app/',
     industry: 'Sports Pools App',
     blurb: 'Free sports pick’em and bankroll contests for friends, played on real lines.',
-    tags: ['Web Design', 'Software'],
+    tags: ['Web Design/Development', 'Software Development'],
     featured: false,
   },
   {
@@ -718,7 +718,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://perottifarms.com/',
     industry: 'Herb & Microgreen Farm',
     blurb: 'Herbs and microgreens from a Cumberland County farm, by order or subscription.',
-    tags: ['Web Design', 'Ecommerce'],
+    tags: ['Web Design/Development', 'Ecommerce'],
     featured: false,
   },
   {
@@ -727,7 +727,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://www.providersoftllc.com/',
     industry: 'Healthcare Software',
     blurb: 'Case management and billing software for early childhood service providers.',
-    tags: ['Web Design'],
+    tags: ['Web Design/Development'],
     featured: false,
   },
   {
@@ -736,7 +736,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://renatisolutions.com/',
     industry: 'Communications & PR',
     blurb: 'Business development, community relations, and PR in the Philadelphia region.',
-    tags: ['Web Design'],
+    tags: ['Web Design/Development'],
     featured: false,
   },
   {
@@ -745,7 +745,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://salemseniorvillage.com/',
     industry: 'Senior Living',
     blurb: 'Affordable apartments for independent seniors 55 and older in Salem.',
-    tags: ['Web Design'],
+    tags: ['Web Design/Development'],
     featured: false,
   },
   {
@@ -754,7 +754,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://semillabreadusa.com/',
     industry: 'Bakery',
     blurb: 'Sourdough bakery in Wilmington, Delaware, with roots in Bogotá, Colombia.',
-    tags: ['Web Design', 'Online Ordering'],
+    tags: ['Web Design/Development', 'Online Ordering'],
     featured: false,
   },
   {
@@ -763,7 +763,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://sharkyssportsbarngrill.com/',
     industry: 'Sports Bar & Grill',
     blurb: 'Williamstown’s neighborhood bar and grill, with pool tables and a rooftop deck.',
-    tags: ['Web Design'],
+    tags: ['Web Design/Development'],
     featured: false,
   },
   {
@@ -772,7 +772,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://solutionsforbreastfeeding.com/',
     industry: 'Lactation Consulting',
     blurb: 'Lactation consults and breastfeeding classes in Sewell, booked and paid online.',
-    tags: ['Web Design', 'Ecommerce', 'Booking'],
+    tags: ['Web Design/Development', 'Ecommerce', 'Booking'],
     featured: false,
   },
   {
@@ -781,7 +781,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://terraverdegardens.com/',
     industry: 'Landscape Design',
     blurb: 'Coastal and native garden design and care, from Ocean City to Philadelphia.',
-    tags: ['Web Design'],
+    tags: ['Web Design/Development'],
     featured: false,
   },
   {
@@ -790,7 +790,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://tikvahajmi.org/',
     industry: 'Mental Health Nonprofit',
     blurb: 'Philadelphia Jewish nonprofit hosting events for adults with mental illness.',
-    tags: ['Web Design', 'Donations', 'Events'],
+    tags: ['Web Design/Development', 'Donations', 'Events'],
     featured: false,
   },
   {
@@ -799,7 +799,7 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://zingmini.com/',
     industry: 'Disc Golf Equipment',
     blurb: 'Custom hot-stamped disc golf mini discs, sold in bulk from 100 pieces.',
-    tags: ['Web Design', 'Ecommerce'],
+    tags: ['Web Design/Development', 'Ecommerce'],
     featured: false,
   },
   {
@@ -808,10 +808,87 @@ export const PORTFOLIO_MORE: WorkItem[] = [
     url: 'https://abilitynetworkde.org/',
     industry: 'Disability Services Association',
     blurb: 'Statewide membership association for Delaware’s disability service providers.',
-    tags: ['Web Design'],
+    tags: ['Web Design/Development'],
     featured: false,
   },
 ]
+
+/*
+ * The Portfolio page's running order (Mike's "Updated Client order", 2026-10-02):
+ * ids top to bottom. The PORTFOLIO_LEAD_IDS hang as prominent rows (each on a row
+ * of its own, in this order); every other listed site hangs in the grid below, in
+ * this order. A site in WORK / PORTFOLIO_MORE that isn't listed here isn't on the
+ * page (its data is kept: mosaic, njroadtests). The story's Work chapter keeps
+ * WORK's own order and its six featured sites.
+ */
+export const PORTFOLIO_ORDER: readonly string[] = [
+  'nefloors',
+  'scribewise',
+  'clc',
+  'atlas',
+  'acctrans',
+  'phade',
+  'dnssolutions',
+  'jomar',
+  'tricity',
+  'shrivers',
+  'fourx',
+  'semilla',
+  'bageluniversity',
+  'tixforgood',
+  'reliablepower',
+  'crabtrap',
+  'tasteofearth',
+  'sharkys',
+  'eaglepallet',
+  'terraverde',
+  'abilitynetwork',
+  'ogren',
+  'outercoastal',
+  'knightsinsurance',
+  'founderspay',
+  'cynthiaroberts',
+  'mahs',
+  'midatlantic',
+  'amplifier',
+  'renati',
+  'schwing',
+  'cumberland',
+  'haines',
+  'djwagner',
+  'guidancecenter',
+  'coreproperty',
+  'crabbyjacks',
+  'doubleeagle',
+  'providersoft',
+  'eastlyn',
+  'fairacres',
+  'fabbri',
+  'epac',
+  'grassngravel',
+  'hotys',
+  'gregjones',
+  'libertypoint',
+  'mmk9',
+  'missiontransitions',
+  'dominicks',
+  'newcomb',
+  'northeastenergy',
+  'onepartsocial',
+  'paddockpulse',
+  'perotti',
+  'pier4',
+  'ridgeroller',
+  'andujar',
+  'salemsenior',
+  'buenagardens',
+  'breastfeeding',
+  'tikvah',
+  'zingmini',
+  'villafazzolari',
+  'comtec',
+]
+export const PORTFOLIO_LEAD_IDS: readonly string[] = ['clc', 'atlas']
 
 export interface Testimonial {
   quote: string

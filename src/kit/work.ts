@@ -1,4 +1,4 @@
-import { BRAND, PORTFOLIO_MORE, SECTIONS, WORK, type WorkItem } from '../content'
+import { BRAND, PORTFOLIO_LEAD_IDS, PORTFOLIO_MORE, PORTFOLIO_ORDER, SECTIONS, WORK, type WorkItem } from '../content'
 
 /*
  * WORK helpers without three.js: shared by the story's Work chapter
@@ -31,13 +31,16 @@ export const hostOf = (url: string) => {
 }
 
 /**
- * The Portfolio's sites, in page order (the story's Work chapter reads WORK alone): WORK, then
- * the portfolio-only client sites (content.ts PORTFOLIO_MORE). A site's place here is its neon
- * on the Portfolio, so WORK's keep theirs and the rest carry on after them
+ * The Portfolio's sites, in page order (the story's Work chapter reads WORK alone): the ids
+ * in content.ts PORTFOLIO_ORDER, looked up in WORK and the portfolio-only PORTFOLIO_MORE; a
+ * site not listed there isn't on the page. A site's place here is its neon on the Portfolio
  * (marked pure: the story imports this file too, and never shows the portfolio-only sites. The
- * service pages count it for Web Design's stat and copy, service/data/*.ts)
+ * service pages count it for Web Design & Development's stat and copy, service/data/*.ts)
  */
-export const PORTFOLIO_WORK: readonly WorkItem[] = /* @__PURE__ */ WORK.concat(PORTFOLIO_MORE)
+export const PORTFOLIO_WORK: readonly WorkItem[] = /* @__PURE__ */ (() => {
+  const all = new Map(WORK.concat(PORTFOLIO_MORE).map(w => [w.id, w] as const))
+  return PORTFOLIO_ORDER.map(id => all.get(id)).filter((w): w is WorkItem => !!w)
+})()
 
 /** each site's neon, by its place in WORK (the Portfolio: PORTFOLIO_WORK): a, b, c, a, b, c… (the active lights' three tubes) */
 export type NeonKey = 'a' | 'b' | 'c'
@@ -83,17 +86,15 @@ export function countParts(o: { total: number; featured: number; more: number })
 }
 
 /**
- * The Portfolio's PROMINENT sites: the first PORTFOLIO_LEAD featured ones, in WORK
- * order, each hung on a row of its own with its placard beside it. Every other site
+ * The Portfolio's PROMINENT sites: content.ts PORTFOLIO_LEAD_IDS, in page order, each
+ * hung on a row of its own with its placard beside it. Every other site
  * (PORTFOLIO_WORK) hangs in the grid below them ("More work"), in that order.
  * The story's Work chapter still shows every featured site: this split is the
  * Portfolio's alone (its page, its wall, its counts, its description and preload).
  * On the Portfolio, "featured" (the counts, the classes) means these.
  */
-export const PORTFOLIO_LEAD = 3
-
 export function portfolioSplit<T extends WorkItem>(work: readonly T[]): { lead: T[]; rest: T[] } {
-  const lead = work.filter(w => w.featured).slice(0, PORTFOLIO_LEAD)
+  const lead = work.filter(w => PORTFOLIO_LEAD_IDS.includes(w.id))
   return { lead, rest: work.filter(w => !lead.includes(w)) }
 }
 

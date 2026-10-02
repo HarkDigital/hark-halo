@@ -21,7 +21,8 @@ import { hostOf, isPreview, neonKey } from '../kit/work'
  *             svg.pf-tube      the neon frame (wall.ts writes its paths)
  *           a.pf-hit           the whole screen opens the site
  *         .pf-foot > .pf-pool  the lit tube it stands on, and its light on the wall
- *       .pf-plac               industry, name, blurb, tags, the pill + host
+ *       .pf-plac               industry, name, blurb, the pill + host (no tag pills: the
+ *                              tags stay in content.ts and drive the filter chips)
  *
  * `kind`: 'feat', a prominent site, or 'more' (a tile in the grid). Every name is an h2: the grid
  * has no heading of its own (its section is named "More work" by aria-label alone), so its sites
@@ -75,7 +76,6 @@ export function itemHtml(w: WorkItem, workIndex: number, kind: 'feat' | 'more'):
           <p class="pf-meta"><span class="hud-label">${esc(w.industry)}</span></p>
           <h2 class="pf-name" id="pf-h-${id}">${name}</h2>
           <p class="pf-blurb">${esc(w.blurb)}</p>
-          <ul class="hud-tags pf-tags">${w.tags.map(t => `<li class="hud-tag">${esc(t)}</li>`).join('')}</ul>
           <p class="pf-go">
             <a class="hud-btn hud-btn--ghost pf-cta" href="${url}" target="_blank" rel="noopener" aria-label="${label}, ${name}${note}"><span>${label} <span aria-hidden="true">↗</span></span></a>
             <span class="hud-label pf-host">${host}</span>
