@@ -957,6 +957,39 @@ export const CONTACT_FORM = {
   unverified: 'Please complete the verification',
 }
 
+/**
+ * The hack-help form: the contact form's 'hack' variant in its own dialog, opened
+ * by the Shield chapter's "Emergency cleanup" ([data-contact-form="hack"]). It
+ * asks where the site lives (domain) and what it runs on (platform); the message
+ * is optional, so someone mid-crisis can send it in seconds.
+ */
+export const HACK_FORM = {
+  eyebrow: 'Hack remediation',
+  title: 'Hacked? We’re on it.',
+  body: 'Tell us where it’s happening and what it runs on. We’ll get back to you fast.',
+  platforms: [
+    'WordPress',
+    'WooCommerce',
+    'Shopify',
+    'Squarespace',
+    'Wix',
+    'Webflow',
+    'HTML / static site',
+    'Joomla',
+    'Drupal',
+    'Custom-built',
+    'Something else',
+    'Not sure',
+  ],
+  domainPlaceholder: 'yourdomain.com',
+  messagePlaceholder: 'What are you seeing? Redirects, a Google warning, strange pages, spam sent from your site…',
+  submit: 'Get help now',
+  missing: 'Please fill in your name, email, website, and platform',
+  badDomain: 'That website address looks off',
+  sentTitle: 'We’re on it.',
+  sentBody: 'Thanks. We’ll look at your site and get back to you as fast as we can, usually within a few hours on business days.',
+}
+
 export const CONTACT = {
   eyebrow: 'Start a project',
   title: 'Say hello.',

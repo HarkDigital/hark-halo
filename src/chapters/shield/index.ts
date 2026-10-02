@@ -266,8 +266,11 @@ export default function create(): Chapter {
         stepState.push('')
         stepP.push(-1)
       })
+      // opens the hack-help form (ui/formDialog, kind 'hack'); the mailto is its no-script fallback
       const cta = el('a', 'hud-btn sh-cta', SECURITY.cta, copyB)
       cta.href = SECURITY.href
+      cta.setAttribute('data-contact-form', 'hack')
+      cta.setAttribute('aria-haspopup', 'dialog')
 
       probe = el('div', 'sh-probe', undefined, stage)
       reveal(copyA, 0)

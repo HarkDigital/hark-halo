@@ -42,12 +42,13 @@ declare global {
 
 installPrintPolyfills()
 applyLightsCss()
-// "Contact Us" anywhere (the contact card, the copy layer, the static page) opens the form
+// "Contact Us" anywhere (the contact card, the copy layer, the static page) opens the form;
+// [data-contact-form="hack"] ("Emergency cleanup") opens its hack-help version
 document.addEventListener('click', e => {
   const b = (e.target as HTMLElement | null)?.closest?.<HTMLElement>('[data-contact-form]')
   if (!b) return
   e.preventDefault()
-  openContactDialog(b)
+  openContactDialog(b, b.dataset.contactForm === 'hack' ? 'hack' : 'project')
 })
 
 async function boot() {

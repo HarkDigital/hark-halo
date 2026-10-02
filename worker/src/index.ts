@@ -2,6 +2,8 @@
  * hark-contact — the contact form's backend (Cloudflare Worker).
  *
  * POST JSON {name, email, company, service, message, website, turnstileToken}
+ *   (+ {phone, domain, platform} from the site's hack-help form: service "Hack
+ *   Remediation", its message optional; the email is titled "Hacked site: …")
  * (the Halo form's payload; `website` is the honeypot) →
  *   1. CORS: only ALLOWED_ORIGINS may post
  *   2. honeypot: a filled `website` is a bot → a quiet 200
@@ -54,7 +56,12 @@ export default {
     const company = clip(body.company, 200)
     const service = clip(body.service, 120)
     const message = clip(body.message, 8000)
-    if (!name || !email || !message) return json(400, { error: 'Please fill in your name, email, and message' })
+    const phone = clip(body.phone, 60)
+    const domain = clip(body.domain, 253)
+    const platform = clip(body.platform, 80)
+    const hack = !!domain
+    if (hack ? !name || !email || !platform : !name || !email || !message)
+      return json(400, { error: hack ? 'Please fill in your name, email, website, and platform' : 'Please fill in your name, email, and message' })
     if (!EMAIL_RE.test(email)) return json(400, { error: 'That email address looks off' })
 
     // Turnstile: is this a person?
@@ -73,9 +80,17 @@ export default {
     if (!env.SENDGRID_API_KEY) return json(500, { error: 'Email service is not configured' })
     const to = env.CONTACT_TO_EMAIL || 'info@hark.digital'
     const from = env.CONTACT_FROM_EMAIL || 'noreply@hark.digital'
-    const lines = [`Name: ${name}`, `Email: ${email}`, company ? `Company: ${company}` : '', service ? `Service: ${service}` : '', '', message].filter(
-      (l, i, a) => l !== '' || i === a.length - 2,
-    )
+    const lines = [
+      `Name: ${name}`,
+      `Email: ${email}`,
+      phone ? `Phone: ${phone}` : '',
+      company ? `Company: ${company}` : '',
+      service ? `Service: ${service}` : '',
+      domain ? `Website: ${domain}` : '',
+      platform ? `Platform: ${platform}` : '',
+      '',
+      message || '(no details given)',
+    ].filter((l, i, a) => l !== '' || i === a.length - 2)
     const html = `<p>${lines.slice(0, -1).filter(Boolean).map(esc).join('<br>')}</p><p>${esc(message).replace(/\n/g, '<br>')}</p><p style="color:#888">Sent from ${esc(origin)}</p>`
     const res = await fetch('https://api.sendgrid.com/v3/mail/send', {
       method: 'POST',
@@ -84,7 +99,7 @@ export default {
         personalizations: [{ to: [{ email: to }] }],
         from: { email: from, name: 'Hark Digital website' },
         reply_to: { email, name },
-        subject: `New inquiry from ${name}${company ? ` · ${company}` : ''}`,
+        subject: hack ? `Hacked site: ${domain} (${platform})` : `New inquiry from ${name}${company ? ` · ${company}` : ''}`,
         content: [
           { type: 'text/plain', value: `${lines.join('\n')}\n\nSent from ${origin}` },
           { type: 'text/html', value: html },
