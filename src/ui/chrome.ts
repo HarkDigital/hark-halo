@@ -1,7 +1,7 @@
 import type { Engine, EngineState } from '../core/Engine'
 import type { Frame } from '../core/types'
 import type { Sound } from './sound'
-import { BRAND, portfolioUrl } from '../content'
+import { BRAND, MICROCOPY, portfolioUrl } from '../content'
 import { logoSvg } from './mark'
 import { bindServicesMenu, servicesMenuItem } from './servicesMenu'
 import { bindMenuSheet, menuButtonHtml, menuRowHtml, menuSheetHtml, sectionName } from './menuSheet'
@@ -24,6 +24,10 @@ import { REDUCED_MOTION } from '../kit/motion'
  *                 pages; here with 'Read as a page' too). While it is up the
  *                 chapter layer underneath is hidden and the scene holds
  *                 still behind the frost.
+ *   bottom-left   once the hero's copy has gone, its scroll hint lives on here
+ *                 ("Scroll down to navigate", a bouncing arrow beneath; on
+ *                 phones a compact arrow + "Scroll" level with the pips) until
+ *                 the last chapter, where there's nothing left to scroll
  *   bottom-right  seven hairline pips (each a ≥ 24px button named for its
  *                 chapter; the current one a white bar). No readout text,
  *                 no switches: sound stays off (ui/sound.ts) and motion is
@@ -114,6 +118,7 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
     </header>
 
     <div class="ch-bottom">
+      <p class="hud-label ch-scroll" aria-hidden="true"><span class="ch-scroll-t">${esc(MICROCOPY.scrollHint)}</span><span class="ch-scroll-s">Scroll</span><span class="ch-scroll-a"><svg viewBox="0 0 14 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 1.5v16M1.5 12.5 7 18l5.5-5.5"/></svg></span></p>
       <div class="ch-prog">
         <nav class="ch-chapters" aria-label="Chapters"><ol class="ch-pips">${pips}</ol></nav>
       </div>
@@ -160,6 +165,8 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
     else if (fromMenu) menuBtn.focus({ preventScroll: true })
   })
 
+  const scrollEl = chr.querySelector<HTMLElement>('.ch-scroll')
+  let lastRemind = false
   let lastIndex = -1
 
   // -------------------------------------------------------------------- motion
@@ -242,6 +249,12 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
         const href = readHref(activeId)
         for (const a of readLinks) a.setAttribute('href', href)
         noteChapter(activeId)
+      }
+      // the scroll reminder: once the hero's copy (and its own hint) has gone, until the last chapter
+      const remind = (state.index > 0 || state.local > 0.09) && state.index < total - 1
+      if (remind !== lastRemind) {
+        lastRemind = remind
+        scrollEl?.classList.toggle('is-on', remind)
       }
 
     },

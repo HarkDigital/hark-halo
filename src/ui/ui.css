@@ -597,6 +597,79 @@
   gap: 12px;
 }
 
+/* the scroll reminder, bottom-left (chrome.ts shows it once the hero's copy has
+   gone, until the last chapter): the hero's hint, smaller, its arrow bouncing.
+   Decorative (aria-hidden): the page itself says where to go. */
+.ch-scroll {
+  margin: 0 auto 0 0;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(8 * var(--hud-px));
+  font-size: calc(10 * var(--hud-px));
+  color: var(--fg-muted);
+  pointer-events: none;
+  opacity: 0;
+  transform: translate3d(0, 8px, 0);
+  transition:
+    opacity 0.4s ease,
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ch-scroll.is-on {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.7s ease 0.15s,
+    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.15s;
+}
+.ch-scroll-s {
+  display: none;
+}
+.ch-scroll-a {
+  display: block;
+  width: calc(12 * var(--hud-px));
+  height: calc(17 * var(--hud-px));
+  color: rgba(255, 255, 255, 0.72);
+  animation: ch-bounce 1.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+.ch-scroll-a svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+@keyframes ch-bounce {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  45% {
+    transform: translate3d(0, 35%, 0);
+  }
+  70% {
+    transform: translate3d(0, -5%, 0);
+  }
+}
+/* phones: a compact arrow + "Scroll", level with the pips */
+@media (max-width: 720px) {
+  .ch-scroll {
+    flex-direction: row;
+    align-self: center;
+    gap: 7px;
+    font-size: 10px;
+  }
+  .ch-scroll-t {
+    display: none;
+  }
+  .ch-scroll-s {
+    display: inline;
+    order: 2;
+  }
+  .ch-scroll-a {
+    width: 10px;
+    height: 14px;
+  }
+}
+
 /* progress: hairline pips (no readout text) */
 .ch-prog {
   display: grid;
