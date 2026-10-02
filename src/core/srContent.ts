@@ -30,7 +30,7 @@ const COPY: Record<string, () => string> = {
 
   work: () => `
     <h2 tabindex="0">${esc(SECTIONS.work.title)}</h2>
-    <p>${esc(SECTIONS.work.eyebrow)} — ${WORK.length} sites.</p>
+    <p>${esc(SECTIONS.work.eyebrow)}.</p>
     <ul>${WORK.map(
       (w, i) =>
         `<li><h3>${esc(w.name)}</h3><p>${esc(w.industry)}. ${esc(w.blurb)}</p><p>${ext(

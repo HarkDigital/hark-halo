@@ -35,26 +35,6 @@
   line-height: 0.92;
   letter-spacing: -0.052em;
 }
-.stage-work .wk-count {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px 14px;
-  margin: 4px 0 0;
-  font-family: var(--font-label);
-  font-weight: var(--label-weight);
-  font-size: 11.5px;
-  letter-spacing: 0.077em;
-  text-transform: uppercase;
-  color: var(--fg-muted);
-}
-.stage-work .wk-count i {
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: var(--fg);
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
-}
 
 /* ---------------- docks (cards, list) ---------------- */
 
@@ -259,11 +239,6 @@
   .stage-work .wk-title {
     width: 4.14em;
     font-size: clamp(2.8rem, 6.4vw, calc(6.6 * var(--hud-rem)));
-  }
-  .stage-work .wk-count {
-    gap: calc(8 * var(--hud-px)) calc(14 * var(--hud-px));
-    margin-top: calc(4 * var(--hud-px));
-    font-size: calc(11.5 * var(--hud-px));
   }
   .stage-work .wk-card {
     gap: calc(14 * var(--hud-px));

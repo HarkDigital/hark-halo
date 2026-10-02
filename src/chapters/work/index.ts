@@ -31,7 +31,7 @@ import {
 import './work.css'
 
 /*
- * CAROUSEL (Selected work) — a revolving glass showroom.
+ * CAROUSEL (Our work) — a revolving glass showroom.
  *
  * Six tall leaves of curved glass stand in a circle on the black mirror
  * floor like the drum of a revolving door, round a ring of neon arcs (cyan,
@@ -452,8 +452,6 @@ class Work implements Chapter {
       el('h2', 'hud-h2 wk-title', undefined, this.intro),
       cut > 0 ? `${esc(title.slice(0, cut))} <em>${esc(title.slice(cut + 1))}</em>` : `<em>${esc(title)}</em>`,
     )
-    const count = el('p', 'wk-count', undefined, this.intro)
-    count.innerHTML = [`${WORK.length} sites`, `${NF} featured`, `${NR} more`].map(s => `<span>${esc(s)}</span>`).join('<i aria-hidden="true"></i>')
 
     // one frosted card per leaf, docked left (bottom on portrait)
     this.dock = el('div', 'wk-dock', undefined, stage)
@@ -537,10 +535,9 @@ class Work implements Chapter {
   /** The headline's widest line (its words, not its box): the drum stands clear of it. */
   private introTextRight(W: number) {
     let r = 0
-    this.intro.querySelectorAll<HTMLElement>('.wk-title .rise-w, .wk-count').forEach(n => {
+    this.intro.querySelectorAll<HTMLElement>('.wk-title .rise-w').forEach(n => {
       const b = n.getBoundingClientRect()
-      if (b.width > 0 && n.classList.contains('rise-w')) r = Math.max(r, b.right)
-      else if (b.width > 0) r = Math.max(r, b.left + Math.min(b.width, 320))
+      if (b.width > 0) r = Math.max(r, b.right)
     })
     return r > 0 ? r : W * 0.45
   }

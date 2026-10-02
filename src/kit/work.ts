@@ -99,13 +99,13 @@ export function portfolioSplit<T extends WorkItem>(work: readonly T[]): { lead: 
 
 /**
  * The Portfolio's meta description (and og:description), from its client sites
- * (PORTFOLIO_WORK): "Built to be heard. Selected work by Hark Digital Design: City
- * Line Capital, ComTec Systems, Atlas Real Estate, and 64 more."
+ * (PORTFOLIO_WORK): "Built to be heard. Websites and software by Hark Digital
+ * Design: City Line Capital, ComTec Systems, Atlas Real Estate, and 64 more."
  */
 export function portfolioDescription(work: readonly WorkItem[] = PORTFOLIO_WORK): string {
   const { lead, rest } = portfolioSplit(work)
   const names = lead.map(w => w.name)
-  const intro = `${SECTIONS.work.title} ${SECTIONS.work.eyebrow} by ${BRAND.name}`
+  const intro = `${SECTIONS.work.title} Websites and software by ${BRAND.name}`
   if (!names.length) return `${intro}.`
   return rest.length ? `${intro}: ${names.join(', ')}, and ${countWord(rest.length).toLowerCase()} more.` : `${intro}: ${names.join(', ')}.`
 }

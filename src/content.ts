@@ -880,7 +880,7 @@ export const STATS = [
 
 /** The original site's section headers — they carry "listen" through the story. */
 export const SECTIONS = {
-  work: { eyebrow: 'Selected work', title: 'Built to be heard.' },
+  work: { eyebrow: 'Our work', title: 'Built to be heard.' },
   services: { eyebrow: 'What we do', title: 'Loud and clear.' },
   voices: { eyebrow: 'Client voices', title: 'They talk. We Listen.' },
 }
