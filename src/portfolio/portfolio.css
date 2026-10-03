@@ -915,10 +915,6 @@
   gap: 10px 16px;
   margin: 18px 0 0;
 }
-.pf-host {
-  color: var(--fg-muted);
-  overflow-wrap: anywhere;
-}
 /* dozens of pills over a moving lamp: a solid dark glass, no backdrop-filter */
 .pf-cta.hud-btn--ghost {
   -webkit-backdrop-filter: none;
@@ -1009,7 +1005,7 @@
     order: 3;
     margin: 0;
   }
-  .pf-item--more :is(.pf-blurb, .pf-tags, .pf-host) {
+  .pf-item--more :is(.pf-blurb, .pf-tags) {
     position: absolute !important;
     width: 1px;
     height: 1px;

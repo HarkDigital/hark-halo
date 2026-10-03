@@ -4,7 +4,6 @@ import { el, reveal, rise, setRise } from '../../core/dom'
 import { clamp, ease, lerp, smoothstep } from '../../core/math'
 import { nextFrame } from '../../core/yield'
 import { SECTIONS, WORK, portfolioUrl, workImage, type WorkItem } from '../../content'
-import { hostOf, isPreview } from '../../kit/work'
 import { G } from '../../kit/glass'
 import { loadScreenshot, whenRevealed } from '../../kit/images'
 import { SCRUB_LAST, Scrub, scrubAllowed, scrubUrl, type ScrubHooks } from './scrub'
@@ -485,7 +484,6 @@ class Work implements Chapter {
 
   private buildCard(parent: HTMLElement, w: WorkItem, k: number): CardEl {
     const root = el('article', 'wk-card hud-panel hud-panel--strong', undefined, parent)
-    const pre = isPreview(w.url)
     const meta = el('div', 'wk-meta', undefined, root)
     el('span', 'hud-label wk-ind', w.industry, meta)
     const name = rise(el('h3', 'hud-h2 wk-name', undefined, root), esc(w.name)) // (plain: no accent last word)
@@ -495,7 +493,6 @@ class Work implements Chapter {
     a.href = w.url
     a.target = '_blank'
     a.rel = 'noopener'
-    el('span', 'hud-label wk-host', pre ? 'Pre-launch build' : hostOf(w.url), cta)
     return { root, name }
   }
 

@@ -129,10 +129,6 @@
   gap: 10px 16px;
   margin-top: 4px;
 }
-.stage-work .wk-host {
-  color: var(--fg-muted);
-  overflow-wrap: anywhere;
-}
 
 /* ---------------- the other nine ---------------- */
 
