@@ -24,7 +24,7 @@ import './services.css'
  *
  *   0.000–0.205  intro (0.9 vh): the hero's segue clears (src/core/post.ts);
  *                the louvres open out of hairlines, the whole column hangs in
- *                its backlight, the camera drifts in. "Loud and clear."
+ *                its backlight, the camera drifts in. "Full range."
  *                rises at 0.068 and holds to 0.217 (landing 0.15)
  *   0.205–0.930  eleven plates (~0.066 each): part → turn → settle → hold
  *   0.930–1.000  the last plate returns; the louvres close to hairlines of

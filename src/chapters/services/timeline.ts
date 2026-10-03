@@ -5,7 +5,7 @@
  *
  *   0.00–0.90 vh  INTRO   the segue clears (hero → services, src/core/post.ts),
  *                         the louvres open out of hairlines (0.12–0.62), the
- *                         copy rises ("Loud and clear.", from 0.30)
+ *                         copy rises ("Full range.", from 0.30)
  *                         and holds while the column hangs in its backlight and
  *                         the camera drifts in
  *   0.90–4.09 vh  PLATES  eleven plates, 0.29 vh each: part → turn → settle →
