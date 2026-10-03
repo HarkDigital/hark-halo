@@ -966,7 +966,7 @@ export const STATS = [
 export const SECTIONS = {
   work: { eyebrow: 'Our work', title: 'See for yourself.' },
   services: { eyebrow: 'What we do', title: 'Whatever it takes.' },
-  voices: { eyebrow: 'Client voices', title: 'They talk. We Listen.' },
+  voices: { eyebrow: 'Client voices', title: 'They talk. We listen.' },
 }
 
 /** How every engagement runs (Software Development process, servicePages.ts). */
@@ -1023,6 +1023,7 @@ export const CONTACT_FORM = {
     'Software Development',
     'Ecommerce',
     'SEO / GEO',
+    'Page Speed',
     'AI Consulting',
     'Aerial Photography & Video',
     'Hack Remediation',

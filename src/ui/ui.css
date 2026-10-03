@@ -1543,26 +1543,7 @@ html.no-webgl #stages {
 .fb-sec--work li p {
   font-size: 15px;
 }
-/* services: numbered */
-.fb-sec--services ol {
-  counter-reset: svc;
-}
-.fb-sec--services li {
-  counter-increment: svc;
-  position: relative;
-  padding-left: 56px;
-}
-.fb-sec--services li::before {
-  content: counter(svc, decimal-leading-zero);
-  position: absolute;
-  left: 0;
-  top: 23px;
-  font-family: var(--font-label);
-  font-weight: var(--label-weight);
-  font-size: 11px;
-  letter-spacing: 0.066em;
-  color: var(--fr-text-2);
-}
+/* services: no numbers */
 .fb-sec--services li h3 span {
   color: #ffffff;
 }

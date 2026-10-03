@@ -182,7 +182,7 @@ export default function create(): Chapter {
     ticks = TESTIMONIALS.map(() => el('i', '', undefined, tickRow))
 
     body = el('div', 'vx-body', undefined, card)
-    // “They talk.” first; “We Listen.” (the lit accent) once the line catches.
+    // “They talk.” first; “We listen.” (the lit accent) once the line catches.
     // (on the card, not the body: it's centred on the whole pane)
     const m = SECTIONS.voices.title.match(/^(.*?\.)\s+(.*)$/)
     title = el('h2', 'hud-h2 vx-title', undefined, card)
@@ -278,7 +278,7 @@ export default function create(): Chapter {
    * gate) only fades whole groups, on top.
    */
   function scrubWords(local: number, calm: boolean, g: number) {
-    /* the intro title: “They talk.”, then “We Listen.”; they leave last word first */
+    /* the intro title: “They talk.”, then “We listen.”; they leave last word first */
     const nA = titleScrubA.count
     const nB = titleScrubB.count
     if (local >= TITLE_OUT1) {
