@@ -8,8 +8,8 @@
 // 1. captures the homepage at 1280×800 (third-party overlays hidden, lib/capture.mjs,
 //    plus --hide; nothing is clicked) → public/work/<id>.webp and public/work/640/<id>.webp
 // 2. records its hover video → public/work/video/<id>.mp4 (scripts/work-video.mjs)
-// 3. appends it to PORTFOLIO_MORE in src/content.ts (portfolio only: the story's Work
-//    chapter reads WORK)
+// 3. appends it to PORTFOLIO_MORE in src/content.ts and its id to the end of
+//    PORTFOLIO_ORDER (portfolio only: the story's Work chapter reads WORK)
 //
 // --industry is required. --name and --blurb are drafted from the page (og:site_name /
 // <title>, the meta description) when left out, and --tags from what the page carries
@@ -187,7 +187,12 @@ if (!dry && !known) {
   const start = content.indexOf('export const PORTFOLIO_MORE')
   const end = start < 0 ? -1 : content.indexOf('\n]', start)
   if (end < 0) fail('could not find the end of PORTFOLIO_MORE in src/content.ts')
-  fs.writeFileSync(contentPath, `${content.slice(0, end)}\n${entry}${content.slice(end)}`)
+  const next = `${content.slice(0, end)}\n${entry}${content.slice(end)}`
+  // and on the page: last in its running order
+  const os = next.indexOf('export const PORTFOLIO_ORDER')
+  const oe = os < 0 ? -1 : next.indexOf('\n]', os)
+  if (oe < 0) fail('could not find the end of PORTFOLIO_ORDER in src/content.ts')
+  fs.writeFileSync(contentPath, `${next.slice(0, oe)}\n  ${q(id)},${next.slice(oe)}`)
 }
 
 console.log(`

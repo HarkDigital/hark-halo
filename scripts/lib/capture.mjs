@@ -18,7 +18,8 @@ export const DEFAULT_HIDE = [
   '.grecaptcha-badge', '#pojo-a11y-toolbar', '[id^="trustedsite"]', '.trustedsite-trustmark',
   '#hubspot-messages-iframe-container', '.intercom-lightweight-app', '#CybotCookiebotDialog',
   '#onetrust-banner-sdk', '#onetrust-consent-sdk', '.cky-consent-container', '#cookie-law-info-bar',
-  '#hark-wpe-cookie-consent', '.pum-overlay', '#moove_gdpr_cookie_info_bar', '.cmplz-cookiebanner',
+  // (Popup Maker's open popup is .pum-active, display:block !important: outranked here)
+  '#hark-wpe-cookie-consent', '.pum-overlay', 'html .pum-overlay.pum-active', '#moove_gdpr_cookie_info_bar', '.cmplz-cookiebanner',
   '#tidio-chat', '.buttonizer',
   '#wm-ipp-base', '#wm-ipp', '#donato', '.wm-ipp-base',
 ].join(',')

@@ -17,9 +17,9 @@ import { mountRail } from './rail'
 /*
  * THE PORTFOLIO — every site, at <base>portfolio/ (portfolio.html; the build
  * writes dist/portfolio/index.html with its description generated from its
- * client sites and the lead screenshot preloaded, vite.config.ts). Every site:
- * WORK (the story's 15), then the portfolio-only client sites (content.ts
- * PORTFOLIO_MORE; in page order kit/work.ts PORTFOLIO_WORK).
+ * client sites and the lead screenshot preloaded, vite.config.ts). Every site,
+ * in content.ts PORTFOLIO_ORDER (kit/work.ts PORTFOLIO_WORK; the home page's 15,
+ * WORK, are its first 15).
  *
  * "The Glass Wall": the sites hang as lit panes of glass on the black wall
  * (wall.ts), under a glass tube that filters them by tag (rail.ts). No
@@ -28,12 +28,12 @@ import { mountRail } from './rail'
  * pages' own (page/shell.ts), with Work lit.
  *
  *   hero       "Portfolio", "Built to be heard." (the Work chapter's own title)
- *   stage      the rail (it scrolls with the page), the three prominent sites (the
- *              first three featured, kit/work.ts portfolioSplit: one to a row, the
- *              screen beside its placard, sides alternating), then the grid ("More
- *              work", named for screen readers only: no heading, it follows the rows
- *              straight on): every other site (WORK's rest, then PORTFOLIO_MORE), three
- *              to a band (2-up tiles on phones)
+ *   stage      the rail (it scrolls with the page; off for now, PORTFOLIO.filters),
+ *              the prominent sites (the first two in the order, kit/work.ts
+ *              portfolioSplit: one to a row, the screen beside its placard, sides
+ *              alternating), then the grid ("More work", named for screen readers
+ *              only: no heading, it follows the rows straight on): every other site,
+ *              in order, three to a band (2-up tiles on phones)
  *   contact    "Say hello." and the form (no service chosen), the footer
  *
  * Every word is the site's own copy (content.ts WORK, PORTFOLIO_MORE,
@@ -71,7 +71,7 @@ const match = (w: WorkItem) => !initialTag || w.tags.includes(initialTag)
 
 // ---------------------------------------------------------------- the page
 // (on this page "featured" is the prominent few; the story's Work chapter shows every featured site.
-// Each site's place on the page is its neon: WORK's keep theirs, the rest carry on after them)
+// Each site's place on the page is its neon)
 const split = portfolioSplit(PORTFOLIO_WORK)
 const at = (w: WorkItem) => ({ w, i: PORTFOLIO_WORK.indexOf(w) })
 const featured = split.lead.map(at)
