@@ -923,15 +923,14 @@ export const TESTIMONIALS: Testimonial[] = [
     company: "Shriver's Salt Water Taffy",
   },
   {
-    // (excerpts: no turnaround time or cost on the site)
     quote:
-      'Very excited to have worked with Mike to get our website totally fixed after a disaster experience with TWO other developers. … he turned around a website that fits our needs, suits our vibe, and looks awesome.',
+      'Very excited to have worked with Mike to get our website totally fixed after a disaster experience with TWO other developers. In one month, he turned around a website that fits our needs, suits our vibe, and looks awesome.',
     name: 'Barbara Barber',
     company: 'CrossFit Off The Grid',
   },
   {
     quote:
-      'They deliver a quality product with great support … Any time we have a question they are quick to respond.',
+      'They deliver a quality product with great support at a fraction of the cost of other media companies. Any time we have a question they are quick to respond.',
     name: 'Scott Quarella',
     company: 'Bellview Winery',
   },

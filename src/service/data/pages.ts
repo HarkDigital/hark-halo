@@ -326,7 +326,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
     stat: { value: 'Now', label: 'Is when a hacked site needs attention. Every hour online costs trust and traffic.' },
     relatedTags: ['Security'],
     quote: {
-      text: 'Very excited to have worked with Mike to get our website totally fixed after a disaster experience with TWO other developers. … he turned around a website that fits our needs.',
+      text: 'Very excited to have worked with Mike to get our website totally fixed after a disaster experience with TWO other developers. In one month, he turned around a website that fits our needs.',
       name: 'Barbara Barber',
       company: 'CrossFit Off The Grid',
     },
