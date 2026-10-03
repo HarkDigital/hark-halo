@@ -6,7 +6,7 @@ import { SECTIONS, SERVICE_CTA, SERVICES, serviceUrl } from '../../content'
  * plate); CSS decides HOW it arrives (words come into focus, long
  * ease-outs), so wherever the scroll rests the copy is settled and exact.
  *
- *   intro   eyebrow + "Full range."
+ *   intro   eyebrow + "Whatever it takes."
  *   card    frosted glass: NN / 11 · title · blurb · the service's own
  *           page ("Explore the service →", src/service/*) · 01–11 index
  *
