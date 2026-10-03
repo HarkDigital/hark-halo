@@ -27,7 +27,7 @@ import { mountRail } from './rail'
  * per pane. The header, Menu sheet, contact card and footer are the service
  * pages' own (page/shell.ts), with Work lit.
  *
- *   hero       "Portfolio", "Built to be heard." (the Work chapter's own title)
+ *   hero       "Portfolio", "See for yourself." (the Work chapter's own title)
  *   stage      the rail (it scrolls with the page; off for now, PORTFOLIO.filters),
  *              the prominent sites (the first two in the order, kit/work.ts
  *              portfolioSplit: one to a row, the screen beside its placard, sides

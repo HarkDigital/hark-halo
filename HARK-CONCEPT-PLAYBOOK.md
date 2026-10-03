@@ -63,7 +63,7 @@ differs from the existing rows.
     label it **Preview**, never "live".
   - Use **US English** (center, not centre; no Britishisms).
   - Don't repeat the tagline everywhere. Use the original section headlines:
-    "Built to be heard.", "Whatever it takes." (services: never a count of
+    "See for yourself.", "Whatever it takes." (services: never a count of
     services), "They talk. We Listen.", "First we listen. Then we build.",
     "Hacked? Breathe.", "Say hello."
   - Give each concept its own microcopy (`MICROCOPY` in content.ts).

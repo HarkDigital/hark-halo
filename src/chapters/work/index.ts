@@ -53,7 +53,7 @@ import './work.css'
  * it stopped. Stills stay with Data Saver, slow connections and devices that
  * can't play the videos.
  *
- *   0.000–0.100  intro: "Built to be heard." — a high three-quarter view, the
+ *   0.000–0.100  intro: "See for yourself." — a high three-quarter view, the
  *                drum turning (headline settled from ~0.035)
  *   0.074–0.118  the camera comes down to eye level; leaf 01 arrives and clears
  *   0.100–0.760  six items (0.11 each): turn 0–30% of an item, card 26–97%,

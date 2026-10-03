@@ -100,8 +100,8 @@ export function portfolioSplit<T extends WorkItem>(work: readonly T[]): { lead: 
 
 /**
  * The Portfolio's meta description (and og:description), from its client sites
- * (PORTFOLIO_WORK): "Built to be heard. Websites and software by Hark Digital
- * Design: City Line Capital, ComTec Systems, Atlas Real Estate, and 64 more."
+ * (PORTFOLIO_WORK): "See for yourself. Websites and software by Hark Digital
+ * Design: NorthEastern Services, Scribewise, and 63 more."
  */
 export function portfolioDescription(work: readonly WorkItem[] = PORTFOLIO_WORK): string {
   const { lead, rest } = portfolioSplit(work)
