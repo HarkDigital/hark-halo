@@ -198,9 +198,9 @@ export const PORTFOLIO = {
  * and the Read-as-a-page fallback), in the order they run there. Kept as the first
  * 15 of PORTFOLIO_ORDER below; the first six are featured (the carousel's leaves),
  * the other nine its halo tiles. A site that moves in here needs its scrub clips:
- * scripts/work-video.mjs --scrub-only --travel=1400 for the six, --scrub=tile
- * --scrub-only --travel=700 for the nine (1750 / 875 at --w=1600). A half and a quarter
- * of the hover video's travel, so each screen scrolls its site slowly under the page's scroll.
+ * scripts/work-video.mjs --scrub --scrub-only --travel=700 for the six, --scrub=tile
+ * for the nine (875 at --w=1600). A quarter of the hover video's travel, so each
+ * screen scrolls its site slowly under the page's scroll.
  */
 export const WORK: WorkItem[] = [
   {
