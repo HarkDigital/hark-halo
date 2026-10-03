@@ -197,8 +197,9 @@ export const PORTFOLIO = {
  * THE HOME PAGE'S 15: the story's Work chapter (its carousel, the accessible copy
  * and the Read-as-a-page fallback), in the order they run there. Kept as the first
  * 15 of PORTFOLIO_ORDER below; the first six are featured (the carousel's leaves),
- * the other nine its halo tiles. A site that moves in here needs its scrub clips
- * (scripts/work-video.mjs --scrub, or --scrub=tile for the nine).
+ * the other nine its halo tiles. A site that moves in here needs its scrub clips:
+ * scripts/work-video.mjs --scrub-only --travel=1400 (--scrub=tile for the nine). Half
+ * the hover video's travel, so each screen scrolls its site slowly under the page's scroll.
  */
 export const WORK: WorkItem[] = [
   {

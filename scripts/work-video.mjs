@@ -1,7 +1,7 @@
 // A portfolio site's preview video: a smooth scroll down its homepage.
 //
 //   node scripts/work-video.mjs --id=jomar --url=https://jomarcorp.com/ [--hide=".cookie,#popup"]
-//                               [--w=1600] [--travel=3500] [--scrub[=tile]] [--keep]
+//                               [--w=1600] [--travel=3500] [--scrub[=tile]] [--scrub-only] [--keep]
 //
 // Records --w × 0.625·w frames (default 1280×800) while scrolling the real page (fixed headers stay
 // put, vh units stay true): a 0.8 s hold on the hero, an eased scroll of up to
@@ -76,18 +76,23 @@ try {
   await Promise.race([browser.close(), new Promise(r => setTimeout(r, 3000))])
 }
 
-execFileSync('ffmpeg', [
-  '-y', '-loglevel', 'error', '-framerate', String(FPS), '-i', path.join(tmp, 'f%04d.jpg'),
-  '-vf', `scale=800:500:flags=lanczos:${COLOR}`, '-c:v', 'libx264', '-preset', 'slower', '-crf', '31',
-  '-pix_fmt', 'yuv420p', '-movflags', '+faststart', '-an', out,
-])
-console.log(`[${args.id}] ${path.relative(root, out)} (${Math.round(fs.statSync(out).size / 1024)} KB)`)
+// (--scrub-only: the scrub copies alone, the portfolio's hover video left as it is)
+if (!args['scrub-only']) {
+  execFileSync('ffmpeg', [
+    '-y', '-loglevel', 'error', '-framerate', String(FPS), '-i', path.join(tmp, 'f%04d.jpg'),
+    '-vf', `scale=800:500:flags=lanczos:${COLOR}`, '-c:v', 'libx264', '-preset', 'slower', '-crf', '31',
+    '-pix_fmt', 'yuv420p', '-movflags', '+faststart', '-an', out,
+  ])
+  console.log(`[${args.id}] ${path.relative(root, out)} (${Math.round(fs.statSync(out).size / 1024)} KB)`)
+}
 // --scrub[=leaf|tile]: also copies for scroll-scrubbing (the story's Work carousel sets
 // currentTime from the scroll), at the widths its still is drawn at: a featured leaf
 // (default) 1280 on desktop and 800 on phones (scrub/m/), a halo tile 720 and 480. A
 // keyframe every 12 frames (half a second): a seek decodes at most 11 frames, and at
-// CRF 25 the scroll stays sharp (~2.5–4 MB for a desktop leaf).
-if (args.scrub) {
+// CRF 25 the scroll stays sharp (~2.5–4 MB for a desktop leaf). The home page's are
+// recorded at half the travel (--scrub-only --travel=1400, 1750 at --w=1600): the page's
+// scroll plays the whole clip, so less travel is a slower screen.
+if (args.scrub || args['scrub-only']) {
   const tile = args.scrub === 'tile'
   for (const [dir, sw] of [['scrub', tile ? 720 : 1280], ['scrub/m', tile ? 480 : 800]]) {
     const sh = Math.round(sw * 0.625)
