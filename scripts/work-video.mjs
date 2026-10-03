@@ -90,8 +90,8 @@ if (!args['scrub-only']) {
 // (default) 1280 on desktop and 800 on phones (scrub/m/), a halo tile 720 and 480. A
 // keyframe every 12 frames (half a second): a seek decodes at most 11 frames, and at
 // CRF 25 the scroll stays sharp (~2.5–4 MB for a desktop leaf). The home page's are
-// recorded at half the travel (--scrub-only --travel=1400, 1750 at --w=1600): the page's
-// scroll plays the whole clip, so less travel is a slower screen.
+// recorded at less travel (--scrub-only; leaves --travel=1400, tiles 700; 1750 / 875 at
+// --w=1600): the page's scroll plays the whole clip, so less travel is a slower screen.
 if (args.scrub || args['scrub-only']) {
   const tile = args.scrub === 'tile'
   for (const [dir, sw] of [['scrub', tile ? 720 : 1280], ['scrub/m', tile ? 480 : 800]]) {
