@@ -3,7 +3,7 @@
 //   npm run add-site -- <url> --industry="Seafood Restaurant" [--name="The Crab Trap"]
 //                       [--blurb="One factual sentence, ~64–79 characters."] [--tags="Ecommerce,Events"]
 //                       [--id=crabtrap] [--hide=".promo-modal"] [--archive=<snapshot url>]
-//                       [--no-video] [--dry] [--force]
+//                       [--no-video] [--dry] [--force] [--wait=4000]
 //
 // 1. captures the homepage at 1280×800 (third-party overlays hidden, lib/capture.mjs,
 //    plus --hide; nothing is clicked) → public/work/<id>.webp and public/work/640/<id>.webp
@@ -20,6 +20,8 @@
 // --archive: capture from a snapshot (a site that's down) while the entry links the real url.
 // --dry: capture to /private/tmp/claude-501/add-site/ only and print the entry.
 // --force: replace an existing id's images and video (its content.ts entry is left alone).
+// --wait: ms to let the hero settle back at the top before the still (default 1500; longer
+// for a headline that animates in, e.g. acctrans).
 import puppeteer from 'puppeteer-core'
 import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -91,7 +93,7 @@ try {
     await new Promise(r => setTimeout(r, 150))
   }
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }))
-  await new Promise(r => setTimeout(r, 1500))
+  await new Promise(r => setTimeout(r, parseInt(args.wait ?? '1500', 10) || 1500))
   await page.screenshot({ path: path.join(tmp, 'shot.png') })
   page$ = await page.evaluate(() => {
     const meta = n => document.querySelector(`meta[name="${n}"], meta[property="${n}"]`)?.getAttribute('content')?.trim() ?? ''
