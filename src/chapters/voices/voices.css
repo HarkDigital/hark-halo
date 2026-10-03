@@ -1,7 +1,7 @@
 /* ------------------------------------------------------------------
    Voiceprint (voices) — the card the quote is set on. The frosted pane
    (WebGL) is locked to this box: the card itself draws nothing but type.
-   Rows: the meta line (eyebrow · count), the quote with its speaker
+   Rows: the meta line (eyebrow · ticks), the quote with its speaker
    (bottom-aligned, sized by JS to fit the longest voice), and the band at
    the foot the neon line runs through. The words (quote, speaker, intro
    title) are scrubbed by scroll, not timed: scrub.ts writes each word's
@@ -36,7 +36,7 @@
   --vx-tw: calc(var(--vx-w) - var(--pad-l) - var(--pad-x));
 }
 
-/* ---------------- meta: eyebrow · count + ticks ---------------- */
+/* ---------------- meta: eyebrow · ticks ---------------- */
 
 .stage-voices .vx-meta {
   display: flex;
@@ -70,20 +70,6 @@
 .stage-voices .vx-card.is-voice .vx-index {
   opacity: 1;
   transition: opacity 0.7s ease 0.1s;
-}
-.stage-voices .vx-count {
-  margin: 0;
-  white-space: nowrap;
-  font-family: var(--font-label);
-  font-weight: var(--label-weight);
-  font-size: 11px;
-  letter-spacing: 0.077em;
-  color: var(--fg-muted);
-  font-variant-numeric: tabular-nums;
-}
-.stage-voices .vx-count b {
-  font-weight: inherit;
-  color: var(--fg);
 }
 /* eight hairlines: the current one long and lit */
 .stage-voices .vx-ticks {
@@ -227,9 +213,6 @@
    card is centred, not a left column, and already sized by the viewport; the
    quote is fitted to it in index.ts. ---------------- */
 @media (min-width: 1024px) and (min-aspect-ratio: 5/4) and (min-height: 501px) {
-  .stage-voices .vx-count {
-    font-size: calc(11 * var(--hud-px));
-  }
   .stage-voices .vx-credit {
     gap: calc(5 * var(--hud-px));
     font-size: calc(11.5 * var(--hud-px));

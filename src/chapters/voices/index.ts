@@ -155,7 +155,6 @@ export default function create(): Chapter {
   let body: HTMLElement
   let eyebrow: HTMLElement
   let index: HTMLElement
-  let count: HTMLElement
   let ticks: HTMLElement[] = []
   let titleA: HTMLElement
   let titleB: HTMLElement
@@ -179,7 +178,6 @@ export default function create(): Chapter {
     const meta = el('div', 'vx-meta', undefined, card)
     eyebrow = el('p', 'hud-eyebrow vx-eyebrow', SECTIONS.voices.eyebrow, meta)
     index = el('div', 'vx-index', undefined, meta)
-    count = el('p', 'vx-count', '', index)
     const tickRow = el('div', 'vx-ticks', undefined, index)
     ticks = TESTIMONIALS.map(() => el('i', '', undefined, tickRow))
 
@@ -349,7 +347,7 @@ export default function create(): Chapter {
     return want
   }
 
-  /** the meta line (count, ticks) follows the voice in view; the words are scrubbed (scrubWords) */
+  /** the meta line (its ticks) follows the voice in view; the words are scrubbed (scrubWords) */
   function show(next: number) {
     if (next === shown) return
     shown = next
@@ -357,7 +355,6 @@ export default function create(): Chapter {
     card.classList.toggle('is-voice', isVoice)
     card.classList.toggle('is-intro', next === -1)
     if (isVoice) {
-      count.innerHTML = `<b>${String(next + 1).padStart(2, '0')}</b> / ${String(N).padStart(2, '0')}`
       ticks.forEach((d, i) => {
         d.classList.toggle('is-on', i === next)
         d.classList.toggle('is-past', i < next)
