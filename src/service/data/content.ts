@@ -32,26 +32,26 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
       {
         heading: 'What a custom CRM actually gets you',
         paragraphs: [
-          'A CRM is where your business keeps its relationships: every lead, customer, job, quote, and follow-up. The big subscription CRMs assume your business works like everyone else’s, then charge per seat, per month, forever, for a system where most of the buttons are for somebody else. A custom CRM flips that: your pipeline stages, your fields, your reports, your language, with nothing you don’t use. Around it we build the rest of the toolkit, portals where customers log in and get things done, dashboards that pull scattered data into one honest picture, and integrations that make your existing tools talk to each other.',
-          'Hark Digital has been building CRMs and business software for Philadelphia companies since 2016, for trucking firms, medical practices, manufacturers, real estate companies, and nonprofits. The pattern is almost always the same: the customer list lives in a spreadsheet being emailed around, follow-ups live in someone’s head, and answering “where does this job stand?” takes three phone calls. That is exactly where a custom CRM pays for itself.',
+          'A CRM is where your business keeps its relationships: every lead, customer, job, quote, and follow-up. The big subscription CRMs assume your business works like everyone else’s, then hand you a system where most of the buttons are for somebody else. A custom CRM flips that: your pipeline stages, your fields, your reports, your language, with nothing you don’t use. Around it we build the rest of the toolkit, portals where customers log in and get things done, dashboards that pull scattered data into one honest picture, and integrations that make your existing tools talk to each other.',
+          'Hark Digital has been building CRMs and business software for Philadelphia companies since 2016, for trucking firms, medical practices, manufacturers, real estate companies, and nonprofits. The pattern is almost always the same: the customer list lives in a spreadsheet being emailed around, follow-ups live in someone’s head, and answering “where does this job stand?” takes three phone calls. That is exactly where a custom CRM earns its place.',
         ],
       },
       {
         heading: 'When a custom CRM beats the big subscriptions (and when it doesn’t)',
         paragraphs: [
-          'The name-brand CRMs win when your sales process is generic and your team is big enough to absorb the per-seat pricing. A custom CRM wins when the workflow is the business: the way you quote jobs, schedule crews, intake patients, or track freight. If you have ever bent your process to fit a subscription tool, or you are paying every month for features nobody opens, that gap is where custom software starts earning. And unlike a subscription, you own it: no per-seat math, no rate hikes, no losing your data when you cancel.',
-          'We tell clients honestly when they do not need us. Sometimes the right answer is a $30-a-month tool configured well, and we will say so. When custom is the right answer, we keep scope small and shippable: a working prototype in weeks, then short build cycles you can see. No year-long black boxes, no invoices for vaporware.',
+          'The name-brand CRMs win when your sales process is generic and your team happily works the way the vendor expects. A custom CRM wins when the workflow is the business: the way you quote jobs, schedule crews, intake patients, or track freight. If you have ever bent your process to fit a subscription tool, or your team clicks past features nobody opens, that gap is where custom software starts earning. And unlike a subscription, you own it: the code, the data, and the roadmap, with nothing to lose if you ever walk away.',
+          'We tell clients honestly when they do not need us. Sometimes the right answer is an off-the-shelf tool configured well, and we will say so. When custom is the right answer, we keep scope small and shippable: a working prototype first, then short build cycles you can see. No black boxes, no vaporware.',
         ],
       },
     ],
     faqs: [
       {
-        q: 'How much does a custom CRM cost?',
-        a: 'Less than most people expect once you do the subscription math. A focused CRM for a small team typically costs about what two or three years of per-seat licenses would, except it fits your workflow exactly and you own it outright, no monthly bill that scales with headcount. We scope in phases, so you get a working first version early and decide how far to go.',
+        q: 'How do I know if my business needs a custom CRM?',
+        a: 'The signs are familiar: your customer list lives in a spreadsheet being emailed around, follow-ups live in someone’s head, answering “where does this job stand?” takes three phone calls, or you have bent your process to fit a subscription tool that was built for someone else. If your workflow is the business, the way you quote, schedule, intake, or track, a CRM shaped around it earns its place every day.',
       },
       {
-        q: 'How long does it take to build a custom CRM?',
-        a: 'A focused CRM usually ships a usable first version in weeks, not months: a clickable prototype first, then short build cycles you can see. Bigger systems with portals and integrations ship in phases, and your team starts using the early version while we build the rest.',
+        q: 'What does building a custom CRM look like?',
+        a: 'It starts with listening: we map how leads, jobs, and customers actually move through your business. Then comes a clickable prototype your team can react to before anything is built for real, followed by short build cycles you can see and test. Bigger systems with portals and integrations ship in phases, so your team starts using the early version while we build the rest.',
       },
       {
         q: 'Can you migrate our data from spreadsheets, HubSpot, or Salesforce?',
@@ -66,8 +66,8 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
         a: 'Yes. You own the code, the data, and the accounts. We document what we build and hand over access. If we ever part ways, you are not held hostage, any competent developer can pick up where we left off.',
       },
       {
-        q: 'Do you support the software after launch?',
-        a: 'Yes. We stay after launch for updates, fixes, and the next idea. Most clients keep a small ongoing arrangement; others call us when something changes. Either way, launch is the start of the relationship, not the end.',
+        q: 'What happens when our needs change?',
+        a: 'The software changes with you. Because it is built around your workflow, adding a pipeline stage, a report, or a new integration is an edit, not a migration to a new vendor. We stay after launch for updates, fixes, and the next idea; launch is the start of the relationship, not the end.',
       },
     ],
   },
@@ -86,27 +86,27 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
       {
         heading: 'Redesigns: when to burn it down and when to renovate',
         paragraphs: [
-          'Most businesses come to us with an existing site that is slow, dated, impossible to edit, or invisible on Google. The instinct is always a full rebuild, but the honest answer depends on the foundation. A structurally sound site with dated clothes can sometimes be renovated for a fraction of the cost. A site built on a fragile page-builder stack, hacked plugins, or an abandoned platform is usually cheaper to rebuild than to rescue.',
+          'Most businesses come to us with an existing site that is slow, dated, impossible to edit, or invisible on Google. The instinct is always a full rebuild, but the honest answer depends on the foundation. A structurally sound site with dated clothes can often be renovated instead of rebuilt. A site built on a fragile page-builder stack, hacked plugins, or an abandoned platform is usually better rebuilt than rescued.',
           'Either way, a redesign with us never means losing what already works. We map your existing pages and rankings before touching anything, preserve the URLs search engines already know (or redirect them properly), and launch without dropping the traffic you spent years earning. Then we train your team so the new site stays fresh without calling a developer for every typo.',
         ],
       },
     ],
     faqs: [
       {
-        q: 'How much does a website cost in Philadelphia?',
-        a: 'A professional small-business site typically runs from the low-to-mid four figures, depending on size and features. Ecommerce, portals, and custom functionality add to that. We quote a flat project price after a short conversation, no surprise hourly billing.',
+        q: 'What should a small business website include?',
+        a: 'The essentials: a clear statement of what you do and where, right in the first screen; proof, like your work, reviews, and credentials; an obvious next step on every page (call, book, buy, ask); fast load times; and structure that search engines and AI assistants can read. Everything else is decoration, and decoration is optional.',
       },
       {
-        q: 'How long does a website redesign take?',
-        a: 'Most sites launch in four to eight weeks from kickoff. The biggest variable is content, when photos and copy come together quickly, launches come faster. Complex sites with ecommerce or custom features run longer, and we set that expectation upfront.',
+        q: 'What happens during a website redesign?',
+        a: 'We start by listening: your goals, your customers, and what your current site already does well. Then we inventory your pages and rankings, design concepts you can react to, build, and test on real devices. Before launch we set up redirects so search engines follow you to the new site, and after launch we train your team to run it.',
       },
       {
         q: 'Will I be able to update the website myself?',
         a: 'Yes. We build on content management systems you can actually use, and we train you before handover. Change text, swap photos, add pages, without calling us. We stay available for the bigger stuff.',
       },
       {
-        q: 'Will my website work on phones?',
-        a: 'Yes, more than half of most local businesses’ traffic is mobile, so we design phone-first. Every site we ship is responsive: one site that adapts to phones, tablets, laptops, and ultrawide monitors.',
+        q: 'Can my website connect to the tools I already use?',
+        a: 'Usually, yes. Booking systems, CRMs, email marketing, payment processors, and inventory tools can all plug into your site, so a form submission lands where your team actually works instead of in someone’s inbox. Because we also build custom software, we can connect the tools that don’t connect on their own.',
       },
       {
         q: 'Do you write the content or do we?',
@@ -145,15 +145,15 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
       },
       {
         q: 'Can customers pay invoices through my website?',
-        a: 'Yes. We build payment portals for service businesses, deposits, invoices, and recurring billing, connected to processors like Stripe or Square. One client calls it “the end of check-chasing.” It is usually a small, fast project.',
+        a: 'Yes. We build payment portals for service businesses, deposits, invoices, and recurring billing, connected to processors like Stripe or Square. One client calls it “the end of check-chasing.” Your customers pay from a link, and the books reconcile themselves.',
       },
       {
         q: 'How do you handle shipping and sales tax?',
         a: 'We configure real-time carrier rates or flat-rate rules to match how you actually ship, and automated sales tax calculation for the states where you owe it. Both are set up and tested before launch, not left as homework.',
       },
       {
-        q: 'Is it safe to sell online?',
-        a: 'Yes, when the store is built properly. Card payments go through certified processors, so card numbers never live on your site. We add SSL, hardening, updates, and backups, and because we also do hack remediation, we know exactly what attackers look for.',
+        q: 'How do you keep an online store secure?',
+        a: 'Card payments go through certified processors, so card numbers never live on your site. On top of that: SSL everywhere, a hardened checkout, prompt updates, and backups we actually test. Because we also do hack remediation, we know exactly what attackers look for, and we build stores that give them nothing to find.',
       },
       {
         q: 'Can you fix or redesign my existing online store?',
@@ -181,13 +181,13 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
         heading: 'Local SEO: winning “near me” in Philadelphia',
         paragraphs: [
           'For a local business, search is a map game before it is a ranking game. When someone in Fishtown, Manayunk, or Chestnut Hill searches “dentist near me” or “generator installer Philadelphia,” the map pack, those top three pinned results, takes most of the clicks. Getting there is a specific discipline: a complete and active Google Business Profile, consistent name-address-phone data everywhere it appears, real reviews answered like a human, and location pages that actually say where you work.',
-          'We have done this for medical practices, kitchen showrooms, transport companies, and dental offices across Philadelphia and the surrounding counties. The playbook is not secret, it is just tedious, and it compounds. Six months of steady, correct work beats any “#1 on Google, guaranteed” shortcut, and it keeps paying after the work stops.',
+          'We have done this for medical practices, kitchen showrooms, transport companies, and dental offices across Philadelphia and the surrounding counties. The playbook is not secret, it is just tedious, and it compounds. Steady, correct work beats any “#1 on Google, guaranteed” shortcut, and it keeps working after the work stops.',
         ],
       },
       {
         heading: 'What we actually do, month to month',
         paragraphs: [
-          'SEO retainers have a deserved reputation for invoices attached to mystery. Ours are attached to a list: the technical issues fixed, the pages published or improved, the rankings and citations moved, and what is queued next. We audit your site’s speed, structure, and markup; fix the foundation before writing a word; then publish content mapped to questions your customers actually type, each piece structured so both Google and AI assistants can lift the answer.',
+          'SEO work has a deserved reputation for mystery. Ours comes with a list: the technical issues fixed, the pages published or improved, the rankings and citations moved, and what is queued next. We audit your site’s speed, structure, and markup; fix the foundation before writing a word; then publish content mapped to questions your customers actually type, each piece structured so both Google and AI assistants can lift the answer.',
         ],
       },
     ],
@@ -201,12 +201,12 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
         a: 'Make your business machine-readable and consistent: state exactly what you do and where, use structured data (schema.org), keep your name, address, and services identical across your site and major directories, and publish specific, factual content in your area of expertise. AI systems recommend businesses they can describe with confidence.',
       },
       {
-        q: 'How long does SEO take to work?',
-        a: 'Technical fixes can move things within weeks; content and authority building typically show measurable movement in three to six months. Anyone promising page one in a week is selling something. SEO is compound interest, slow at first, then hard to stop.',
+        q: 'How do you measure SEO and GEO results?',
+        a: 'With a list, not a mystery: the technical issues fixed, the pages published or improved, rankings and map-pack positions, traffic from search, and how AI assistants describe and cite your business. Every report says what moved, what didn’t, and what we are doing next.',
       },
       {
         q: 'Do I need SEO if I run ads?',
-        a: 'Ads stop the moment you stop paying; search visibility keeps working. The healthiest mix for most local businesses is ads for immediate demand and SEO/GEO for durable, free-per-click visibility. We help clients shift budget from rented traffic to owned traffic over time.',
+        a: 'Ads stop the moment the campaign does; search visibility keeps working. The healthiest mix for most local businesses is ads for immediate demand and SEO/GEO for durable visibility that keeps earning after the work stops. We help clients lean less on rented traffic and more on traffic they own.',
       },
       {
         q: 'What is local SEO and do I need it?',
@@ -226,14 +226,14 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
       {
         heading: 'Why page speed is a business problem, not a tech one',
         paragraphs: [
-          'Page speed is how long your site takes to become useful to a visitor, and it quietly decides whether they stay or bounce. Google’s own research is blunt about it: as mobile load time goes from one second to three, the chance a visitor leaves jumps by around 32 percent; by five seconds it roughly doubles. A slow site is not a technical footnote, it is lost customers, lower rankings, and wasted ad spend, every single day.',
-          'Since 2021 speed is also a direct Google ranking factor through Core Web Vitals, so a slow site competes with one hand tied behind its back. The good news is that page speed is one of the most fixable problems on the web, and the fixes usually pay for themselves in recovered traffic and conversions within weeks.',
+          'Page speed is how long your site takes to become useful to a visitor, and it quietly decides whether they stay or bounce. Google’s own research is blunt about it: as mobile load time goes from one second to three, the chance a visitor leaves jumps by around 32 percent; by five seconds it roughly doubles. A slow site is not a technical footnote, it is lost customers and lower rankings, every single day.',
+          'Since 2021 speed is also a direct Google ranking factor through Core Web Vitals, so a slow site competes with one hand tied behind its back. The good news is that page speed is one of the most fixable problems on the web, and the fixes show up where it counts: recovered traffic and conversions.',
         ],
       },
       {
         heading: 'What actually makes a website slow',
         paragraphs: [
-          'The usual suspects are boringly consistent: enormous unoptimized images, a pile of plugins each loading their own scripts, render-blocking CSS and JavaScript, no caching, no compression, and cheap shared hosting that buckles under load. Heavy page builders like Elementor, Divi, and WPBakery are common culprits, they trade speed for drag-and-drop convenience, and the bill comes due in load time.',
+          'The usual suspects are boringly consistent: enormous unoptimized images, a pile of plugins each loading their own scripts, render-blocking CSS and JavaScript, no caching, no compression, and underpowered shared hosting that buckles under load. Heavy page builders like Elementor, Divi, and WPBakery are common culprits, they trade speed for drag-and-drop convenience, and the bill comes due in load time.',
           'Fixing it is detective work, not guesswork. We read the actual waterfall in GTmetrix and the flagged opportunities in PageSpeed Insights, then attack them in order of impact: compress and lazy-load images, defer and trim scripts, inline the critical CSS, add a CDN and proper caching, and upgrade hosting when the server itself is the bottleneck. Most sites get their biggest jump from the first two or three fixes alone.',
         ],
       },
@@ -241,7 +241,7 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
     faqs: [
       {
         q: 'Why is my website so slow?',
-        a: 'Almost always some mix of oversized images, too many plugins and scripts, render-blocking code, missing caching and compression, and slow hosting. A quick audit in PageSpeed Insights and GTmetrix pinpoints exactly which of these is costing you the most, and most sites have two or three big offenders doing the bulk of the damage.',
+        a: 'Almost always some mix of oversized images, too many plugins and scripts, render-blocking code, missing caching and compression, and slow hosting. A quick audit in PageSpeed Insights and GTmetrix pinpoints exactly which of these is hurting you the most, and most sites have two or three big offenders doing the bulk of the damage.',
       },
       {
         q: 'What is a good PageSpeed Insights score?',
@@ -252,12 +252,12 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
         a: 'Three metrics Google uses to measure real experience: LCP (Largest Contentful Paint, how fast the main content loads, target under 2.5 seconds), INP (Interaction to Next Paint, how responsive the page feels, target under 200 milliseconds), and CLS (Cumulative Layout Shift, how much the page jumps around, target under 0.1). Passing all three is a ranking advantage.',
       },
       {
-        q: 'How much does page speed optimization cost?',
-        a: 'Most speed projects are a fixed price quoted after a short audit, depending on your platform and how deep the problems run. It is almost always cheaper than the traffic and sales a slow site quietly loses, and the gains tend to show up within days of the work going live.',
+        q: 'How do you prove the speed actually improved?',
+        a: 'With before-and-after numbers in writing: PageSpeed Insights and GTmetrix scores, Core Web Vitals from real-world field data, and load times measured on real phones. We re-test after every round of fixes, so the improvement isn’t a feeling, it’s a receipt.',
       },
       {
-        q: 'Can you fix my WordPress site speed?',
-        a: 'Yes. WordPress speed work is a big part of what we do, especially sites built on heavy page builders like Elementor, Divi, or WPBakery. We optimize images, tame plugins, add proper caching and a CDN, and clean up the theme, usually without rebuilding the whole site.',
+        q: 'Do I need to rebuild my site to make it fast?',
+        a: 'Usually not. Most slow sites have two or three big offenders, oversized images, too many scripts, missing caching, and fixing those delivers most of the gain without touching the design. When the foundation itself is the problem, like a heavy page builder or an abandoned theme, we show you the numbers and tell you honestly whether a rebuild is worth it.',
       },
       {
         q: 'Will faster pages actually help my Google ranking?',
@@ -281,7 +281,7 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
         heading: 'Where AI actually pays off for small businesses',
         paragraphs: [
           'The wins are rarely glamorous. An assistant trained on your documents that answers staff questions instantly. Intake forms that summarize themselves before the first phone call. Quotes drafted from job notes. Invoices categorized, emails triaged, reviews responded to in your voice for your approval. Each one shaves minutes off a task you do dozens of times a week, and the minutes are the point. Hours back per week is the only AI metric that matters for a small business.',
-          'We start every engagement with a pilot: one small, measurable win, chosen because it is likely to succeed and easy to verify. If the pilot does not save time or money, we stop there and you have lost very little. If it does, and it usually does when the target is picked honestly, we integrate it properly, document it, and train your team to run it without us.',
+          'We start every engagement with a pilot: one small, measurable win, chosen because it is likely to succeed and easy to verify. If the pilot does not save real time, we stop there, and you have an honest answer. If it does, and it usually does when the target is picked honestly, we integrate it properly, document it, and train your team to run it without us.',
         ],
       },
     ],
@@ -291,8 +291,8 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
         a: 'The reliable wins are language and paperwork: drafting quotes and emails, summarizing intake forms and meetings, answering routine customer questions from your own documents, and categorizing invoices or tickets. If a task is repetitive and involves words, AI probably helps. If it involves judgment and relationships, it probably does not.',
       },
       {
-        q: 'How much does AI consulting cost?',
-        a: 'We start with a fixed-price opportunity audit, a short engagement that maps your workflows and returns a prioritized list of what is worth automating, what it would cost, and what is not worth it. Pilots are scoped small on purpose. You never buy the big build before the small proof.',
+        q: 'Where should my business start with AI?',
+        a: 'With an opportunity audit, then one small pilot. The audit maps how work flows through your business and returns a prioritized list of what is worth automating and what is not; the pilot proves one measurable win before anything bigger gets built. You never commit to the big build before the small proof.',
       },
       {
         q: 'Is my business data safe with AI tools?',
@@ -308,7 +308,7 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
       },
       {
         q: 'What is an AI opportunity audit?',
-        a: 'A short, fixed-price review of how work flows through your business, returned as a plain-English map: tasks worth automating now, tasks to revisit later, and tasks AI should not touch, each with expected time savings and rough cost. It is designed to be useful even if you never hire us again.',
+        a: 'A short review of how work flows through your business, returned as a plain-English map: tasks worth automating now, tasks to revisit later, and tasks AI should not touch, each with the time it should give back. It is designed to be useful even if you never hire us again.',
       },
     ],
   },
@@ -328,7 +328,7 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
         heading: 'What aerial imagery does for a business',
         paragraphs: [
           'Real estate listings with aerial photography consistently attract more views and sell faster, a drone shows the property, the lot lines, and the neighborhood in a single frame no ground camera can capture. Builders and contractors use weekly flyovers as visual progress reports that keep clients and lenders confident. Roofers and inspectors get high-resolution imagery of roofs, gutters, and towers without ladders, lifts, or risk.',
-          'And for any brand, aerial video is simply the most cinematic asset per dollar you can put on a website or a social feed. We shoot in 4K, color-grade properly, and deliver files cut and sized for where they will live, web, social, or the big screen. Because we also build websites, the footage lands on pages designed to use it, not in a folder nobody opens.',
+          'And for any brand, aerial video is simply the most cinematic asset you can put on a website or a social feed. We shoot in 4K, color-grade properly, and deliver files cut and sized for where they will live, web, social, or the big screen. Because we also build websites, the footage lands on pages designed to use it, not in a folder nobody opens.',
         ],
       },
     ],
@@ -338,24 +338,24 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
         a: 'Yes. Any drone flight done for business purposes in the U.S. requires an FAA Part 107 certified pilot. Hiring unlicensed operators exposes your business to FAA fines and voids most insurance. Always ask to see the certificate, legitimate pilots are glad to show it.',
       },
       {
-        q: 'How much does drone photography cost?',
-        a: 'Single-property real estate shoots are typically a few hundred dollars. Construction progress packages, inspections, and cinematic video productions are quoted by scope. Planning, flying, editing, and delivery are included, the price you are quoted is the price.',
+        q: 'How do you plan a drone shoot?',
+        a: 'Every shoot starts on the ground: we check and clear the airspace, file FAA authorizations where needed, plan around the weather, and agree on a shot list with you, so flight time is spent shooting, not deciding. Then we fly, edit, and deliver files sized for where they will live.',
       },
       {
         q: 'Can you fly anywhere in Philadelphia?',
-        a: 'Most places, with planning. Parts of Philadelphia sit in controlled airspace around airports, which requires FAA authorization, something a licensed pilot can usually obtain, often quickly. We check airspace before quoting so there are no surprises on shoot day.',
+        a: 'Most places, with planning. Parts of Philadelphia sit in controlled airspace around airports, which requires FAA authorization, something a licensed pilot can usually obtain. We check the airspace before shoot day so there are no surprises.',
       },
       {
         q: 'What do you deliver after a shoot?',
-        a: 'Edited, color-graded photos and video sized for their destination, high-resolution masters plus web- and social-ready versions. Real estate shoots typically deliver next day. You own the media and can use it anywhere, forever.',
+        a: 'Edited, color-graded photos and video sized for their destination, high-resolution masters plus web- and social-ready versions. You own the media and can use it anywhere, forever.',
       },
       {
         q: 'Can drones inspect my roof or building?',
         a: 'Yes. High-resolution aerial imagery shows damaged shingles, flashing, gutters, and hard-to-reach structures without ladders or lifts. It is faster and safer than climbing, and you keep a dated visual record, useful for insurance claims and maintenance planning.',
       },
       {
-        q: 'Do you shoot video as well as photos?',
-        a: 'Yes, 4K cinematic video is half the work we do. Brand films, property tours, construction timelines, events, and action sports. We plan shots around how the footage will be used, then edit and grade it to broadcast standards.',
+        q: 'What can aerial video be used for?',
+        a: 'Brand films, property tours, construction timelines, events, and action sports, all shot in 4K. We plan the shots around where the footage will live, then edit and color-grade it for the web, social feeds, or the big screen.',
       },
     ],
   },
@@ -368,7 +368,7 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
         heading: 'How to tell if your website has been hacked',
         paragraphs: [
           'The signs are rarely a dramatic defaced homepage. More often it is quieter: Google search results for your business showing pharmacy spam, visitors redirected to sketchy sites, a red “this site may be hacked” or “deceptive site ahead” warning, hosting suspension emails, a sudden flood of strange traffic, or customers reporting antivirus alerts. Some infections show nothing at all to you, they cloak, showing clean pages to the owner and spam to everyone else.',
-          'If any of this is happening, the clock matters. Every hour a compromised site stays up, it damages search rankings, email deliverability, and customer trust, and gives the attacker more time to dig in. The right first move is not deleting things in a panic (evidence matters for finding the entry point); it is a fast, methodical response.',
+          'If any of this is happening, the clock matters. Every hour a compromised site stays up, it damages search rankings, email deliverability, and customer trust, and gives the attacker more time to dig in. The right first move is not deleting things in a panic (evidence matters for finding the entry point); it is a calm, methodical response.',
         ],
       },
       {
@@ -382,15 +382,15 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
     faqs: [
       {
         q: 'My website was hacked, what should I do first?',
-        a: 'Do not delete anything yet, the evidence helps find the entry point. Change your hosting and admin passwords from a clean device, take a backup of the current (infected) state, and get professional help fast. Email info@hark.digital with "EMERGENCY" in the subject and we will triage quickly.',
+        a: 'Do not delete anything yet, the evidence helps find the entry point. Change your hosting and admin passwords from a clean device, take a backup of the current (infected) state, and get professional help. Email info@hark.digital with "EMERGENCY" in the subject and we will take it from there.',
       },
       {
-        q: 'How much does hacked website cleanup cost?',
-        a: 'Most cleanups are a fixed price quoted after a quick triage, depending on the size of the site and depth of the infection. It is almost always far cheaper than the traffic, reputation, and revenue a compromised site burns while it stays infected.',
+        q: 'How can I tell if my website has been hacked?',
+        a: 'Look for pharmacy or casino spam in Google results for your business, visitors redirected to sketchy sites, a red “this site may be hacked” or “deceptive site ahead” warning, hosting suspension emails, or customers reporting antivirus alerts. Some infections hide from the owner entirely, showing clean pages to you and spam to everyone else, so a professional scan is worth it whenever something feels off.',
       },
       {
-        q: 'How long does it take to fix a hacked website?',
-        a: 'Containment usually happens the same day. Full cleanup, restoration, and Google blocklist removal typically take one to several days depending on the infection. Google generally lifts warnings within a day or two after we submit the cleaned site for review.',
+        q: 'What does a hacked website cleanup include?',
+        a: 'Four steps, every time. Triage: assess the damage, contain the spread, and preserve the evidence. Clean: remove every injected script, backdoor, and rogue admin account from the files and the database. Restore: bring the site back online and clear the Google warnings and blocklists. Harden: patch the software, close the entry point, rotate credentials, and leave monitoring in place.',
       },
       {
         q: 'How do I remove the "this site may be hacked" warning from Google?',
@@ -409,13 +409,13 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
 
   security: {
     metaDescription:
-      'Website and data security for small businesses, hardening, 24/7 monitoring, tested backups, and plain-English reporting. Prevention that costs less than one cleanup.',
+      'Website and data security for small businesses, hardening, 24/7 monitoring, tested backups, and plain-English reporting. Prevention, so there is nothing to clean up.',
     article: [
       {
         heading: 'Why small business websites get attacked',
         paragraphs: [
           'Attackers do not choose targets, software does. Automated bots scan the internet around the clock for sites running outdated plugins, weak passwords, and known vulnerabilities, and they do not care whether the site belongs to a bank or a bakery. Small business sites are compromised constantly precisely because their owners assume they are too small to matter.',
-          'The consequences are not abstract: hosting suspensions, Google warnings that scare customers, blacklisted email domains, stolen customer data, and cleanup bills that dwarf what prevention would have cost. Website security is not a product you buy once; it is a short list of habits kept faithfully, updates, strong access control, monitoring, and backups that actually restore.',
+          'The consequences are not abstract: hosting suspensions, Google warnings that scare customers, blacklisted email domains, stolen customer data, and emergency cleanups that prevention would have made unnecessary. Website security is not a product you buy once; it is a short list of habits kept faithfully, updates, strong access control, monitoring, and backups that actually restore.',
         ],
       },
       {
@@ -432,20 +432,20 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
         a: 'Keep software and plugins updated, use strong unique passwords with two-factor authentication, limit admin accounts, run SSL, take automatic off-site backups, and monitor for changes. Most breaches exploit known holes that updates had already fixed, consistency beats cleverness.',
       },
       {
-        q: 'What does website security cost per month?',
-        a: 'Ongoing care, updates, monitoring, backups, and reporting, is a modest monthly retainer that costs a fraction of a single hack cleanup. We quote based on your site’s size and stack after a quick assessment.',
+        q: 'What does ongoing website security include?',
+        a: 'Four habits, kept faithfully: updates applied with backups first; monitoring for file changes, suspicious logins, malware, and downtime; off-site backups we actually test-restore; and a monthly report in plain English, covering what was updated, what was blocked, and what we recommend next.',
       },
       {
         q: 'What is website hardening?',
-        a: 'Hardening is reducing the ways an attacker can get in: patching software, removing unused plugins and accounts, enforcing strong authentication, restricting file permissions, and configuring the server defensively. It turns your site from an easy automated target into an expensive manual one, and bots move on.',
+        a: 'Hardening is reducing the ways an attacker can get in: patching software, removing unused plugins and accounts, enforcing strong authentication, restricting file permissions, and configuring the server defensively. It turns your site from an easy automated target into a hard manual one, and bots move on.',
       },
       {
         q: 'How often should my website be backed up?',
         a: 'Daily for most business sites; more often for busy stores where losing a day of orders hurts. Backups must be automatic, stored off the server, retained across multiple dates, and test-restored periodically. We rehearse restores so recovery is routine, not a gamble.',
       },
       {
-        q: 'Do I need an SSL certificate?',
-        a: 'Yes, without SSL, browsers label your site “Not Secure,” search engines demote it, and data between visitors and your site travels unencrypted. There is no good reason to run a business site without SSL; we configure it correctly and keep it renewed.',
+        q: 'Is my small business website really a target?',
+        a: 'Yes, because attackers don’t pick targets, software does. Bots scan the internet around the clock for outdated plugins, weak passwords, and known vulnerabilities, and they don’t care whether a site belongs to a bank or a bakery. Small business sites get hit constantly precisely because their owners assume they are too small to matter.',
       },
       {
         q: 'What is 24/7 website monitoring?',
@@ -491,8 +491,8 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
         a: 'Talk to your attorney first, and do not ignore it, silence usually escalates into a filed lawsuit. In parallel, get an honest technical audit so you know your real exposure and can show concrete remediation is underway. Documented, in-progress fixes materially change how these cases resolve. We produce that audit and do the fixing.',
       },
       {
-        q: 'How much does website accessibility remediation cost?',
-        a: 'It depends on the size of the site and how it was built. An audit is a fixed price; remediation is quoted from the audit findings, ranked so the highest-risk barriers get fixed first. It is reliably cheaper than a settlement, and unlike a settlement, it also gets you a better website.',
+        q: 'How do you test a website for accessibility?',
+        a: 'Automated scans first, they catch maybe a third of the problems, then the rest by hand: keyboard only, screen reader on, zoomed to 200%, motion reduced, with every finding mapped to WCAG 2.2. You get a plain-English report ranked by severity and legal exposure, and the fixes are made in the code itself, highest-risk barriers first.',
       },
       {
         q: 'Does web accessibility help SEO?',
@@ -508,8 +508,8 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
       {
         heading: 'Why WordPress sites break (it’s usually not WordPress)',
         paragraphs: [
-          'WordPress powers around 43 percent of all websites, and its core software is solid, maintained by thousands of developers and patched constantly. The trouble almost never starts there. It starts in the ecosystem around it: a theme from 2019 nobody updated, thirty plugins from thirty different authors, cheap shared hosting straining under load, and a page builder stacking scripts on every page. WordPress doesn’t break; the pile of decisions bolted onto it does.',
-          'That is actually good news. Because the platform is everywhere, its failure modes are famous, and the fixes are well understood. The white screen of death, the update that took the site down, the admin dashboard that takes twelve seconds to load, the pharmacy spam in your Google results, we have seen each of these dozens of times, and none of them is a mystery. A decade of building, rescuing, and maintaining WordPress sites means the diagnosis is usually fast, and the cure is usually permanent.',
+          'WordPress powers around 43 percent of all websites, and its core software is solid, maintained by thousands of developers and patched constantly. The trouble almost never starts there. It starts in the ecosystem around it: a theme from 2019 nobody updated, thirty plugins from thirty different authors, underpowered shared hosting straining under load, and a page builder stacking scripts on every page. WordPress doesn’t break; the pile of decisions bolted onto it does.',
+          'That is actually good news. Because the platform is everywhere, its failure modes are famous, and the fixes are well understood. The white screen of death, the update that took the site down, the admin dashboard that takes twelve seconds to load, the pharmacy spam in your Google results, we have seen each of these dozens of times, and none of them is a mystery. A decade of building, rescuing, and maintaining WordPress sites means we recognize the problem on sight, and the cure is usually permanent.',
         ],
       },
       {
@@ -523,7 +523,7 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
     faqs: [
       {
         q: 'Why is my WordPress site so slow?',
-        a: 'The usual culprits, in order: unoptimized images, no caching, a heavy page builder theme, too many plugins loading scripts on every page, a bloated database, and budget shared hosting. A short audit pinpoints which ones apply to your site; fixing the top two or three usually transforms it.',
+        a: 'The usual culprits, in order: unoptimized images, no caching, a heavy page builder theme, too many plugins loading scripts on every page, a bloated database, and underpowered shared hosting. A short audit pinpoints which ones apply to your site; fixing the top two or three usually transforms it.',
       },
       {
         q: 'Why does my WordPress site keep getting hacked?',
@@ -539,11 +539,11 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
       },
       {
         q: 'Should I fix my WordPress site or rebuild it?',
-        a: 'Depends on the foundation. A solid site with fixable problems gets fixed, that is cheaper. A site on an abandoned theme, a fragile plugin stack, or years of accumulated patches is often cheaper to rebuild than to keep rescuing. We audit first and give you the honest math for both paths.',
+        a: 'Depends on the foundation. A solid site with fixable problems gets fixed. A site on an abandoned theme, a fragile plugin stack, or years of accumulated patches is often better rebuilt than rescued again and again. We audit first and give you an honest recommendation for both paths.',
       },
       {
-        q: 'Do you offer WordPress maintenance plans?',
-        a: 'Yes. Monthly care plans cover updates (applied with backups, not blindly), security monitoring, off-site backups, uptime checks, and small fixes, with a plain-English monthly report. It costs a fraction of a single emergency rescue, which is rather the point.',
+        q: 'What does a WordPress care plan include?',
+        a: 'Updates applied with backups first, not blindly; security monitoring; off-site backups; uptime checks; and small fixes, with a plain-English report every month. Boring maintenance is how WordPress disasters stay hypothetical.',
       },
     ],
   },

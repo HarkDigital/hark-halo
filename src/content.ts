@@ -923,14 +923,15 @@ export const TESTIMONIALS: Testimonial[] = [
     company: "Shriver's Salt Water Taffy",
   },
   {
+    // (excerpts: no turnaround time or cost on the site)
     quote:
-      'Very excited to have worked with Mike to get our website totally fixed after a disaster experience with TWO other developers. In one month, he turned around a website that fits our needs, suits our vibe, and looks awesome.',
+      'Very excited to have worked with Mike to get our website totally fixed after a disaster experience with TWO other developers. … he turned around a website that fits our needs, suits our vibe, and looks awesome.',
     name: 'Barbara Barber',
     company: 'CrossFit Off The Grid',
   },
   {
     quote:
-      'They deliver a quality product with great support at a fraction of the cost of other media companies. Any time we have a question they are quick to respond.',
+      'They deliver a quality product with great support … Any time we have a question they are quick to respond.',
     name: 'Scott Quarella',
     company: 'Bellview Winery',
   },
@@ -972,8 +973,8 @@ export const SECTIONS = {
 /** How every engagement runs (Software Development process, servicePages.ts). */
 export const PROCESS = [
   { title: 'Listen', text: 'We map how work actually flows through your business, not how the org chart says it does.' },
-  { title: 'Prototype', text: 'A clickable model in weeks, not months. You react to something real before we build the real thing.' },
-  { title: 'Build', text: 'Short cycles, working software at every step. No year-long black box.' },
+  { title: 'Prototype', text: 'A clickable model first. You react to something real before we build the real thing.' },
+  { title: 'Build', text: 'Short cycles, working software at every step. No black box.' },
   { title: 'Support', text: 'We stay after launch, updates, tweaks, and the next idea when you’re ready.' },
 ]
 
@@ -1035,7 +1036,7 @@ export const CONTACT_FORM = {
   sending: 'Sending…',
   note: 'We reply to every message. No spam, ever.',
   sentTitle: 'Message sent.',
-  sentBody: 'Thanks for reaching out. We will get back to you shortly, usually within a business day.',
+  sentBody: 'Thanks for reaching out. We’ll be in touch.',
   missing: 'Please fill in your name, email, and message',
   badEmail: 'That email address looks off',
   unverified: 'Please complete the verification',
@@ -1050,7 +1051,7 @@ export const CONTACT_FORM = {
 export const HACK_FORM = {
   eyebrow: 'Hack remediation',
   title: 'Hacked? We’re on it.',
-  body: 'Tell us where it’s happening and what it runs on. We’ll get back to you fast.',
+  body: 'Tell us where it’s happening and what it runs on, and we’ll take it from there.',
   platforms: [
     'WordPress',
     'WooCommerce',
@@ -1071,7 +1072,7 @@ export const HACK_FORM = {
   missing: 'Please fill in your name, email, website, and platform',
   badDomain: 'That website address looks off',
   sentTitle: 'We’re on it.',
-  sentBody: 'Thanks. We’ll look at your site and get back to you as fast as we can, usually within a few hours on business days.',
+  sentBody: 'Thanks. We’ll look at your site and be in touch.',
 }
 
 export const CONTACT = {

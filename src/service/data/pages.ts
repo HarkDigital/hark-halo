@@ -35,7 +35,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
     features: [
       {
         title: 'Custom CRMs',
-        text: 'Leads, customers, jobs, and follow-ups in a system shaped around your exact pipeline, not a bloated per-seat subscription you use ten percent of. Your stages, your fields, your reports, in your language. No license fees that grow with headcount, and no bending your process to fit someone else’s software.',
+        text: 'Leads, customers, jobs, and follow-ups in a system shaped around your exact pipeline, not a bloated subscription you use ten percent of. Your stages, your fields, your reports, in your language. Nothing you don’t use, and no bending your process to fit someone else’s software.',
       },
       {
         title: 'Client & customer portals',
@@ -52,8 +52,8 @@ export const SERVICE_PAGES: ServicePageData[] = [
     ],
     process: [
       { title: 'Listen', text: 'We map how work actually flows through your business, not how the org chart says it does.' },
-      { title: 'Prototype', text: 'A clickable model in weeks, not months. You react to something real before we build the real thing.' },
-      { title: 'Build', text: 'Short cycles, working software at every step. No year-long black box.' },
+      { title: 'Prototype', text: 'A clickable model first. You react to something real before we build the real thing.' },
+      { title: 'Build', text: 'Short cycles, working software at every step. No black box.' },
       { title: 'Support', text: 'We stay after launch, updates, tweaks, and the next idea when you’re ready.' },
     ],
     stat: { value: '10 years', label: 'Of custom software for real businesses. Portals, dashboards, and integrations since 2016.' },
@@ -76,7 +76,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
     features: [
       {
         title: 'Design that converts',
-        text: 'Pretty is table stakes. Every layout decision points visitors toward the thing you want them to do next, call, book, buy, or ask. We design the path as carefully as the pixels, so the site doesn’t just get admired, it produces. A beautiful site that doesn’t convert is an expensive brochure.',
+        text: 'Pretty is table stakes. Every layout decision points visitors toward the thing you want them to do next, call, book, buy, or ask. We design the path as carefully as the pixels, so the site doesn’t just get admired, it produces. A beautiful site that doesn’t convert is just a brochure.',
       },
       {
         title: 'Easy to update',
@@ -202,7 +202,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
       },
       {
         title: 'Fast on real phones',
-        text: 'Lab scores are easy; a cheap Android on cell data is the real test. We optimize for the visitor you are actually losing, not just your fast laptop. Images sized for the screen that loads them, scripts deferred until they matter, and a first paint that lands before patience runs out.',
+        text: 'Lab scores are easy; a mid-range Android on cell data is the real test. We optimize for the visitor you are actually losing, not just your fast laptop. Images sized for the screen that loads them, scripts deferred until they matter, and a first paint that lands before patience runs out.',
       },
       {
         title: 'Speed that lasts',
@@ -210,7 +210,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
       },
     ],
     process: [
-      { title: 'Measure', text: 'A real audit across PageSpeed, GTmetrix, and field data, so we fix what actually costs you, not what merely looks scary.' },
+      { title: 'Measure', text: 'A real audit across PageSpeed, GTmetrix, and field data, so we fix what actually hurts you, not what merely looks scary.' },
       { title: 'Fix the heavy hitters', text: 'Bloated images, oversized scripts, render-blocking CSS, and slow hosting, tackled in order of impact.' },
       { title: 'Tune & cache', text: 'Compression, lazy-loading, a CDN, and smart caching so repeat visits feel instant.' },
       { title: 'Verify', text: 'We re-test on real devices and hand you the before-and-after scores in writing.' },
@@ -274,7 +274,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
       },
       {
         title: 'Inspections',
-        text: 'Roofs, towers, and gutters without ladders or lifts. High-resolution imagery, zero risk. Find the cracked flashing or the clogged gutter in minutes instead of renting a lift or putting a person on a wet roof. Same-day images, zoomable down to the shingle.',
+        text: 'Roofs, towers, and gutters without ladders or lifts. High-resolution imagery, zero risk. Find the cracked flashing or the clogged gutter without a lift or a person on a wet roof. Images zoomable down to the shingle.',
       },
       {
         title: 'Cinematic production',
@@ -302,7 +302,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
     features: [
       {
         title: 'Emergency response',
-        text: 'Fast triage to contain the damage. Every hour a hacked site stays up costs you trust and traffic. We isolate the infection, get a holding page up if needed, and start the cleanup the same day you call, because attackers don’t keep business hours and neither does your reputation.',
+        text: 'Triage first, to contain the damage. Every hour a hacked site stays up costs you trust and traffic. We isolate the infection, get a holding page up if needed, and go straight into the cleanup, because attackers don’t keep business hours and neither does your reputation.',
       },
       {
         title: 'Malware removal',
@@ -326,7 +326,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
     stat: { value: 'Now', label: 'Is when a hacked site needs attention. Every hour online costs trust and traffic.' },
     relatedTags: ['Security'],
     quote: {
-      text: 'Very excited to have worked with Mike to get our website totally fixed after a disaster experience with TWO other developers. In one month, he turned around a website that fits our needs.',
+      text: 'Very excited to have worked with Mike to get our website totally fixed after a disaster experience with TWO other developers. … he turned around a website that fits our needs.',
       name: 'Barbara Barber',
       company: 'CrossFit Off The Grid',
     },
@@ -387,11 +387,11 @@ export const SERVICE_PAGES: ServicePageData[] = [
       },
       {
         title: 'Demand-letter defense',
-        text: 'Thousands of ADA website lawsuits are filed every year, and small businesses are the easy targets. Documented conformance makes yours a hard one. An audit trail, an accessibility statement, and a site that passes the scan a plaintiff’s firm runs first, the cheapest legal protection you can buy.',
+        text: 'Thousands of ADA website lawsuits are filed every year, and small businesses are the easy targets. Documented conformance makes yours a hard one. An audit trail, an accessibility statement, and a site that passes the scan a plaintiff’s firm runs first, the strongest protection a website can have.',
       },
       {
         title: 'Accessible from day one',
-        text: 'On new builds, accessibility is baked into the design and markup from the first wireframe, cheaper than retrofitting and better for SEO too. Palettes chosen for contrast, components that work by keyboard, forms that announce themselves properly. Done right, it’s invisible, just a site everyone can use.',
+        text: 'On new builds, accessibility is baked into the design and markup from the first wireframe, easier than retrofitting and better for SEO too. Palettes chosen for contrast, components that work by keyboard, forms that announce themselves properly. Done right, it’s invisible, just a site everyone can use.',
       },
     ],
     process: [
@@ -423,17 +423,17 @@ export const SERVICE_PAGES: ServicePageData[] = [
       },
       {
         title: 'Speed & Core Web Vitals',
-        text: 'WordPress can be genuinely fast. Caching, image optimization, database cleanup, and theme surgery until the scores go green. Most slow WordPress sites are carrying years of accumulated weight, and shedding it is usually the cheapest dramatic improvement a site can buy.',
+        text: 'WordPress can be genuinely fast. Caching, image optimization, database cleanup, and theme surgery until the scores go green. Most slow WordPress sites are carrying years of accumulated weight, and shedding it is usually the most dramatic improvement a site can make.',
       },
       {
         title: 'Hardening & care plans',
-        text: 'Most hacked sites we clean are WordPress running old plugins. Updates, backups, and monitoring, handled monthly so it never gets there. A care plan costs a fraction of a single emergency rescue, which is exactly the point: boring maintenance is how disasters stay hypothetical.',
+        text: 'Most hacked sites we clean are WordPress running old plugins. Updates, backups, and monitoring, handled monthly so it never gets there. Boring maintenance is exactly the point: it’s how disasters stay hypothetical.',
       },
     ],
     process: [
       { title: 'Audit', text: 'Theme, plugins, hosting, and database, reviewed and returned as a plain-English report of what’s hurting you.' },
       { title: 'Stabilize', text: 'Updates applied, backups running, security holes closed, the bleeding stops before the tuning starts.' },
-      { title: 'Fix & speed up', text: 'Plugin cleanup, theme fixes, and performance work, or an honest recommendation to rebuild when rescue costs more.' },
+      { title: 'Fix & speed up', text: 'Plugin cleanup, theme fixes, and performance work, or an honest recommendation to rebuild when rescue isn’t the right call.' },
       { title: 'Care plan', text: 'Monthly updates, monitoring, and small fixes so the site stays fast and patched without you thinking about it.' },
     ],
     stat: { value: '43%', label: 'Of the web runs on WordPress. Its problems are common, so are the fixes.' },
