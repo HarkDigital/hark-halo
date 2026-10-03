@@ -189,6 +189,8 @@ export const PORTFOLIO = {
   shotAlt: (name: string) => `Screenshot of the ${name} website`,
   /** a tag gets a filter chip once this many sites on the page share it */
   minTag: 2,
+  /** the tag filter (the glass rail of chips over the wall). Off for now: true brings it back as it was */
+  filters: false,
 }
 
 /*

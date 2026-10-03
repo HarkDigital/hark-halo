@@ -39,7 +39,8 @@ import { mountRail } from './rail'
  * Every word is the site's own copy (content.ts WORK, PORTFOLIO_MORE,
  * SECTIONS.work, CONTACT) but for the page's few new strings (content.ts
  * PORTFOLIO). The filter's chips are the tags its sites share (kit/work.ts tagChips). ?tag=<slug>
- * opens it filtered (and is kept up to date as the filter changes).
+ * opens it filtered (and is kept up to date as the filter changes). The filter is off for now
+ * (PORTFOLIO.filters): the hero goes straight to the prominent rows.
  */
 
 installPrintPolyfills()
@@ -54,7 +55,8 @@ const current: Current = { kind: 'portfolio' }
 mountTop({ current })
 
 // ---------------------------------------------------------------- the filter this page opens with
-const chips = tagChips(PORTFOLIO_WORK, PORTFOLIO.minTag)
+// (none while PORTFOLIO.filters is off: no rail, and a ?tag= link opens the whole wall)
+const chips = PORTFOLIO.filters ? tagChips(PORTFOLIO_WORK, PORTFOLIO.minTag) : []
 const params = new URLSearchParams(location.search)
 const asked = params.has('tag') ? tagSlug(params.get('tag') ?? '') : ''
 const initial = chips.some(c => c.slug === asked) ? asked : ''
@@ -132,6 +134,6 @@ mountContact()
 const stage = document.querySelector<HTMLElement>('.pf-stage')
 if (stage) {
   const wall = mountWall({ stage, work: PORTFOLIO_WORK, match })
-  mountRail({ wall, stage, work: PORTFOLIO_WORK, chips, initial })
+  if (chips.length) mountRail({ wall, stage, work: PORTFOLIO_WORK, chips, initial })
 }
 bindReveals()

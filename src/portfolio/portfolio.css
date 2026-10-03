@@ -300,6 +300,10 @@
 .pf-room--more.is-solo {
   margin-top: 0;
 }
+/* no rail (PORTFOLIO.filters off): the first room keeps the rail's distance from the headline */
+.pf-stage > .pf-room:first-child {
+  padding-top: calc(var(--pf-bar-mt) + var(--pf-rail-h) + clamp(32px, 4.4vh, 52px));
+}
 
 /* ---------------- the wall (the hang) ---------------- */
 .pf-wall {
