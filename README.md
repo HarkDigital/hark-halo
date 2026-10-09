@@ -24,3 +24,14 @@ and tags are drafted from the page when left out (and flagged). Options:
 `--hide=".popup"` (a site's own overlays), `--archive=<snapshot url>` (a site
 that's down), `--dry`, `--force`. Then look at the still and `npm run build`.
 
+
+## Adding a service
+
+Write the copy first with `SERVICE-PAGE-TEMPLATE.md`: what a service page is
+made of, the house rules (no pricing, no turnaround times, no obvious-yes
+FAQs), the length of every field, a blank template and a finished example.
+A filled-in template is all a build needs: the entries in `SERVICES`
+(`src/content.ts`), `SERVICE_PAGES` (`src/service/data/pages.ts`),
+`SERVICE_CONTENT` (`src/service/data/content.ts`) and `CONTACT_FORM.services`,
+a home plate icon (`src/chapters/services/icons.ts`) and a hero scene
+(`src/service/scenes/`). The page, menus, footer and Read as a page follow.
