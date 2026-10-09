@@ -5,7 +5,7 @@ import { nextFrame } from '../../core/yield'
 import { N, TILE_H, TILE_W, buildDeck, type Deck } from './deck'
 import { Hud, type HudMetrics } from './hud'
 import { G } from '../../kit/glass'
-import { A, B, CARD_IN, CARD_OUT, INTRO_IN, LENGTH, LOUVRE_IN_AT, LOUVRE_IN_LEN, at } from './timeline'
+import { A, B, CARD_IN, CARD_OUT, FIRST_EXTRA, INTRO_IN, LENGTH, LOUVRE_IN_AT, LOUVRE_IN_LEN, at } from './timeline'
 import { SERVICES, serviceUrl } from '../../content'
 import './services.css'
 
@@ -22,12 +22,12 @@ import './services.css'
  * The timeline lives in ./timeline.ts (in vh of scroll; chapters/index.ts
  * reads the chapter's length and landing from it too):
  *
- *   0.000–0.205  intro (0.9 vh): the hero's segue clears (src/core/post.ts);
+ *   0.000–0.240  intro (1.25 vh): the hero's segue clears (src/core/post.ts);
  *                the louvres open out of hairlines, the whole column hangs in
  *                its backlight, the camera drifts in. "Whatever it takes."
- *                rises at 0.068 and holds to 0.217 (landing 0.15)
- *   0.205–0.930  the plates (~0.066 each with eleven): part → turn → settle → hold
- *   0.930–1.000  the last plate returns; the louvres close to hairlines of
+ *                rises at 0.058 and holds to 0.250 (landing 0.127)
+ *   0.240–0.941  the plates (~0.056 each with twelve; the first ~0.09): part → turn → settle → hold
+ *   0.941–1.000  the last plate returns; the louvres close to hairlines of
  *                light and the camera pulls back into black
  *
  * While the segue plays, update() reports where the column sits on screen
@@ -38,10 +38,34 @@ import './services.css'
  * scrolling can't strobe: the backlight swell and the light sweep.
  */
 
-const SPAN = (B - A) / N
+/** one plate's share of the local progress (the first plate has FIRST_EXTRA more: plateIndex) */
+const SPAN = (B - A) / (N + FIRST_EXTRA)
 /** half-width (in beats) of each turn, centred on the boundary between two plates */
 const TURN = 0.3
-const ANCHORS = Array.from({ length: N }, (_, i) => A + SPAN * (i + 0.55))
+/**
+ * Scroll (in plate shares from A) → the column's continuous index. Plate 1's hold is slowed:
+ * across the shares SLOW_A..SLOW_B the index gives back FIRST_EXTRA beats on a smoothstep
+ * (never stopping: its slowest is ~0.2x), arriving at 1 - TURN just as plate 2's turn begins;
+ * past it, one beat per share as before.
+ */
+const SLOW_A = 0.15
+const SLOW_B = 1 - TURN + FIRST_EXTRA
+const plateIndex = (v: number) => {
+  const k = clamp((v - SLOW_A) / (SLOW_B - SLOW_A))
+  return v - FIRST_EXTRA * k * k * (3 - 2 * k)
+}
+/** local progress where the column's index is `u` (the inverse of plateIndex, by bisection: it only rises) */
+const localAt = (u: number) => {
+  let lo = u
+  let hi = u + FIRST_EXTRA
+  for (let i = 0; i < 40; i++) {
+    const mid = (lo + hi) / 2
+    if (plateIndex(mid) < u) lo = mid
+    else hi = mid
+  }
+  return A + SPAN * ((lo + hi) / 2)
+}
+const ANCHORS = Array.from({ length: N }, (_, i) => localAt(i + 0.55))
 /** local progress that was `l` in the old 3.8 vh chapter, measured from plate 1 (A) */
 const fromA = (l: number) => A + ((l - 0.08) * 3.8) / LENGTH
 /** …and from the last plate (B) */
@@ -71,7 +95,7 @@ const bump = (x: number) => {
 
 /** Continuous plate index (0..N-1): holds mid-beat, turns across the boundaries. */
 function plateAt(local: number) {
-  const u = (local - A) / SPAN
+  const u = plateIndex((local - A) / SPAN)
   let f = 0
   let turning = 0
   for (let j = 1; j < N; j++) {

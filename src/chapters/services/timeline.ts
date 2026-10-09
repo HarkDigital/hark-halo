@@ -5,13 +5,13 @@ import { SERVICES } from '../../content'
  * progress they come to. chapters/index.ts reads LENGTH / LANDING / INTRO from
  * here, so the chapter's length and its beats can never drift apart.
  *
- *   0.00–0.90 vh  INTRO   the segue clears (hero → services, src/core/post.ts),
+ *   0.00–1.25 vh  INTRO   the segue clears (hero → services, src/core/post.ts),
  *                         the louvres open out of hairlines (0.12–0.62), the
  *                         copy rises ("Whatever it takes.", from 0.30)
  *                         and holds while the column hangs in its backlight and
  *                         the camera drifts in
- *   0.90–… vh     PLATES  one plate per service, 0.29 vh each: part → turn → settle →
- *                         hold (Software Development is the first)
+ *   1.25–… vh     PLATES  one plate per service, 0.29 vh each: part → turn → settle →
+ *                         hold (Software Development is the first, and holds ~0.17 vh longer)
  *   + 0.31 vh     OUT     the last plate returns; the louvres close to
  *                         hairlines of light, the camera pulls back into black
  *
@@ -20,15 +20,20 @@ import { SERVICES } from '../../content'
  * the out beat keep their old scroll lengths exactly.)
  */
 
-/** the intro beat (vh), before plate 1 starts to part */
-export const INTRO_VH = 0.9
+/** the intro beat (vh), before plate 1 starts to part ("What we do" holds; 0.9 until Oct 9 2026) */
+export const INTRO_VH = 1.25
 /** one plate's share (vh), as tuned for eleven: 0.84 of the old 3.8 vh chapter over 11 */
 const PLATE_VH = 3.192 / 11
-/** the plates (vh): one share each, so a new service adds a plate's worth of scroll, not a squeeze */
-export const PLATES_VH = PLATE_VH * SERVICES.length
+/**
+ * extra shares for the first plate's hold (index.ts plateAt slows the column through it), so
+ * a reader coming off the intro doesn't scroll straight past Software Development
+ */
+export const FIRST_EXTRA = 0.6
+/** the plates (vh): one share each (and the first's extra), so a new service adds a plate's worth of scroll, not a squeeze */
+export const PLATES_VH = PLATE_VH * (SERVICES.length + FIRST_EXTRA)
 /** the out beat (vh) */
 const OUT_VH = 0.308
-/** chapter length (vh): 4.4 with eleven services */
+/** chapter length (vh) */
 export const LENGTH = INTRO_VH + PLATES_VH + OUT_VH
 
 /** vh of scroll → local progress */
