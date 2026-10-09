@@ -67,7 +67,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
     stat: { value: '10 years', label: 'Of custom software for real businesses. Portals, dashboards, and integrations since 2016.' },
     relatedTags: ['Software'],
     quote: {
-      text: 'We needed a stand-alone payment portal for our fast-growing business. Mike built it on time, on budget, trained us, and followed up to make sure everything ran smooth.',
+      text: 'We needed a stand-alone payment portal for our fast-growing business. Hark Digital built it on time, on budget, trained us, and followed up to make sure everything ran smooth.',
       name: 'Pete Rose',
       company: 'The Home Hero',
     },
@@ -149,7 +149,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
     stat: { value: '$1M+', label: 'Flows through client stores we built, every single year' },
     relatedTags: ['Ecommerce'],
     quote: {
-      text: 'Mike helped launch a successful holiday season campaign that brought us record number sales.',
+      text: 'Hark Digital helped launch a successful holiday season campaign that brought us record number sales.',
       name: 'Holly Kisby',
       company: "Shriver's Salt Water Taffy",
     },
@@ -403,7 +403,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
     stat: { value: 'Now', label: 'Is when a hacked site needs attention. Every hour online costs trust and traffic.' },
     relatedTags: ['Security'],
     quote: {
-      text: 'Very excited to have worked with Mike to get our website totally fixed after a disaster experience with TWO other developers. In one month, he turned around a website that fits our needs.',
+      text: 'Very excited to have worked with Hark Digital to get our website totally fixed after a disaster experience with TWO other developers. In one month, they turned around a website that fits our needs.',
       name: 'Barbara Barber',
       company: 'CrossFit Off The Grid',
     },

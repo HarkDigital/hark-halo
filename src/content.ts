@@ -926,13 +926,13 @@ export const TESTIMONIALS: Testimonial[] = [
   },
   {
     quote:
-      'His ideas were fresh and unique to our company. Mike helped launch a successful holiday season campaign that brought us record number sales.',
+      'Their ideas were fresh and unique to our company. Hark Digital helped launch a successful holiday season campaign that brought us record number sales.',
     name: 'Holly Kisby',
     company: "Shriver's Salt Water Taffy",
   },
   {
     quote:
-      'Very excited to have worked with Mike to get our website totally fixed after a disaster experience with TWO other developers. In one month, he turned around a website that fits our needs, suits our vibe, and looks awesome.',
+      'Very excited to have worked with Hark Digital to get our website totally fixed after a disaster experience with TWO other developers. In one month, they turned around a website that fits our needs, suits our vibe, and looks awesome.',
     name: 'Barbara Barber',
     company: 'CrossFit Off The Grid',
   },
@@ -945,19 +945,19 @@ export const TESTIMONIALS: Testimonial[] = [
   {
     // an excerpt of Alicia's review (the full text is longer than the card holds)
     quote:
-      'From the very first interaction I had with Mike, he was attentive, professional, and full of creative ideas that truly brought our vision to life. … It’s clear that he puts pride in his work, and it shows.',
+      'From the very first interaction I had with Hark Digital, they were attentive, professional, and full of creative ideas that truly brought our vision to life. … It’s clear that they put pride in their work, and it shows.',
     name: 'Alicia Fichera',
     company: 'DNS Solutions',
   },
   {
     quote:
-      'Mike built the website on time, on budget, trained us, and followed up to make sure everything was running smooth throughout the entire project.',
+      'Hark Digital built the website on time, on budget, trained us, and followed up to make sure everything was running smooth throughout the entire project.',
     name: 'Pete Rose',
     company: 'The Home Hero',
   },
   {
     quote:
-      'Mike was able to update our brand and transform our website into something we are really proud of. His creativity, responsiveness and professionalism made the whole process easy.',
+      'Hark Digital was able to update our brand and transform our website into something we are really proud of. Their creativity, responsiveness and professionalism made the whole process easy.',
     name: 'Alicyn Harkness',
     company: 'ProviderSoft',
   },
