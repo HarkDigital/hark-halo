@@ -4,7 +4,7 @@ A brief for writing the copy for a new service on hark.digital (the Hark Halo si
 
 **How to use it:** fill in the template in the section "The template" for the service you have been building, and hand the filled-in file to the Hark Halo thread. That thread wires it into the site: the page itself, the home page, the menus, the contact form and the copy spreadsheet. You only write words; you never touch the site's code.
 
-The site has twelve services today: Software Development, Web Design & Development, Ecommerce, SEO / GEO, Page Speed, AI Consulting, Company Knowledge AI, Aerial Photography & Video, Hack Remediation, Website & Data Security, ADA Accessibility and WordPress. Read two or three of their live pages (`https://harkdigital.github.io/hark-halo/services/<slug>/`, for example `/services/page-speed/`) before writing; matching their voice matters more than anything in this file.
+The site has thirteen services today: Software Development, Custom CRM, Web Design & Development, Ecommerce, SEO / GEO, Page Speed, AI Consulting, Company Knowledge AI, Aerial Photography & Video, Hack Remediation, Website & Data Security, ADA Accessibility and WordPress. Read two or three of their live pages (`https://harkdigital.github.io/hark-halo/services/<slug>/`, for example `/services/page-speed/`) before writing; matching their voice matters more than anything in this file.
 
 ---
 
@@ -85,8 +85,8 @@ Lengths are from the eleven live pages (characters, with spaces). Stay inside th
 
 ### Two picks that aren't words (suggest them; the Hark Halo thread makes them)
 
-- **Hero scene:** every service page has its own small animation behind the hero, drawn in neon tubes and frosted glass, that reacts to the cursor. The live ones: a circuit grid of data packets (Software), a wireframe that sketches itself (Web Design), a live revenue line (Ecommerce), a radar sweep that finds you (SEO / GEO), a speed gauge (Page Speed), a sieve that filters hype into signal (AI Consulting), a drone over topographic contours (Aerial), a corrupted grid swept clean (Hack Remediation), a shielded core deflecting threats (Security), a keyboard focus ring tabbing through a page (ADA), content blocks snapping into a page (WordPress). Describe one for the new service in two sentences: what it shows, and what the cursor does.
-- **Home page icon:** a simple line icon for the service's plate (the live ones are a `</>`, a browser window, a cart, a magnifier with a spark, a lightning bolt, a chip with a sparkle, a quadcopter, a repair cross, a shield with a check, the accessibility figure, a W in a ring). Name one.
+- **Hero scene:** every service page has its own small animation behind the hero, drawn in neon tubes and frosted glass, that reacts to the cursor. The live ones: a circuit grid of data packets (Software), a pipeline board of jobs moving lead to paid (Custom CRM), a wireframe that sketches itself (Web Design), a live revenue line (Ecommerce), a radar sweep that finds you (SEO / GEO), a speed gauge (Page Speed), a sieve that filters hype into signal (AI Consulting), a constellation of files and chats feeding one answer (Company Knowledge AI), a drone over topographic contours (Aerial), a corrupted grid swept clean (Hack Remediation), a shielded core deflecting threats (Security), a keyboard focus ring tabbing through a page (ADA), content blocks snapping into a page (WordPress). Describe one for the new service in two sentences: what it shows, and what the cursor does.
+- **Home page icon:** a simple line icon for the service's plate (the live ones are a `</>`, a contact card, a browser window, a cart, a magnifier with a spark, a lightning bolt, a chip with a sparkle, a speech bubble holding a page, a quadcopter, a repair cross, a shield with a check, the accessibility figure, a W in a ring). Name one.
 
 ---
 

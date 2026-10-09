@@ -9,6 +9,7 @@ import { constellation } from './constellation'
 import { dataflow } from './dataflow'
 import { focus } from './focus'
 import { glitch } from './glitch'
+import { pipeline } from './pipeline'
 import { radar } from './radar'
 import { shield } from './shield'
 import { sift } from './sift'
@@ -32,6 +33,7 @@ const SCENES: Partial<Record<ServicePageData['scene'], () => Scene>> = {
   focus,
   blocks,
   constellation,
+  pipeline,
 }
 
 export function mountScene(host: HTMLElement, name: ServicePageData['scene'], o: { reduced: boolean }): SceneHandle {

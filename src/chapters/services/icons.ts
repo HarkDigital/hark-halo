@@ -86,6 +86,17 @@ const GLYPHS: Record<string, (g: Ctx) => void> = {
     poly(g, [[19, -23], [42, 0], [19, 23]])
     poly(g, [[8, -33], [-8, 33]])
   },
+  // a contact card: a person and their record
+  'custom-crm': g => {
+    rrect(g, -42, -29, 84, 58, 9)
+    circle(g, -19, -7, 8)
+    g.beginPath()
+    g.arc(-19, 17, 15, Math.PI * 1.08, Math.PI * 1.92)
+    g.stroke()
+    poly(g, [[4, -12], [30, -12]])
+    poly(g, [[4, 0], [30, 0]])
+    poly(g, [[4, 12], [21, 12]])
+  },
   // a browser window with a layout grid
   'web-design': g => {
     rrect(g, -45, -34, 90, 68, 5)

@@ -127,7 +127,7 @@ export function mountContact(o: { service?: string } = {}) {
 /** The footer: every service (this one marked), the site's own pages (Work is the Portfolio). */
 export function footerHtml(current: Current): string {
   const slug = current.kind === 'service' ? current.slug : ''
-  const index11 = SERVICE_PAGES.map(
+  const services = SERVICE_PAGES.map(
     p => `<li><a href="${serviceHref(p.slug)}"${p.slug === slug ? ' aria-current="page"' : ''}>${esc(p.title)}</a></li>`,
   ).join('')
   const workCur = current.kind === 'portfolio' ? ' aria-current="page"' : ''
@@ -137,7 +137,7 @@ export function footerHtml(current: Current): string {
       <div class="svc-foot-cols">
         <nav class="svc-foot-col svc-foot-svc svc-rv" data-rv="list" aria-labelledby="svc-foot-svc-h">
           <p class="hud-label svc-foot-h" id="svc-foot-svc-h">Services</p>
-          <ul>${index11}</ul>
+          <ul style="--rows3:${Math.ceil(SERVICE_PAGES.length / 3)}; --rows2:${Math.ceil(SERVICE_PAGES.length / 2)}">${services}</ul>
         </nav>
         <nav class="svc-foot-col svc-rv" data-rv="list" aria-labelledby="svc-foot-nav-h">
           <p class="hud-label svc-foot-h" id="svc-foot-nav-h">Explore</p>

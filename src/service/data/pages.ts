@@ -9,7 +9,7 @@ export interface ServicePageData {
   slug: string
   num: string
   title: string
-  scene: 'dataflow' | 'blueprint' | 'commerce' | 'radar' | 'velocity' | 'neural' | 'aerial' | 'glitch' | 'shield' | 'focus' | 'blocks' | 'sift' | 'network' | 'constellation'
+  scene: 'dataflow' | 'blueprint' | 'commerce' | 'radar' | 'velocity' | 'neural' | 'aerial' | 'glitch' | 'shield' | 'focus' | 'blocks' | 'sift' | 'network' | 'constellation' | 'pipeline'
   headline: string
   /** part of the headline rendered in the signal color */
   headlineAccent?: string
@@ -39,12 +39,8 @@ export const SERVICE_PAGES: ServicePageData[] = [
     scene: 'dataflow',
     headline: 'Off-the-shelf never quite',
     headlineAccent: 'fits.',
-    lede: 'We build custom CRMs and business software shaped around how your company actually works. Your leads, jobs, and customers tracked your way, portals your clients log into, dashboards that tell the truth, none of it rented from a vendor who thinks you should work their way.',
+    lede: 'We build custom business software shaped around how your company actually works: portals your clients log into, dashboards that tell the truth, and integrations that make your tools talk to each other. None of it rented from a vendor who thinks you should work their way.',
     features: [
-      {
-        title: 'Custom CRMs',
-        text: 'Leads, customers, jobs, and follow-ups in a system shaped around your exact pipeline, not a bloated subscription you use ten percent of. Your stages, your fields, your reports, in your language. Nothing you don’t use, and no bending your process to fit someone else’s software.',
-      },
       {
         title: 'Client & customer portals',
         text: 'Give your customers a place to log in, pay invoices, upload files, and track progress, branded, secure, and yours. Fewer “just checking in” phone calls, fewer emailed attachments, and a business that looks as organized as it actually is. Your customers get answers at midnight without anyone picking up a phone.',
@@ -56,6 +52,10 @@ export const SERVICE_PAGES: ServicePageData[] = [
       {
         title: 'Integrations & automation',
         text: 'Your CRM, your accounting, your website, all talking to each other, with the repetitive busywork automated away. Data entered once shows up everywhere it belongs. Invoices generate themselves, follow-ups fire on schedule, and the double-entry chores your team quietly hates simply stop existing.',
+      },
+      {
+        title: 'Internal tools & web apps',
+        text: 'Schedulers, estimators, intake forms, inventory trackers: the tools your team runs the day on, built around your exact process instead of a spreadsheet held together with good intentions. Quick to learn, easy to change, and shaped around the jobs only your business does.',
       },
     ],
     process: [
@@ -71,11 +71,68 @@ export const SERVICE_PAGES: ServicePageData[] = [
       name: 'Pete Rose',
       company: 'The Home Hero',
     },
+    cta: 'Typing the same data into three systems? That’s software waiting to be connected.',
+  },
+  {
+    slug: 'custom-crm',
+    num: '02',
+    title: 'Custom CRM',
+    scene: 'pipeline',
+    headline: 'A CRM that works the way',
+    headlineAccent: 'you do.',
+    lede: 'Most CRMs are built for somebody else’s sales team, then bent to fit yours. We build yours around how your business actually runs: your stages, your fields, your reports, your language. Every lead, customer, job, and follow-up in one place your team will actually use.',
+    features: [
+      {
+        title: 'Your pipeline, your stages',
+        text: 'Leads, quotes, jobs, renewals, whatever your stages are called, laid out the way your team already talks about them. Move a deal forward, see what’s stuck, and know at a glance who needs a call today, without squeezing your process into a vendor’s idea of a sales funnel.',
+      },
+      {
+        title: 'Follow-ups that happen',
+        text: 'Reminders, tasks, and emails fire on the schedule you set, so the quote that went out Tuesday gets its nudge on Friday without anyone remembering to send it. Every call, email, and note lands on the customer’s record, so the next person picks up where the last one left off.',
+      },
+      {
+        title: 'Reports you’ll actually read',
+        text: 'What sold, what stalled, who owes what, and where your best customers come from, on one screen that’s current the moment you open it. Built around the questions you actually ask in Monday’s meeting, not a wall of charts from a vendor’s template.',
+      },
+      {
+        title: 'Connected, and yours',
+        text: 'Your CRM talks to your accounting, payments, email, and calendar, so data entered once shows up everywhere it should. And it’s yours: the code, the data, and the roadmap, with nothing to lose if you ever walk away and no one to ask permission before you change it.',
+      },
+    ],
+    process: [
+      { title: 'Listen', text: 'We map how a lead becomes a customer in your business, and every spreadsheet it passes through.' },
+      { title: 'Prototype', text: 'A clickable model of your pipeline your team can try before we build the real thing.' },
+      { title: 'Build & migrate', text: 'Short build cycles, your data moved in, and both systems run side by side until you trust the new one.' },
+      { title: 'Train & support', text: 'Your team learns it on their own records, and we stay after launch for fixes and the next idea.' },
+    ],
+    // Salesforce, State of Sales (2023 edition, 7,700+ sales professionals): reps spend 28 percent
+    // of their week actually selling; most of the rest goes to deal management and data entry
+    stat: { value: '28%', label: 'Of a sales rep’s week goes to actually selling. Most of the rest is admin and data entry.' },
+    relatedTags: ['Software Development'],
+    integrations: {
+      label: 'Connects with',
+      line: 'Your accounting, payments, email, and calendar, wired into one place.',
+      logos: [
+        { name: 'QuickBooks', icon: 'quickbooks' },
+        { name: 'Xero', icon: 'xero' },
+        { name: 'Stripe', icon: 'stripe' },
+        { name: 'Square', icon: 'square' },
+        { name: 'PayPal', icon: 'paypal' },
+        { name: 'Gmail', icon: 'gmail' },
+        { name: 'Google Calendar', icon: 'googlecalendar' },
+        { name: 'Google Sheets', icon: 'googlesheets' },
+        { name: 'Mailchimp', icon: 'mailchimp' },
+        { name: 'Calendly', icon: 'calendly' },
+        { name: 'Zapier', icon: 'zapier' },
+        { name: 'HubSpot', icon: 'hubspot' },
+      ],
+      byName: ['Microsoft 365', 'Salesforce', 'DocuSign', 'Twilio'],
+    },
     cta: 'Still running your customer list out of spreadsheets? That’s a custom CRM waiting to happen.',
   },
   {
     slug: 'web-design',
-    num: '02',
+    num: '03',
     title: 'Web Design & Development',
     scene: 'blueprint',
     headline: 'Beautiful. Functional.',
@@ -116,7 +173,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
   },
   {
     slug: 'ecommerce',
-    num: '03',
+    num: '04',
     title: 'Ecommerce',
     scene: 'commerce',
     headline: 'Open 24/7. Even when',
@@ -157,7 +214,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
   },
   {
     slug: 'seo-geo',
-    num: '04',
+    num: '05',
     title: 'SEO / GEO',
     scene: 'radar',
     headline: 'Be the',
@@ -193,7 +250,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
   },
   {
     slug: 'page-speed',
-    num: '05',
+    num: '06',
     title: 'Page Speed',
     scene: 'velocity',
     headline: 'Slow is the new',
@@ -229,7 +286,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
   },
   {
     slug: 'ai-consulting',
-    num: '06',
+    num: '07',
     title: 'AI Consulting',
     scene: 'sift',
     headline: 'AI without the',
@@ -265,7 +322,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
   },
   {
     slug: 'company-knowledge-ai',
-    num: '07',
+    num: '08',
     title: 'Company Knowledge AI',
     scene: 'constellation',
     headline: 'Ask your whole company',
@@ -334,7 +391,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
   },
   {
     slug: 'aerial-media',
-    num: '08',
+    num: '09',
     title: 'Aerial Photography & Video',
     scene: 'aerial',
     headline: 'Your business, from',
@@ -370,7 +427,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
   },
   {
     slug: 'hack-remediation',
-    num: '09',
+    num: '10',
     title: 'Hack Remediation',
     scene: 'glitch',
     headline: 'Breathe. Then',
@@ -411,7 +468,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
   },
   {
     slug: 'security',
-    num: '10',
+    num: '11',
     title: 'Website & Data Security',
     scene: 'shield',
     headline: 'The best hack is the one that',
@@ -447,7 +504,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
   },
   {
     slug: 'ada-accessibility',
-    num: '11',
+    num: '12',
     title: 'ADA Accessibility',
     scene: 'focus',
     headline: 'Every visitor.',
@@ -483,7 +540,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
   },
   {
     slug: 'wordpress',
-    num: '12',
+    num: '13',
     title: 'WordPress',
     scene: 'blocks',
     headline: 'WordPress, without the',

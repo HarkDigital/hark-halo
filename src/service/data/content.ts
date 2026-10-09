@@ -27,12 +27,59 @@ export interface ServiceContent {
 export const SERVICE_CONTENT: Record<string, ServiceContent> = {
   'software-development': {
     metaDescription:
-      'Custom CRM development in Philadelphia, plus client portals, dashboards, and integrations, built around how your business actually works. Hark Digital, est. 2016.',
+      'Custom software development in Philadelphia: client portals, dashboards, integrations, and internal tools built around how your business actually works. Hark Digital, est. 2016.',
     article: [
       {
-        heading: 'What a custom CRM actually gets you',
+        heading: 'What custom business software actually gets you',
         paragraphs: [
-          'A CRM is where your business keeps its relationships: every lead, customer, job, quote, and follow-up. The big subscription CRMs assume your business works like everyone else’s, then hand you a system where most of the buttons are for somebody else. A custom CRM flips that: your pipeline stages, your fields, your reports, your language, with nothing you don’t use. Around it we build the rest of the toolkit, portals where customers log in and get things done, dashboards that pull scattered data into one honest picture, and integrations that make your existing tools talk to each other.',
+          'Custom business software is anything built around your own workflow instead of a vendor’s: a portal where customers log in and get things done, a dashboard that pulls scattered data into one honest picture, an integration that makes your existing tools talk to each other, or an internal tool for the job only your business does. The point is fit. Every screen is shaped around how your team actually works, with nothing you don’t use.',
+          'Hark Digital has been building business software for Philadelphia companies since 2016, for trucking firms, medical practices, manufacturers, real estate companies, and nonprofits. The pattern is familiar: the same data typed into three systems, reports rebuilt by hand every Monday, and customers calling to ask what a portal could have told them. That is exactly where custom software earns its place.',
+        ],
+      },
+      {
+        heading: 'When to build, and when to buy',
+        paragraphs: [
+          'Off-the-shelf software wins when your process is standard and a product already fits; configured well, it is often the right call, and we will say so. Custom wins when the workflow is the business: the way you quote jobs, schedule crews, intake patients, or track freight. If your team works around its tools instead of with them, that gap is where custom software starts earning. And you own it: the code, the data, and the roadmap.',
+          'When custom is the right answer, we keep scope small and shippable: a working prototype first, then short build cycles you can see and test. No black boxes, no vaporware. And if the system you need is a CRM, it has its own page, with the same honest approach.',
+        ],
+      },
+    ],
+    faqs: [
+      {
+        q: 'What is a client portal?',
+        a: 'A client portal is a private, branded website where your customers log in to get things done without calling you: pay invoices, upload files, sign documents, book appointments, or check the status of a job. It cuts the “just checking in” calls and makes a small business look as organized as it actually is.',
+      },
+      {
+        q: 'Should we build custom software or buy something off the shelf?',
+        a: 'Buy when your process is standard and a product already fits; configured well, it is often the right call, and we will tell you so. Build when the gaps are the business, like quoting rules, scheduling, or intake steps no product models well, or when your tools need to talk to each other in ways they don’t out of the box.',
+      },
+      {
+        q: 'What can a custom dashboard show?',
+        a: 'Whatever you actually ask about your business: what sold, what’s stuck, who owes what, how crews or projects are tracking, and where your best customers come from. We pull the numbers from the systems you already use, so the picture is current the moment you open it instead of rebuilt by hand every Monday.',
+      },
+      {
+        q: 'Can you connect the software we already use?',
+        a: 'Yes, integrations are most of our software work. We connect accounting systems, payment processors, email, shipping tools, and websites so data entered once shows up everywhere it should. If a tool has an API (most modern tools do), we can usually integrate it.',
+      },
+      {
+        q: 'Do we own the software you build?',
+        a: 'Yes. You own the code, the data, and the accounts. We document what we build and hand over access. If we ever part ways, you are not held hostage, any competent developer can pick up where we left off.',
+      },
+      {
+        q: 'What happens when our needs change?',
+        a: 'The software changes with you. Because it is built around your workflow, adding a report, a screen, or a new integration is an edit, not a migration to a new vendor. We stay after launch for updates, fixes, and the next idea; launch is the start of the relationship, not the end.',
+      },
+    ],
+  },
+
+  'custom-crm': {
+    metaDescription:
+      'Custom CRM development for Philadelphia small businesses: your pipeline, your fields, your reports, connected to the tools you use and owned outright. Hark Digital, est. 2016.',
+    article: [
+      {
+        heading: 'What a custom CRM is, and what it gets you',
+        paragraphs: [
+          'A CRM (customer relationship management system) is where your business keeps its relationships: every lead, customer, job, quote, and follow-up. The big subscription CRMs assume your business works like everyone else’s, then hand you a system where most of the buttons are for somebody else. A custom CRM flips that: your pipeline stages, your fields, your reports, your language, with nothing you don’t use.',
           'Hark Digital has been building CRMs and business software for Philadelphia companies since 2016, for trucking firms, medical practices, manufacturers, real estate companies, and nonprofits. The pattern is almost always the same: the customer list lives in a spreadsheet being emailed around, follow-ups live in someone’s head, and answering “where does this job stand?” takes three phone calls. That is exactly where a custom CRM earns its place.',
         ],
       },
@@ -50,6 +97,10 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
         a: 'The signs are familiar: your customer list lives in a spreadsheet being emailed around, follow-ups live in someone’s head, answering “where does this job stand?” takes three phone calls, or you have bent your process to fit a subscription tool that was built for someone else. If your workflow is the business, the way you quote, schedule, intake, or track, a CRM shaped around it earns its place every day.',
       },
       {
+        q: 'Should we customize a CRM like HubSpot or build our own?',
+        a: 'Customize first if your process is close to standard: a well-configured HubSpot or Pipedrive is the right call for plenty of sales teams, and we will tell you so. Build when the gaps are the business, like quoting rules, crew scheduling, or intake steps no subscription models well, or when the CRM needs to live inside a portal or app you already run.',
+      },
+      {
         q: 'What does building a custom CRM look like?',
         a: 'It starts with listening: we map how leads, jobs, and customers actually move through your business. Then comes a clickable prototype your team can react to before anything is built for real, followed by short build cycles you can see and test. Bigger systems with portals and integrations ship in phases, so your team starts using the early version while we build the rest.',
       },
@@ -58,16 +109,12 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
         a: 'Yes. Most custom CRM projects start with a migration, out of a tangle of spreadsheets or out of a subscription CRM that never quite fit. We map your existing data into the new structure, clean it up on the way, and run both systems side by side until you trust the new one.',
       },
       {
-        q: 'Can you connect the software we already use?',
-        a: 'Yes, integrations are most of our software work. We connect accounting systems, payment processors, email, shipping tools, and websites so data entered once shows up everywhere it should. If a tool has an API (most modern tools do), we can usually integrate it.',
+        q: 'How do you get a team to actually use a new CRM?',
+        a: 'By making it save them time from the first login. We design around the screens your team already lives in, fill in what the system already knows, cut every field nobody reads, and train people on their own records instead of a demo. Adoption is a design problem, so we treat it as one from the first sketch.',
       },
       {
-        q: 'Do we own the software you build?',
-        a: 'Yes. You own the code, the data, and the accounts. We document what we build and hand over access. If we ever part ways, you are not held hostage, any competent developer can pick up where we left off.',
-      },
-      {
-        q: 'What happens when our needs change?',
-        a: 'The software changes with you. Because it is built around your workflow, adding a pipeline stage, a report, or a new integration is an edit, not a migration to a new vendor. We stay after launch for updates, fixes, and the next idea; launch is the start of the relationship, not the end.',
+        q: 'What can a custom CRM connect to?',
+        a: 'Most tools with an API: accounting like QuickBooks or Xero, payments like Stripe or Square, Gmail and Outlook, Google Calendar, e-signatures, texting, and your website’s forms. Data entered once shows up everywhere it should, and nobody retypes an invoice or a phone number again.',
       },
     ],
   },

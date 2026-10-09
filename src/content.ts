@@ -68,11 +68,19 @@ export const SERVICES: Service[] = [
     slug: 'software-development',
     title: 'Software Development',
     blurb:
-      'Custom CRMs, client portals, and dashboards built around how your business actually runs. Every lead, job, and customer in one system that fits like it was made for you, because it was.',
-    tags: ['Custom CRMs', 'Client Portals', 'Dashboards', 'Integrations'],
+      'Client portals, dashboards, integrations, and internal tools built around how your business actually runs. Software that fits like it was made for you, because it was.',
+    tags: ['Client Portals', 'Dashboards', 'Integrations', 'Internal Tools'],
   },
   {
     num: '02',
+    slug: 'custom-crm',
+    title: 'Custom CRM',
+    blurb:
+      'Customer list in a spreadsheet, follow-ups in someone’s head? We build a CRM around how you actually sell, quote, and schedule, so every lead and job lives in one place.',
+    tags: ['Custom CRM Development', 'CRM Migration', 'Sales Pipeline', 'Customer Database'],
+  },
+  {
+    num: '03',
     slug: 'web-design',
     title: 'Web Design & Development',
     blurb:
@@ -80,7 +88,7 @@ export const SERVICES: Service[] = [
     tags: ['UI/UX', 'Responsive', 'CMS', 'Branding'],
   },
   {
-    num: '03',
+    num: '04',
     slug: 'ecommerce',
     title: 'Ecommerce',
     blurb:
@@ -88,7 +96,7 @@ export const SERVICES: Service[] = [
     tags: ['Online Stores', 'Payment Portals', 'Analytics', 'Conversion'],
   },
   {
-    num: '04',
+    num: '05',
     slug: 'seo-geo',
     title: 'SEO / GEO',
     blurb:
@@ -96,7 +104,7 @@ export const SERVICES: Service[] = [
     tags: ['Search Ranking', 'AI Discoverability', 'Local SEO', 'Content Strategy'],
   },
   {
-    num: '05',
+    num: '06',
     slug: 'page-speed',
     title: 'Page Speed',
     blurb:
@@ -104,7 +112,7 @@ export const SERVICES: Service[] = [
     tags: ['Core Web Vitals', 'PageSpeed Insights', 'GTmetrix', 'Load Time'],
   },
   {
-    num: '06',
+    num: '07',
     slug: 'ai-consulting',
     title: 'AI Consulting',
     blurb:
@@ -112,7 +120,7 @@ export const SERVICES: Service[] = [
     tags: ['Opportunity Audit', 'Custom AI Tools', 'Automation', 'Team Training'],
   },
   {
-    num: '07',
+    num: '08',
     slug: 'company-knowledge-ai',
     title: 'Company Knowledge AI',
     blurb:
@@ -120,7 +128,7 @@ export const SERVICES: Service[] = [
     tags: ['AI Knowledge Base', 'Private AI Assistant', 'Chat With Your Documents', 'Internal Search'],
   },
   {
-    num: '08',
+    num: '09',
     slug: 'aerial-media',
     title: 'Aerial Photography & Video',
     blurb:
@@ -128,7 +136,7 @@ export const SERVICES: Service[] = [
     tags: ['Drone Video', 'Real Estate', 'Inspections', 'Cinematic'],
   },
   {
-    num: '09',
+    num: '10',
     slug: 'hack-remediation',
     title: 'Hack Remediation',
     blurb:
@@ -136,7 +144,7 @@ export const SERVICES: Service[] = [
     tags: ['Malware Removal', 'Breach Response', 'Recovery', 'Blocklist Removal'],
   },
   {
-    num: '10',
+    num: '11',
     slug: 'security',
     title: 'Website & Data Security',
     blurb:
@@ -144,7 +152,7 @@ export const SERVICES: Service[] = [
     tags: ['Hardening', 'Monitoring', 'Backups', 'SSL & Compliance'],
   },
   {
-    num: '11',
+    num: '12',
     slug: 'ada-accessibility',
     title: 'ADA Accessibility',
     blurb:
@@ -152,7 +160,7 @@ export const SERVICES: Service[] = [
     tags: ['WCAG Audits', 'Remediation', 'Screen Reader Testing', 'ADA Compliance'],
   },
   {
-    num: '12',
+    num: '13',
     slug: 'wordpress',
     title: 'WordPress',
     blurb:
@@ -1029,6 +1037,7 @@ export const CONTACT_FORM = {
   services: [
     'Web Design & Development',
     'Software Development',
+    'Custom CRM',
     'Ecommerce',
     'SEO / GEO',
     'Page Speed',
