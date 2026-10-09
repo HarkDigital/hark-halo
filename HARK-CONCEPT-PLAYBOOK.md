@@ -64,7 +64,7 @@ differs from the existing rows.
   - Use **US English** (center, not centre; no Britishisms).
   - Don't repeat the tagline everywhere. Use the original section headlines:
     "See for yourself.", "Whatever it takes." (services: never a count of
-    services), "They talk. We listen.", "First we listen. Then we build.",
+    services), "Word gets around.", "First we listen. Then we build.",
     "Hacked? Breathe.", "Say hello."
   - Give each concept its own microcopy (`MICROCOPY` in content.ts).
 - The site must be **noindex**. The deploy workflow injects it; the concept

@@ -21,9 +21,9 @@ import './voices.css'
  * speaker small beneath it; scrolling to the next voice morphs the tube into
  * the next speaker's print and shifts its colour (cyan → violet → magenta …).
  *
- *   0.00–0.12  intro: the line lies flat and dark: “They talk.” rises in
- *              (0.014–0.036). It catches (0.036–0.056) and lights up: “We
- *              Listen.” (0.040–0.058); settled 0.06 (heading) and 0.08
+ *   0.00–0.12  intro: the line lies flat and dark: “Word gets” rises in
+ *              (0.014–0.036). It catches (0.036–0.056) and lights up:
+ *              “around.” (0.040–0.058); settled 0.06 (heading) and 0.08
  *              (landing), clear of the cut; both leave 0.097–0.117
  *   0.12–0.93  eight voices (0.101 each): hold (the quote, the live line; a
  *              soft playhead reads along the voice as you scroll) → around
@@ -182,9 +182,10 @@ export default function create(): Chapter {
     ticks = TESTIMONIALS.map(() => el('i', '', undefined, tickRow))
 
     body = el('div', 'vx-body', undefined, card)
-    // “They talk.” first; “We listen.” (the lit accent) once the line catches.
-    // (on the card, not the body: it's centred on the whole pane)
-    const m = SECTIONS.voices.title.match(/^(.*?\.)\s+(.*)$/)
+    // two beats, a line each: the first sentence, then the second once the line catches
+    // ("They talk." / "We listen."); a single sentence splits before its last word
+    // ("Word gets" / "around."). (On the card, not the body: it's centred on the whole pane)
+    const m = SECTIONS.voices.title.match(/^(.*?\.)\s+(.*)$/) ?? SECTIONS.voices.title.match(/^(.*\S)\s+(\S+)$/)
     title = el('h2', 'hud-h2 vx-title', undefined, card)
     titleA = rise(el('span', 'vx-t1', undefined, title), m ? m[1] : SECTIONS.voices.title)
     title.appendChild(document.createTextNode(' '))
@@ -278,7 +279,7 @@ export default function create(): Chapter {
    * gate) only fades whole groups, on top.
    */
   function scrubWords(local: number, calm: boolean, g: number) {
-    /* the intro title: “They talk.”, then “We listen.”; they leave last word first */
+    /* the intro title's two beats (“Word gets”, then “around.”); they leave last word first */
     const nA = titleScrubA.count
     const nB = titleScrubB.count
     if (local >= TITLE_OUT1) {

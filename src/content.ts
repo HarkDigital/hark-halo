@@ -951,9 +951,9 @@ export const TESTIMONIALS: Testimonial[] = [
     company: 'Bellview Winery',
   },
   {
-    // an excerpt of Alicia's review (the full text is longer than the card holds)
+    // an excerpt of Alicia's review (the full text is longer than the card holds; two of its sentences, no ellipsis)
     quote:
-      'From the very first interaction I had with Hark Digital, they were attentive, professional, and full of creative ideas that truly brought our vision to life. … It’s clear that they put pride in their work, and it shows.',
+      'From the very first interaction I had with Hark Digital, they were attentive, professional, and full of creative ideas that truly brought our vision to life. It’s clear that they put pride in their work, and it shows.',
     name: 'Alicia Fichera',
     company: 'DNS Solutions',
   },
@@ -982,7 +982,7 @@ export const STATS = [
 export const SECTIONS = {
   work: { eyebrow: 'Our work', title: 'See for yourself.' },
   services: { eyebrow: 'What we do', title: 'Whatever it takes.' },
-  voices: { eyebrow: 'Client voices', title: 'They talk. We listen.' },
+  voices: { eyebrow: 'Client voices', title: 'Word gets around.' },
 }
 
 /** How every engagement runs (Software Development process, servicePages.ts). */
