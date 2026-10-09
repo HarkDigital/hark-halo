@@ -291,8 +291,9 @@ export default function create(): Chapter {
       lastLocal = local
 
       const { f, u, turning } = plateAt(local)
-      // presenting: the plate in view is out of the louvres
-      const open = glide(u / 0.32) * (1 - glide((u - 10.72) / 0.3))
+      // presenting: the plate in view is out of the louvres (until the last plate's beat ends: N - 0.28,
+      // 10.72 when there were eleven; it follows the count so the last plate always presents)
+      const open = glide(u / 0.32) * (1 - glide((u - (N - 0.28)) / 0.3))
       // the louvres: hairlines → open (intro, as the segue clears) … open → hairlines (out beat)
       const louvreIn = glide((local - LOUVRE_IN_AT) / LOUVRE_IN_LEN)
       const louvreOut = glide((local - fromB(0.915)) / at(0.266))
