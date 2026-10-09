@@ -1,3 +1,5 @@
+import { SERVICES } from '../../content'
+
 /*
  * The Etched timeline, in viewport heights of scroll (vh) and the local
  * progress they come to. chapters/index.ts reads LENGTH / LANDING / INTRO from
@@ -8,9 +10,9 @@
  *                         copy rises ("Whatever it takes.", from 0.30)
  *                         and holds while the column hangs in its backlight and
  *                         the camera drifts in
- *   0.90–4.09 vh  PLATES  eleven plates, 0.29 vh each: part → turn → settle →
+ *   0.90–… vh     PLATES  one plate per service, 0.29 vh each: part → turn → settle →
  *                         hold (Software Development is the first)
- *   4.09–4.40 vh  OUT     the last plate returns; the louvres close to
+ *   + 0.31 vh     OUT     the last plate returns; the louvres close to
  *                         hairlines of light, the camera pulls back into black
  *
  * (Until Oct 2026 the intro was 0.30 vh of a 3.8 vh chapter, almost all of it
@@ -18,12 +20,16 @@
  * the out beat keep their old scroll lengths exactly.)
  */
 
-/** chapter length (vh) */
-export const LENGTH = 4.4
 /** the intro beat (vh), before plate 1 starts to part */
 export const INTRO_VH = 0.9
-/** the eleven plates (vh): 0.84 of the old 3.8 vh chapter */
-export const PLATES_VH = 3.192
+/** one plate's share (vh), as tuned for eleven: 0.84 of the old 3.8 vh chapter over 11 */
+const PLATE_VH = 3.192 / 11
+/** the plates (vh): one share each, so a new service adds a plate's worth of scroll, not a squeeze */
+export const PLATES_VH = PLATE_VH * SERVICES.length
+/** the out beat (vh) */
+const OUT_VH = 0.308
+/** chapter length (vh): 4.4 with eleven services */
+export const LENGTH = INTRO_VH + PLATES_VH + OUT_VH
 
 /** vh of scroll → local progress */
 export const at = (vh: number) => vh / LENGTH

@@ -4,7 +4,7 @@ A brief for writing the copy for a new service on hark.digital (the Hark Halo si
 
 **How to use it:** fill in the template in the section "The template" for the service you have been building, and hand the filled-in file to the Hark Halo thread. That thread wires it into the site: the page itself, the home page, the menus, the contact form and the copy spreadsheet. You only write words; you never touch the site's code.
 
-The site has eleven services today: Software Development, Web Design & Development, Ecommerce, SEO / GEO, Page Speed, AI Consulting, Aerial Photography & Video, Hack Remediation, Website & Data Security, ADA Accessibility and WordPress. Read two or three of their live pages (`https://harkdigital.github.io/hark-halo/services/<slug>/`, for example `/services/page-speed/`) before writing; matching their voice matters more than anything in this file.
+The site has twelve services today: Software Development, Web Design & Development, Ecommerce, SEO / GEO, Page Speed, AI Consulting, Company Knowledge AI, Aerial Photography & Video, Hack Remediation, Website & Data Security, ADA Accessibility and WordPress. Read two or three of their live pages (`https://harkdigital.github.io/hark-halo/services/<slug>/`, for example `/services/page-speed/`) before writing; matching their voice matters more than anything in this file.
 
 ---
 
@@ -25,6 +25,7 @@ One service's words appear in more places than its own page:
 
 1. **Hero:** the service title as a small label, then the **headline** (big, two lines), the **lede** (a short paragraph), and two fixed buttons ("Start a project" and "All services"). Behind it, the service's own animated **hero scene**.
 2. **What you get:** four frosted panels, each a **feature** (a title and a paragraph).
+   - *Optional:* a **Connects with** logo wall of the tools the service works with (Company Knowledge AI has one): a label, one line, the tools (Simple Icons slugs) and any tools to name in text instead. Ask for it in the build notes.
 3. **The number:** one big **stat** with a caps label under it.
 4. **How it works:** the fixed heading "First we listen. Then we build." and four **process steps** (a short title and one sentence each).
 5. **The longer version:** the **article**, two (sometimes three) short sections with a heading each.
@@ -91,7 +92,7 @@ Lengths are from the eleven live pages (characters, with spaces). Stay inside th
 
 ## The template
 
-Copy everything between the lines, fill it in, and hand it back. Leave a field as `(none)` if it doesn't apply (only the client quote is optional).
+Copy everything between the lines, fill it in, and hand it back. Leave a field as `(none)` if it doesn't apply (only the client quote and the logo wall are optional).
 
 ---
 

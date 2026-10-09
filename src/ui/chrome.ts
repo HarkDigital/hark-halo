@@ -71,7 +71,7 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
 
   const brandInner = `<span class="ch-logo" aria-hidden="true">${logoSvg('ch-logo-svg')}</span>`
 
-  // (Services carries the dropdown of the eleven service pages; Work goes straight to the Portfolio page)
+  // (Services carries the dropdown of the service pages; Work goes straight to the Portfolio page)
   const links = NAV.filter(id => indexOf(id) >= 0)
     .map(id => {
       const a = id === 'work' ? `<a class="ch-link" href="${portfolioUrl()}">${biz(id)}</a>` : `<a class="ch-link" href="#${id}" data-go="${id}">${biz(id)}</a>`

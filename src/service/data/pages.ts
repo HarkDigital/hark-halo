@@ -9,7 +9,7 @@ export interface ServicePageData {
   slug: string
   num: string
   title: string
-  scene: 'dataflow' | 'blueprint' | 'commerce' | 'radar' | 'velocity' | 'neural' | 'aerial' | 'glitch' | 'shield' | 'focus' | 'blocks' | 'sift' | 'network'
+  scene: 'dataflow' | 'blueprint' | 'commerce' | 'radar' | 'velocity' | 'neural' | 'aerial' | 'glitch' | 'shield' | 'focus' | 'blocks' | 'sift' | 'network' | 'constellation'
   headline: string
   /** part of the headline rendered in the signal color */
   headlineAccent?: string
@@ -20,6 +20,14 @@ export interface ServicePageData {
   /** matches tags in work.ts to surface related projects */
   relatedTags: string[]
   quote?: { text: string; name: string; company: string }
+  /**
+   * The tools it connects to, as a wall of logos between "What you get" and the stat
+   * (main.ts). Logos show compatibility only: one uniform white treatment, no
+   * "partner" or "certified" wording. `icon` is a Simple Icons slug (pinned version,
+   * main.ts SIMPLE_ICONS); `byName` are tools whose makers keep their marks out of
+   * open libraries, named in text instead.
+   */
+  integrations?: { label: string; line: string; logos: { name: string; icon: string }[]; byName?: string[] }
   cta: string
 }
 
@@ -256,8 +264,77 @@ export const SERVICE_PAGES: ServicePageData[] = [
     cta: 'Curious what AI could actually do for your business? Ask us for the honest version.',
   },
   {
-    slug: 'aerial-media',
+    slug: 'company-knowledge-ai',
     num: '07',
+    title: 'Company Knowledge AI',
+    scene: 'constellation',
+    headline: 'Ask your whole company',
+    headlineAccent: 'anything.',
+    lede: 'Your business already knows the answer. It’s just scattered across shared drives, chat threads, inboxes, and project tools. We build a private AI that reads all of it, answers your team’s questions in plain English, and links every claim to its source.',
+    features: [
+      {
+        title: 'Answers that cite sources',
+        text: 'Every answer links to the document, message, or task it came from, so your team can check it in one click instead of taking it on faith. When the answer isn’t in your files, it says so plainly and suggests where to look, rather than guessing.',
+      },
+      {
+        title: 'Connected to your tools',
+        text: 'We connect the places your knowledge already lives: Google Drive, Slack, email, project managers like Asana or Jira, and CRMs like HubSpot. It keeps itself in sync as files and threads change, so nobody has to upload anything or keep a second system up to date.',
+      },
+      {
+        title: 'Private by design',
+        text: 'It runs on a server your business owns, reads your tools without the power to change them, and only your team’s accounts can sign in. The AI model sees just the passages each question needs, under business terms that keep your data out of its training.',
+      },
+      {
+        title: 'Tested on your questions',
+        text: 'Before anyone relies on it, your own people grade its answers to questions they already know cold. We fix what the grading turns up, missing folders, unclear sources, gaps in what gets written down, so trust is earned on real work, not promised in a demo.',
+      },
+    ],
+    process: [
+      { title: 'Listen', text: 'We learn where your team’s knowledge lives and which questions eat up their week.' },
+      { title: 'Connect', text: 'We link your drives, chat, and project tools with read-only access, on a server you own.' },
+      { title: 'Test', text: 'Your team grades real answers to questions they already know, before anyone depends on it.' },
+      { title: 'Launch & tune', text: 'We roll it out, watch what people actually ask, and close the gaps their questions reveal.' },
+    ],
+    // McKinsey Global Institute, “The social economy” (July 2012): interaction workers spend
+    // about 19 percent of their time searching for and gathering information
+    stat: { value: '19%', label: 'Of the average knowledge worker’s week goes to searching for and gathering information' },
+    relatedTags: ['Software'],
+    integrations: {
+      label: 'Connects with',
+      line: 'If your team keeps its knowledge there, we can usually connect it.',
+      logos: [
+        { name: 'Google Drive', icon: 'googledrive' },
+        { name: 'Google Docs', icon: 'googledocs' },
+        { name: 'Google Sheets', icon: 'googlesheets' },
+        { name: 'Gmail', icon: 'gmail' },
+        { name: 'Dropbox', icon: 'dropbox' },
+        { name: 'Box', icon: 'box' },
+        { name: 'Notion', icon: 'notion' },
+        { name: 'Confluence', icon: 'confluence' },
+        { name: 'Zoom', icon: 'zoom' },
+        { name: 'Google Meet', icon: 'googlemeet' },
+        { name: 'Google Calendar', icon: 'googlecalendar' },
+        { name: 'Asana', icon: 'asana' },
+        { name: 'ClickUp', icon: 'clickup' },
+        { name: 'Trello', icon: 'trello' },
+        { name: 'Jira', icon: 'jira' },
+        { name: 'Basecamp', icon: 'basecamp' },
+        { name: 'Airtable', icon: 'airtable' },
+        { name: 'HubSpot', icon: 'hubspot' },
+        { name: 'Mailchimp', icon: 'mailchimp' },
+        { name: 'QuickBooks', icon: 'quickbooks' },
+        { name: 'Xero', icon: 'xero' },
+        { name: 'Stripe', icon: 'stripe' },
+        { name: 'Zendesk', icon: 'zendesk' },
+        { name: 'Intercom', icon: 'intercom' },
+      ],
+      byName: ['Slack', 'Microsoft 365', 'Salesforce'],
+    },
+    cta: 'Think of the last answer you spent an hour hunting for. That’s the one we start with.',
+  },
+  {
+    slug: 'aerial-media',
+    num: '08',
     title: 'Aerial Photography & Video',
     scene: 'aerial',
     headline: 'Your business, from',
@@ -293,7 +370,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
   },
   {
     slug: 'hack-remediation',
-    num: '08',
+    num: '09',
     title: 'Hack Remediation',
     scene: 'glitch',
     headline: 'Breathe. Then',
@@ -334,7 +411,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
   },
   {
     slug: 'security',
-    num: '09',
+    num: '10',
     title: 'Website & Data Security',
     scene: 'shield',
     headline: 'The best hack is the one that',
@@ -370,7 +447,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
   },
   {
     slug: 'ada-accessibility',
-    num: '10',
+    num: '11',
     title: 'ADA Accessibility',
     scene: 'focus',
     headline: 'Every visitor.',
@@ -406,7 +483,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
   },
   {
     slug: 'wordpress',
-    num: '11',
+    num: '12',
     title: 'WordPress',
     scene: 'blocks',
     headline: 'WordPress, without the',

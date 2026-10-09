@@ -1,7 +1,7 @@
 import { SERVICES } from '../../content'
 
 /*
- * Etched — the eleven service plates, drawn into ONE canvas atlas.
+ * Etched — the service plates (one per service), drawn into ONE canvas atlas.
  *
  * Each cell is the face of a glass tile in reverse etching: the icon, the
  * plate number, the service name and four registration marks are the CLEAR
@@ -136,6 +136,30 @@ const GLYPHS: Record<string, (g: Ctx) => void> = {
       poly(g, [[27, o], [39, o]])
     }
     sparkle(g, 0, 0, 15)
+  },
+  // a speech bubble holding a folded page: ask, and the answer comes from your files
+  'company-knowledge-ai': g => {
+    const l = -40
+    const t = -34
+    const w = 80
+    const h = 58
+    const r = 13
+    g.beginPath()
+    g.moveTo(l + r, t)
+    g.arcTo(l + w, t, l + w, t + h, r)
+    g.arcTo(l + w, t + h, l, t + h, r)
+    g.lineTo(-12, t + h)
+    g.lineTo(-25, t + h + 15)
+    g.lineTo(-23, t + h)
+    g.arcTo(l, t + h, l, t, r)
+    g.arcTo(l, t, l + w, t, r)
+    g.closePath()
+    g.stroke()
+    // the page, its corner folded down
+    poly(g, [[-13, -21], [5, -21], [13, -13], [13, 11], [-13, 11]], true)
+    poly(g, [[5, -21], [5, -13], [13, -13]])
+    poly(g, [[-7, -6], [7, -6]])
+    poly(g, [[-7, 1], [4, 1]])
   },
   // a quadcopter, top-down
   'aerial-media': g => {

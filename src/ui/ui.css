@@ -264,7 +264,7 @@
 }
 
 /* ---------------- the Services dropdown (ui/servicesMenu.ts) ----------------
-   a chevron beside the link opens a frosted list of the eleven service pages */
+   a chevron beside the link opens a frosted list of the service pages */
 .ch-dd {
   position: relative;
   display: flex;

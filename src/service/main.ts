@@ -45,6 +45,12 @@ applyLightsCss()
 const BASE = import.meta.env.BASE_URL
 const esc = (s: string) => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
 const serviceHref = (slug: string) => `${BASE}services/${slug}/`
+/** the logo wall's icons (a service's `integrations`): Simple Icons, pinned so an update can't change a logo */
+const SIMPLE_ICONS = 'https://cdn.jsdelivr.net/npm/simple-icons@16.34.0/icons/'
+/** a title in a sentence ("…about page speed."): title-case words go lower case; AI, SEO, WordPress keep theirs */
+/** "a, b, and c" */
+const listOf = (xs: string[]) => (xs.length < 3 ? xs.join(' and ') : `${xs.slice(0, -1).join(', ')}, and ${xs[xs.length - 1]}`)
+const inSentence = (t: string) => t.replace(/\b[A-Z][a-z]+\b/g, w => w.toLowerCase())
 
 const slug = location.pathname.match(/\/services\/([a-z0-9-]+)\/?$/)?.[1] ?? ''
 const index = SERVICE_PAGES.findIndex(p => p.slug === slug)
@@ -109,6 +115,24 @@ function render(i: number) {
         </li>`,
     )
     .join('')
+  const ints = page.integrations
+  const integrations = ints
+    ? `
+    <section class="svc-sec svc-ints" aria-labelledby="svc-ints-h">
+      <h2 class="svc-eyebrow hud-eyebrow svc-rv" data-rv="wipe" id="svc-ints-h">${esc(ints.label)}</h2>
+      <p class="hud-body svc-ints-line svc-rv" data-rv="wipe" style="--d:1">${esc(ints.line)}</p>
+      <ul class="svc-ints-grid">${ints.logos
+        .map(
+          (l, k) => `
+        <li class="svc-int svc-rv" style="--d:${Math.min(k, 12) * 0.5}">
+          <img class="svc-int-i" src="${SIMPLE_ICONS}${esc(l.icon)}.svg" alt="" width="24" height="24" loading="lazy" decoding="async">
+          <span class="svc-int-n">${esc(l.name)}</span>
+        </li>`,
+        )
+        .join('')}</ul>
+      ${ints.byName?.length ? `<p class="svc-ints-also svc-rv" data-rv="wipe">Also ${esc(listOf(ints.byName))}.</p>` : ''}
+    </section>`
+    : ''
   const article = content
     ? `
     <section class="svc-sec svc-article" aria-labelledby="svc-article-h">
@@ -130,7 +154,7 @@ function render(i: number) {
     ? `
     <section class="svc-sec svc-faq" aria-labelledby="svc-faq-h">
       <p class="hud-eyebrow svc-rv" data-rv="wipe">Questions, answered</p>
-      <h2 class="hud-h2 svc-h2 svc-rv" data-words id="svc-faq-h">What people ask us about ${esc(page.title.toLowerCase())}.</h2>
+      <h2 class="hud-h2 svc-h2 svc-rv" data-words id="svc-faq-h">What people ask us about ${esc(inSentence(page.title))}.</h2>
       <div class="svc-faq-list">
         ${content.faqs
           .map(
@@ -175,6 +199,7 @@ function render(i: number) {
       <h2 class="svc-eyebrow hud-eyebrow svc-rv" data-rv="wipe" id="svc-features-h">What you get</h2>
       <ul class="svc-feature-grid">${features}</ul>
     </section>
+    ${integrations}
 
     <section class="svc-stat" aria-label="By the numbers">
       <p class="svc-stat-in svc-rv" data-rv="stat">

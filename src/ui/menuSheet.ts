@@ -8,7 +8,7 @@ import { holdInert, releaseInert } from './inert'
  * service page and the Portfolio (page/shell.ts). A "Menu" pill opens a full-screen black
  * frosted sheet, a real modal dialog (focus trap, Escape, the layers behind
  * it inert with a fallback, focus back to Menu on close): the sections as big
- * plain names (Services opens the eleven service pages beneath it; the
+ * plain names (Services opens the service pages beneath it; the
  * section you are in is lit, with a glass bead), 'Start a project'
  * (and the host's own extra button), the address, and the mark drawn as a
  * hairline behind it all.

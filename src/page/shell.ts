@@ -19,7 +19,7 @@ import { rise } from '../core/rise'
  *             sheet (ui/menuSheet.ts)
  *   contact   "Say hello." + the form (a service preselected on its own page)
  *             inside a card whose neon edge draws in on scroll
- *   footer    the eleven services, the site's own pages, the logo, colophon
+ *   footer    every service, the site's own pages, the logo, colophon
  *   reveals   the service pages' entrances (service.css .svc-rv kinds)
  *   spots     the frosted panels' cursor glow (service pages)
  *
@@ -124,7 +124,7 @@ export function mountContact(o: { service?: string } = {}) {
   mountNeonFrame(cardEl)
 }
 
-/** The footer: the eleven services (this one marked), the site's own pages (Work is the Portfolio). */
+/** The footer: every service (this one marked), the site's own pages (Work is the Portfolio). */
 export function footerHtml(current: Current): string {
   const slug = current.kind === 'service' ? current.slug : ''
   const index11 = SERVICE_PAGES.map(

@@ -5,7 +5,7 @@ import { SERVICES } from '../../content'
 import { buildAtlas, type Atlas } from './icons'
 
 /*
- * The Etched deck: eleven thick glass plates hung as a column of louvres.
+ * The Etched deck: thick glass plates (one per service) hung as a column of louvres.
  *
  * Each plate is ONE mesh with two materials: sandblasted caps (frosted
  * transmission, roughness animates: the plate in view thaws a little) and

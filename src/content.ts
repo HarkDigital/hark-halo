@@ -113,6 +113,14 @@ export const SERVICES: Service[] = [
   },
   {
     num: '07',
+    slug: 'company-knowledge-ai',
+    title: 'Company Knowledge AI',
+    blurb:
+      'Answers buried in Drive folders, Slack threads, and old project notes? We build a private AI that searches all of it, answers in plain English, and shows its sources.',
+    tags: ['AI Knowledge Base', 'Private AI Assistant', 'Chat With Your Documents', 'Internal Search'],
+  },
+  {
+    num: '08',
     slug: 'aerial-media',
     title: 'Aerial Photography & Video',
     blurb:
@@ -120,7 +128,7 @@ export const SERVICES: Service[] = [
     tags: ['Drone Video', 'Real Estate', 'Inspections', 'Cinematic'],
   },
   {
-    num: '08',
+    num: '09',
     slug: 'hack-remediation',
     title: 'Hack Remediation',
     blurb:
@@ -128,7 +136,7 @@ export const SERVICES: Service[] = [
     tags: ['Malware Removal', 'Breach Response', 'Recovery', 'Blocklist Removal'],
   },
   {
-    num: '09',
+    num: '10',
     slug: 'security',
     title: 'Website & Data Security',
     blurb:
@@ -136,7 +144,7 @@ export const SERVICES: Service[] = [
     tags: ['Hardening', 'Monitoring', 'Backups', 'SSL & Compliance'],
   },
   {
-    num: '10',
+    num: '11',
     slug: 'ada-accessibility',
     title: 'ADA Accessibility',
     blurb:
@@ -144,7 +152,7 @@ export const SERVICES: Service[] = [
     tags: ['WCAG Audits', 'Remediation', 'Screen Reader Testing', 'ADA Compliance'],
   },
   {
-    num: '11',
+    num: '12',
     slug: 'wordpress',
     title: 'WordPress',
     blurb:
@@ -1025,6 +1033,7 @@ export const CONTACT_FORM = {
     'SEO / GEO',
     'Page Speed',
     'AI Consulting',
+    'Company Knowledge AI',
     'Aerial Photography & Video',
     'Hack Remediation',
     'Website & Data Security',

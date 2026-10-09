@@ -442,6 +442,87 @@ html.is-svc.menu-open {
   color: var(--fg-muted);
 }
 
+/* Connects with (a service's `integrations`): one uniform white mark per tool, its name
+   beside it, on a dark glass chip (no backdrop-filter: two dozen of them). The marks show
+   compatibility only, so every one gets the same treatment: no brand colour, no size of its own */
+.svc-ints-line {
+  max-width: 46ch;
+  margin: calc(-14 * var(--hud-px)) 0 calc(34 * var(--hud-px));
+}
+.svc-ints-grid {
+  display: grid;
+  /* six across (24 tools: four even rows), four on tablets, three, then two on phones */
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: calc(10 * var(--hud-px));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.svc-int {
+  display: flex;
+  align-items: center;
+  gap: calc(12 * var(--hud-px));
+  min-width: 0;
+  padding: calc(14 * var(--hud-px)) calc(16 * var(--hud-px));
+  border-radius: calc(14 * var(--hud-px));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 0 0 1px var(--line);
+  transition: box-shadow 0.4s ease;
+}
+.svc-int-i {
+  flex: none;
+  width: calc(24 * var(--hud-px));
+  height: calc(24 * var(--hud-px));
+  /* every mark white (the files are one-colour paths) */
+  filter: brightness(0) invert(1);
+  opacity: 0.78;
+  transition: opacity 0.4s ease;
+}
+.svc-int-n {
+  min-width: 0;
+  font-size: calc(14.5 * var(--hud-px));
+  line-height: 1.25;
+  color: var(--fg-muted);
+  overflow-wrap: anywhere;
+}
+@media (hover: hover) {
+  .svc-int:hover {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.22),
+      0 0 18px rgba(var(--neon-a-rgb), 0.16);
+  }
+  .svc-int:hover .svc-int-i {
+    opacity: 1;
+  }
+}
+.svc-ints-also {
+  margin: calc(22 * var(--hud-px)) 0 0;
+  font-size: calc(15 * var(--hud-px));
+  color: var(--fg-muted);
+}
+@media (max-width: 1180px) {
+  .svc-ints-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (max-width: 760px) {
+  .svc-ints-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 520px) {
+  .svc-ints-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .svc-int {
+    padding: 12px;
+    gap: 10px;
+  }
+}
+
 /* the stat: a band of light across the page */
 .svc-stat {
   margin-top: clamp(80px, 13vh, calc(150 * var(--hud-px)));
@@ -768,7 +849,7 @@ html.is-svc.menu-open {
   padding: 0;
   list-style: none;
 }
-/* the eleven services: down, then across, three columns */
+/* the services: down, then across, three columns of four (twelve fit; a thirteenth starts a fourth column) */
 .svc-foot-svc ul {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-template-rows: repeat(4, auto);

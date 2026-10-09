@@ -104,7 +104,7 @@
   box-shadow: 0 0 12px var(--et-neon);
   pointer-events: none;
 }
-/* all eleven share one grid cell, so the card never jumps */
+/* they all share one grid cell, so the card never jumps */
 .stage-services .et-stack {
   display: grid;
 }
@@ -197,7 +197,7 @@
 /* one dot per service (no numbers); the lit one stretches into a neon bar */
 .stage-services .et-keys {
   display: grid;
-  grid-template-columns: repeat(11, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--et-n, 11), minmax(0, 1fr));
   gap: 3px;
   padding-top: 12px;
   border-top: 1px solid var(--line);

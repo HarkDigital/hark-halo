@@ -313,6 +313,53 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
     ],
   },
 
+  'company-knowledge-ai': {
+    metaDescription:
+      'Private AI knowledge assistants for Philadelphia small businesses. We connect Google Drive, Slack, and project tools so your team gets cited answers from its own files. Hark Digital.',
+    article: [
+      {
+        heading: 'What company knowledge AI is, and why it matters',
+        paragraphs: [
+          'Company knowledge AI is a private assistant that answers questions from your own business records: shared files, chat history, project tasks, and the notes nobody can find twice. It works by retrieval. For each question it searches your material first, then writes an answer from what it found and cites the sources. The technique is called retrieval-augmented generation, or RAG, and it is what keeps the answers grounded in your files instead of the internet.',
+          'It matters because knowledge gets stuck in people. McKinsey found that knowledge workers spend about 19 percent of their week searching for and gathering information, and in a small business that time usually lands on whoever has been there longest. For Philadelphia small businesses juggling many clients, accounts, or projects, it turns handovers, call prep, and “where did we decide that?” into a question with a cited answer.',
+        ],
+      },
+      {
+        heading: 'When it’s worth building, and when it isn’t',
+        paragraphs: [
+          'It earns its keep when your knowledge is spread across several tools and years of work: an agency with a folder for every client, a firm with matter files and email threads, a contractor with project notes and change orders. If your team keeps asking the same people the same questions, that is the signal. It also shines at handovers, when someone new inherits an account and needs its history.',
+          'It is not worth it if your records are thin or already live in one tidy place, and it cannot know what was never written down. We tell you that up front. Some client contracts also limit how their material can be used with AI, so we help you decide what stays out before anything is connected.',
+        ],
+      },
+    ],
+    faqs: [
+      {
+        q: 'How is this different from ChatGPT or Copilot?',
+        a: 'ChatGPT knows the internet, not your business, and built-in assistants like Copilot or Gemini mostly see the suite they ship with. A company knowledge AI searches across the specific tools you choose, cites the file behind every answer, and runs on infrastructure you control. It is built around your team’s real questions, not a general-purpose chat box.',
+      },
+      {
+        q: 'Will an AI assistant make things up about our clients?',
+        a: 'It can, which is why the design matters. Ours answers only from what it finds in your files, links every claim to its source, and says plainly when it can’t find something. During testing your team grades answers to questions they already know, including trap questions built to tempt it into guessing.',
+      },
+      {
+        q: 'Does the AI company train its models on our files?',
+        a: 'Not under business API terms. Providers like Anthropic and OpenAI don’t train on data sent through their business APIs by default, and some offer zero data retention, so requests aren’t stored once the answer comes back. We set it up under those terms and send only the passages each question needs.',
+      },
+      {
+        q: 'What is retrieval-augmented generation (RAG)?',
+        a: 'Retrieval-augmented generation is a way of answering questions where an AI first searches a set of documents, then writes its answer from the passages it found. It keeps answers grounded in your own records instead of the model’s general memory, and it is what makes citations possible.',
+      },
+      {
+        q: 'Which tools can a company knowledge AI connect to?',
+        a: 'Most tools that hold your team’s knowledge and offer an API: Google Drive and Gmail, Microsoft 365, Slack, Dropbox, Notion, project managers like Asana, Jira, or Teamwork, CRMs like HubSpot or Salesforce, and accounting tools like QuickBooks. We start with the two or three sources where most of your answers live, then add others once those earn their place.',
+      },
+      {
+        q: 'Who in my company can see what?',
+        a: 'Everyone who can sign in can ask about anything that’s connected, so the real control is what you connect. Contracts, budgets, or HR files can stay out entirely, and when different roles need different access, we scope that with you before launch.',
+      },
+    ],
+  },
+
   'aerial-media': {
     metaDescription:
       'FAA Part 107 licensed drone photography and video in Philadelphia, real estate aerials, construction progress, inspections, and 4K cinematic production. Legal, insured, professional.',

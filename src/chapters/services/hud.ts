@@ -7,10 +7,10 @@ import { SECTIONS, SERVICE_CTA, SERVICES, serviceUrl } from '../../content'
  * ease-outs), so wherever the scroll rests the copy is settled and exact.
  *
  *   intro   eyebrow + "Whatever it takes."
- *   card    frosted glass: NN / 11 · title · blurb · the service's own
- *           page ("Explore the service →", src/service/*) · 01–11 index
+ *   card    frosted glass: title · blurb · the service’s own
+ *           page ("Explore the service →", src/service/*)
  *
- * All eleven items share one grid cell, so the card never changes size.
+ * All the items share one grid cell, so the card never changes size.
  * metrics() reports the live layout so the camera frames the column into
  * the space the copy leaves free (re-measured only when something resizes).
  */
@@ -71,6 +71,8 @@ export class Hud {
       this.items.push({ root, title })
     }
     const keys = el('div', 'et-keys', undefined, this.card)
+    // (one column per service: services.css --et-n)
+    keys.style.setProperty('--et-n', String(SERVICES.length))
     // one dot per service (no numbers): named for assistive tech and on hover
     SERVICES.forEach((s, k) => {
       const b = el('button', 'et-key', undefined, keys)

@@ -3,7 +3,7 @@ import { SERVICES, serviceUrl } from '../content'
 /*
  * The header's SERVICES DROPDOWN (the story's chrome and every service page):
  * the Services link stays what it was (the chapter, or back to it); a small
- * chevron beside it opens a frosted list of the eleven service pages.
+ * chevron beside it opens a frosted list of the service pages.
  *
  * On phones: the Menu sheet (ui/menuSheet.ts, the story's and every service
  * page's) opens the same list under its Services row (servicesMenuSub).

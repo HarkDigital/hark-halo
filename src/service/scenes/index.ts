@@ -5,6 +5,7 @@ import { aerial } from './aerial'
 import { blocks } from './blocks'
 import { blueprint } from './blueprint'
 import { commerce } from './commerce'
+import { constellation } from './constellation'
 import { dataflow } from './dataflow'
 import { focus } from './focus'
 import { glitch } from './glitch'
@@ -30,6 +31,7 @@ const SCENES: Partial<Record<ServicePageData['scene'], () => Scene>> = {
   shield,
   focus,
   blocks,
+  constellation,
 }
 
 export function mountScene(host: HTMLElement, name: ServicePageData['scene'], o: { reduced: boolean }): SceneHandle {

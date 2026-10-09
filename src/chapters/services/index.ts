@@ -26,7 +26,7 @@ import './services.css'
  *                the louvres open out of hairlines, the whole column hangs in
  *                its backlight, the camera drifts in. "Whatever it takes."
  *                rises at 0.068 and holds to 0.217 (landing 0.15)
- *   0.205–0.930  eleven plates (~0.066 each): part → turn → settle → hold
+ *   0.205–0.930  the plates (~0.066 each with eleven): part → turn → settle → hold
  *   0.930–1.000  the last plate returns; the louvres close to hairlines of
  *                light and the camera pulls back into black
  *
