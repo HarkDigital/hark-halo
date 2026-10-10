@@ -442,18 +442,20 @@ html.is-svc.menu-open {
   color: var(--fg-muted);
 }
 
-/* Connects with (a service's `integrations`): one uniform white mark per tool, its name
-   beside it, on a dark glass chip (no backdrop-filter: two dozen of them). The marks show
-   compatibility only, so every one gets the same treatment: no brand colour, no size of its own */
+/* Connects with (a service's `integrations`): the tools' own logos, no cards. Every logo
+   is one flat colour (the file is a mask: white at rest, a site neon on hover, each tile
+   its own of the three, --c). A full logo (mark + wordmark, public/logos/) stands alone;
+   a tool with only a mark shows it beside its name */
 .svc-ints-line {
   max-width: 46ch;
-  margin: calc(-14 * var(--hud-px)) 0 calc(34 * var(--hud-px));
+  margin: calc(-14 * var(--hud-px)) 0 calc(40 * var(--hud-px));
 }
 .svc-ints-grid {
-  display: grid;
   /* six across (24 tools: four even rows), four on tablets, three, then two on phones */
+  display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: calc(10 * var(--hud-px));
+  gap: calc(34 * var(--hud-px)) calc(28 * var(--hud-px));
+  align-items: center;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -461,45 +463,49 @@ html.is-svc.menu-open {
 .svc-int {
   display: flex;
   align-items: center;
-  gap: calc(12 * var(--hud-px));
+  gap: calc(10 * var(--hud-px));
   min-width: 0;
-  padding: calc(14 * var(--hud-px)) calc(16 * var(--hud-px));
-  border-radius: calc(14 * var(--hud-px));
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.07),
-    inset 0 0 0 1px var(--line);
-  transition: box-shadow 0.4s ease;
+  color: rgba(255, 255, 255, 0.78);
+  transition:
+    color 0.35s ease,
+    filter 0.35s ease;
+}
+.svc-int-logo,
+.svc-int-i {
+  display: block;
+  flex: none;
+  background: currentColor;
+  -webkit-mask: var(--logo) center / contain no-repeat;
+  mask: var(--logo) center / contain no-repeat;
+}
+/* a full logo: one height for all, as wide as its shape (contained in the tile) */
+.svc-int-logo {
+  width: 100%;
+  max-width: calc(150 * var(--hud-px));
+  height: calc(30 * var(--hud-px));
+  -webkit-mask-position: left center;
+  mask-position: left center;
 }
 .svc-int-i {
-  flex: none;
   width: calc(24 * var(--hud-px));
   height: calc(24 * var(--hud-px));
-  /* every mark white (the files are one-colour paths) */
-  filter: brightness(0) invert(1);
-  opacity: 0.78;
-  transition: opacity 0.4s ease;
 }
 .svc-int-n {
   min-width: 0;
-  font-size: calc(14.5 * var(--hud-px));
-  line-height: 1.25;
-  color: var(--fg-muted);
+  font-size: calc(15 * var(--hud-px));
+  font-weight: 560;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
   overflow-wrap: anywhere;
 }
 @media (hover: hover) {
   .svc-int:hover {
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.1),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.22),
-      0 0 18px rgba(var(--neon-a-rgb), 0.16);
-  }
-  .svc-int:hover .svc-int-i {
-    opacity: 1;
+    color: var(--c);
+    filter: drop-shadow(0 0 10px rgba(var(--c-rgb), 0.55));
   }
 }
 .svc-ints-also {
-  margin: calc(22 * var(--hud-px)) 0 0;
+  margin: calc(34 * var(--hud-px)) 0 0;
   font-size: calc(15 * var(--hud-px));
   color: var(--fg-muted);
 }
@@ -516,10 +522,10 @@ html.is-svc.menu-open {
 @media (max-width: 520px) {
   .svc-ints-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 26px 18px;
   }
-  .svc-int {
-    padding: 12px;
-    gap: 10px;
+  .svc-int-logo {
+    height: 26px;
   }
 }
 

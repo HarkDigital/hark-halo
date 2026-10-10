@@ -22,12 +22,13 @@ export interface ServicePageData {
   quote?: { text: string; name: string; company: string }
   /**
    * The tools it connects to, as a wall of logos between "What you get" and the stat
-   * (main.ts). Logos show compatibility only: one uniform white treatment, no
-   * "partner" or "certified" wording. `icon` is a Simple Icons slug (pinned version,
-   * main.ts SIMPLE_ICONS); `byName` are tools whose makers keep their marks out of
-   * open libraries, named in text instead.
+   * (main.ts). Logos show compatibility only: one flat colour for all (white, a site
+   * neon on hover), no "partner" or "certified" wording. `logo` is the company's own
+   * one-colour full logo (mark + wordmark), self-hosted in public/logos/; without one,
+   * `icon` (a Simple Icons slug, pinned: main.ts SIMPLE_ICONS) shows the mark beside the
+   * name. `byName` are tools named in text instead.
    */
-  integrations?: { label: string; line: string; logos: { name: string; icon: string }[]; byName?: string[] }
+  integrations?: { label: string; line: string; logos: { name: string; icon: string; logo?: string }[]; byName?: string[] }
   cta: string
 }
 

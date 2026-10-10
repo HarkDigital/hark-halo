@@ -124,9 +124,14 @@ function render(i: number) {
       <ul class="svc-ints-grid">${ints.logos
         .map(
           (l, k) => `
-        <li class="svc-int svc-rv" style="--d:${Math.min(k, 12) * 0.5}">
-          <img class="svc-int-i" src="${SIMPLE_ICONS}${esc(l.icon)}.svg" alt="" width="24" height="24" loading="lazy" decoding="async">
-          <span class="svc-int-n">${esc(l.name)}</span>
+        <li class="svc-int svc-rv${l.logo ? ' svc-int--full' : ''}" style="--d:${Math.min(k, 12) * 0.5}; --c:var(--neon-${'abc'[k % 3]}); --c-rgb:var(--neon-${'abc'[k % 3]}-rgb)">${
+          l.logo
+            ? `
+          <span class="svc-int-logo" role="img" aria-label="${esc(l.name)}" style="--logo:url('${BASE}logos/${esc(l.logo)}')"></span>`
+            : `
+          <span class="svc-int-i" aria-hidden="true" style="--logo:url('${SIMPLE_ICONS}${esc(l.icon)}.svg')"></span>
+          <span class="svc-int-n">${esc(l.name)}</span>`
+        }
         </li>`,
         )
         .join('')}</ul>
