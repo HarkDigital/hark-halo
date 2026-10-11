@@ -24,11 +24,12 @@ export interface ServicePageData {
    * The tools it connects to, as a wall of logos between "What you get" and the stat
    * (main.ts). Logos show compatibility only: one flat colour for all (white, a site
    * neon on hover), no "partner" or "certified" wording. `logo` is the company's own
-   * one-colour full logo (mark + wordmark), self-hosted in public/logos/; without one,
-   * `icon` (a Simple Icons slug, pinned: main.ts SIMPLE_ICONS) shows the mark beside the
-   * name. `byName` are tools named in text instead.
+   * one-colour full logo from its brand kit, self-hosted in public/logos/ (`ratio`: its
+   * width / height, for optical sizing). A tool without one (no one-colour version
+   * published, or none at all: Google's products, QuickBooks, Asana…) is named in the
+   * "Also …" line under the wall instead, after it the `byName` tools.
    */
-  integrations?: { label: string; line: string; logos: { name: string; icon: string; logo?: string }[]; byName?: string[] }
+  integrations?: { label: string; line: string; logos: { name: string; logo?: string; ratio?: number }[]; byName?: string[] }
   cta: string
 }
 
@@ -114,18 +115,18 @@ export const SERVICE_PAGES: ServicePageData[] = [
       label: 'Connects with',
       line: 'Your accounting, payments, email, and calendar, wired into one place.',
       logos: [
-        { name: 'QuickBooks', icon: 'quickbooks' },
-        { name: 'Xero', icon: 'xero' },
-        { name: 'Stripe', icon: 'stripe' },
-        { name: 'Square', icon: 'square' },
-        { name: 'PayPal', icon: 'paypal' },
-        { name: 'Gmail', icon: 'gmail' },
-        { name: 'Google Calendar', icon: 'googlecalendar' },
-        { name: 'Google Sheets', icon: 'googlesheets' },
-        { name: 'Mailchimp', icon: 'mailchimp' },
-        { name: 'Calendly', icon: 'calendly' },
-        { name: 'Zapier', icon: 'zapier' },
-        { name: 'HubSpot', icon: 'hubspot' },
+        { name: 'QuickBooks' },
+        { name: 'Xero', logo: 'xero.svg', ratio: 3.552 },
+        { name: 'Stripe', logo: 'stripe.svg', ratio: 2.384 },
+        { name: 'Square', logo: 'square.svg', ratio: 3.989 },
+        { name: 'PayPal', logo: 'paypal.png', ratio: 2.976 },
+        { name: 'Gmail' },
+        { name: 'Google Calendar' },
+        { name: 'Google Sheets' },
+        { name: 'Mailchimp' },
+        { name: 'Calendly', logo: 'calendly.svg', ratio: 4.144 },
+        { name: 'Zapier', logo: 'zapier.svg', ratio: 3.676 },
+        { name: 'HubSpot', logo: 'hubspot.svg', ratio: 3.528 },
       ],
       byName: ['Microsoft 365', 'Salesforce', 'DocuSign', 'Twilio'],
     },
@@ -361,30 +362,30 @@ export const SERVICE_PAGES: ServicePageData[] = [
       label: 'Connects with',
       line: 'If your team keeps its knowledge there, we can usually connect it.',
       logos: [
-        { name: 'Google Drive', icon: 'googledrive' },
-        { name: 'Google Docs', icon: 'googledocs' },
-        { name: 'Google Sheets', icon: 'googlesheets' },
-        { name: 'Gmail', icon: 'gmail' },
-        { name: 'Dropbox', icon: 'dropbox' },
-        { name: 'Box', icon: 'box' },
-        { name: 'Notion', icon: 'notion' },
-        { name: 'Confluence', icon: 'confluence' },
-        { name: 'Zoom', icon: 'zoom' },
-        { name: 'Google Meet', icon: 'googlemeet' },
-        { name: 'Google Calendar', icon: 'googlecalendar' },
-        { name: 'Asana', icon: 'asana' },
-        { name: 'ClickUp', icon: 'clickup' },
-        { name: 'Trello', icon: 'trello' },
-        { name: 'Jira', icon: 'jira' },
-        { name: 'Basecamp', icon: 'basecamp' },
-        { name: 'Airtable', icon: 'airtable' },
-        { name: 'HubSpot', icon: 'hubspot' },
-        { name: 'Mailchimp', icon: 'mailchimp' },
-        { name: 'QuickBooks', icon: 'quickbooks' },
-        { name: 'Xero', icon: 'xero' },
-        { name: 'Stripe', icon: 'stripe' },
-        { name: 'Zendesk', icon: 'zendesk' },
-        { name: 'Intercom', icon: 'intercom' },
+        { name: 'Google Drive' },
+        { name: 'Google Docs' },
+        { name: 'Google Sheets' },
+        { name: 'Gmail' },
+        { name: 'Dropbox', logo: 'dropbox.svg', ratio: 3.688 },
+        { name: 'Box', logo: 'box.png', ratio: 1.889 },
+        { name: 'Notion', logo: 'notion.svg', ratio: 3.086 },
+        { name: 'Confluence', logo: 'confluence.svg', ratio: 4.583 },
+        { name: 'Zoom', logo: 'zoom.png', ratio: 4.442 },
+        { name: 'Google Meet' },
+        { name: 'Google Calendar' },
+        { name: 'Asana' },
+        { name: 'ClickUp', logo: 'clickup.svg', ratio: 4.0 },
+        { name: 'Trello', logo: 'trello.svg', ratio: 2.875 },
+        { name: 'Jira', logo: 'jira.svg', ratio: 2.333 },
+        { name: 'Basecamp' },
+        { name: 'Airtable' },
+        { name: 'HubSpot', logo: 'hubspot.svg', ratio: 3.528 },
+        { name: 'Mailchimp' },
+        { name: 'QuickBooks' },
+        { name: 'Xero', logo: 'xero.svg', ratio: 3.552 },
+        { name: 'Stripe', logo: 'stripe.svg', ratio: 2.384 },
+        { name: 'Zendesk' },
+        { name: 'Intercom' },
       ],
       byName: ['Slack', 'Microsoft 365', 'Salesforce'],
     },

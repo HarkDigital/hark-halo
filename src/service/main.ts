@@ -45,8 +45,6 @@ applyLightsCss()
 const BASE = import.meta.env.BASE_URL
 const esc = (s: string) => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
 const serviceHref = (slug: string) => `${BASE}services/${slug}/`
-/** the logo wall's icons (a service's `integrations`): Simple Icons, pinned so an update can't change a logo */
-const SIMPLE_ICONS = 'https://cdn.jsdelivr.net/npm/simple-icons@16.34.0/icons/'
 /** a title in a sentence ("…about page speed."): title-case words go lower case; AI, SEO, WordPress keep theirs */
 /** "a, b, and c" */
 const listOf = (xs: string[]) => (xs.length < 3 ? xs.join(' and ') : `${xs.slice(0, -1).join(', ')}, and ${xs[xs.length - 1]}`)
@@ -116,26 +114,27 @@ function render(i: number) {
     )
     .join('')
   const ints = page.integrations
+  // (the tools with no logo of their own on the wall are named in the line under it, before the byName ones)
+  const also = ints ? [...ints.logos.filter(l => !l.logo).map(l => l.name), ...(ints.byName ?? [])] : []
   const integrations = ints
     ? `
     <section class="svc-sec svc-ints" aria-labelledby="svc-ints-h">
       <h2 class="svc-eyebrow hud-eyebrow svc-rv" data-rv="wipe" id="svc-ints-h">${esc(ints.label)}</h2>
       <p class="hud-body svc-ints-line svc-rv" data-rv="wipe" style="--d:1">${esc(ints.line)}</p>
       <ul class="svc-ints-grid">${ints.logos
-        .map(
-          (l, k) => `
-        <li class="svc-int svc-rv${l.logo ? ' svc-int--full' : ''}" style="--d:${Math.min(k, 12) * 0.5}; --c:var(--neon-${'abc'[k % 3]}); --c-rgb:var(--neon-${'abc'[k % 3]}-rgb)">${
-          l.logo
-            ? `
-          <span class="svc-int-logo" role="img" aria-label="${esc(l.name)}" style="--logo:url('${BASE}logos/${esc(l.logo)}')"></span>`
-            : `
-          <span class="svc-int-i" aria-hidden="true" style="--logo:url('${SIMPLE_ICONS}${esc(l.icon)}.svg')"></span>
-          <span class="svc-int-n">${esc(l.name)}</span>`
-        }
-        </li>`,
-        )
+        .filter(l => l.logo)
+        .map((l, k) => {
+          // optical sizing: wide wordmarks a little shorter, compact ones a little taller (30 at 3.2:1)
+          const r = l.ratio ?? 3.2
+          const h = Math.min(34, 30 * Math.pow(3.2 / r, 0.4))
+          return `
+        <li class="svc-int svc-rv" style="--d:${Math.min(k, 12) * 0.5}; --c:var(--neon-${'abc'[k % 3]}); --c-rgb:var(--neon-${'abc'[k % 3]}-rgb)">
+          <span class="svc-int-logo" role="img" aria-label="${esc(l.name)}" style="--logo:url('${BASE}logos/${esc(l.logo!)}'); --w:${(h * r).toFixed(1)}; --h:${h.toFixed(1)}"></span>
+        </li>`
+        })
         .join('')}</ul>
-      ${ints.byName?.length ? `<p class="svc-ints-also svc-rv" data-rv="wipe">Also ${esc(listOf(ints.byName))}.</p>` : ''}
+      ${also.length ? `<p class="svc-ints-also svc-rv" data-rv="wipe">Also ${esc(listOf(also))}.</p>` : ''}
+      <p class="svc-ints-tm">Product names and logos are trademarks of their respective owners.</p>
     </section>`
     : ''
   const article = content
