@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js'
-import { flattenCaps, frosted, polished, smoothSides } from '../../kit/glass'
+import { flattenCaps, frosted, polished, smoothSides, frostBiased } from '../../kit/glass'
 import { SERVICES } from '../../content'
 import { buildAtlas, type Atlas } from './icons'
 
@@ -243,6 +243,8 @@ export function buildDeck(mobile: boolean, envMap: THREE.Texture | null): Deck {
     column.add(holder)
 
     const caps = capsBase.clone()
+    // (the frost holds its tuned blur on phones, whatever the glass buffer's size: kit FROST_BIAS)
+    frostBiased(caps)
     const sides = sidesBase.clone()
     // a touch of roughness on the polish: highlights stay razor thin but never
     // shrink below a pixel (sub-pixel HDR lines alias into beads under bloom)

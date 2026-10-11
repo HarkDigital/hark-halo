@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js'
 import { extrudeInset, logoParts, logoShapes } from '../logo/logo'
 import { ACTIVE } from './palette'
+import { FROST_BIAS, FROST_DECL, frostLod } from './frost'
 
 /*
  * Hark Glass kit — one visual language for every chapter.
@@ -128,6 +129,27 @@ export function glass(o: GlassOpts = {}): THREE.MeshPhysicalMaterial {
 }
 
 const LOD_RE = /float lod = log2\( transmissionSamplerSize\.x \) \* applyIorToRoughness\( roughness, ior \);\s*return textureBicubic\( transmissionSamplerMap, fragCoord\.xy, lod \);/
+
+/** FROST on touch devices: kit/frost (re-exported here for the chapters) */
+export { FROST_BIAS, FROST_DECL, frostLod }
+const STOCK_LOD_RE = /float lod = log2\( transmissionSamplerSize\.x \) \* applyIorToRoughness\( roughness, ior \);/
+
+/** three's own frost (stock roughness blur), held at the tuned width on touch devices (FROST_BIAS) */
+export function frostBiased(m: THREE.MeshPhysicalMaterial) {
+  const chunk = THREE.ShaderChunk.transmission_pars_fragment
+  if (!STOCK_LOD_RE.test(chunk)) {
+    if (import.meta.env.DEV) console.warn('[hark] frostBiased: three transmission chunk changed; the frost keeps three’s blur')
+    return
+  }
+  // (it owns the material's compile hook: never on a material another patch already uses)
+  if (import.meta.env.DEV && m.onBeforeCompile !== THREE.Material.prototype.onBeforeCompile) console.warn('[hark] frostBiased: replacing an existing onBeforeCompile')
+  const patched = FROST_DECL + chunk.replace(STOCK_LOD_RE, frostLod('applyIorToRoughness( roughness, ior )'))
+  m.onBeforeCompile = shader => {
+    shader.uniforms.uFrostBias = FROST_BIAS
+    shader.fragmentShader = shader.fragmentShader.replace('#include <transmission_pars_fragment>', patched)
+  }
+  m.customProgramCacheKey = () => 'frost-biased'
+}
 
 /** Read the transmission buffer at mip 0 (no roughness blur) — crisp text/images through glass. */
 export function sharpTransmission(m: THREE.MeshPhysicalMaterial) {

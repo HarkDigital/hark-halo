@@ -11,11 +11,12 @@ import type { SegueMode } from './types'
  * Post-processing for Hark Frost: Scene (render + NaN guard) → Bloom →
  * Output → FINAL.
  *
- * Anti-aliasing: the scene renders into its OWN target, the only
- * multisampled one (4x whenever the frame is under ~1.75 device px per CSS px:
- * 1x/1.25x monitors and phones capped at 1.5, so the razor-sharp mark never
- * stair-steps). The composer's ping-pong targets stay single-sampled, so the
- * post passes never pay for MSAA.
+ * Anti-aliasing: the scene renders into its OWN target, multisampled 4x
+ * whenever the frame is under ~1.75 device px per CSS px (1x/1.25x monitors)
+ * and on every touch device (phones render at 2x, tablets at 1.5x), so the
+ * razor-sharp mark and the services louvres never stair-step. three's own glass
+ * (transmission) buffer always multisamples. The composer's ping-pong targets
+ * stay single-sampled and depthless, so the post passes never pay for MSAA.
  *
  * FINAL is a clean, sharp finish for a black site: no chromatic aberration
  * (the mark must stay razor sharp), a deep vignette, a fine grain and flash /
@@ -447,7 +448,7 @@ const SanitizeShader = {
 }
 
 /**
- * Renders the scene into its own target (the only multisampled one) and
+ * Renders the scene into its own target (the only multisampled one of ours) and
  * copies it through the NaN guard into the composer's read buffer.
  */
 class ScenePass extends Pass {
@@ -530,12 +531,15 @@ export class Post {
     private renderer: THREE.WebGLRenderer,
     scene: THREE.Scene,
     camera: THREE.Camera,
+    msaaBelow = 1.75,
   ) {
+    this.msaaBelow = msaaBelow
     const size = renderer.getDrawingBufferSize(new THREE.Vector2())
-    // single-sampled ping-pong targets (the composer clones this one)
-    const rt = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType })
+    // single-sampled ping-pong targets (the composer clones this one); no depth: the scene renders
+    // into the ScenePass's own target, every pass after it is a full-screen quad
+    const rt = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType, depthBuffer: false })
     this.composer = new EffectComposer(renderer, rt)
-    this.scenePass = new ScenePass(scene, camera, size.x, size.y, Post.samplesFor(renderer.getPixelRatio()))
+    this.scenePass = new ScenePass(scene, camera, size.x, size.y, Post.samplesFor(renderer.getPixelRatio(), msaaBelow))
     this.composer.addPass(this.scenePass)
     this.bloom = new UnrealBloomPass(new THREE.Vector2(size.x / 2, size.y / 2), 0.45, 0.4, 1.0)
     this.composer.addPass(this.bloom)
@@ -586,13 +590,18 @@ export class Post {
     return rt === this.scenePass.target || rt === this.composer.renderTarget1 || rt === this.composer.renderTarget2
   }
 
-  /** 4x MSAA on the scene render unless the frame is already supersampled */
-  static samplesFor(dpr: number) {
-    return dpr < 1.75 ? 4 : 0
+  /**
+   * 4x MSAA on the scene render unless the frame is already supersampled (`below`: the DPR it
+   * switches off at; Engine passes Infinity on touch devices, which keep it at 2x)
+   */
+  static samplesFor(dpr: number, below = 1.75) {
+    return dpr < below ? 4 : 0
   }
+  /** the DPR at and above which the scene render skips MSAA (samplesFor) */
+  msaaBelow: number
 
   setSize(w: number, h: number, dpr: number) {
-    this.scenePass.setSamples(Post.samplesFor(dpr))
+    this.scenePass.setSamples(Post.samplesFor(dpr, this.msaaBelow))
     this.composer.setPixelRatio(dpr)
     this.composer.setSize(w, h)
     this.bloom.resolution.set((w * dpr) / 2, (h * dpr) / 2)

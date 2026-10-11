@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { G, frostedLogo, neonPath, type NeonPath, closedOutline } from '../../kit/glass'
+import { FROST_BIAS, FROST_DECL, G, frostLod, frostedLogo, neonPath, type NeonPath, closedOutline } from '../../kit/glass'
 import { LOGO } from '../../kit/palette'
 import { buildTubeMark, buildTubeNeon } from '../../kit/tube'
 import { logoParts } from '../../logo/logo'
@@ -271,9 +271,9 @@ function diffuseTransmissionChunk(): string | null {
     if (import.meta.env.DEV) console.warn('[process] three transmission chunk changed; the frost keeps three’s blur')
     return null
   }
-  return chunk.replace(
+  return FROST_DECL + chunk.replace(
     LOD_RE,
-    `float lod = log2( transmissionSamplerSize.x ) * applyIorToRoughness( roughness, ior ) * ${DIFFUSE.toFixed(2)};
+    `${frostLod(`applyIorToRoughness( roughness, ior ) * ${DIFFUSE.toFixed(2)}`)}
 		return textureBicubic( transmissionSamplerMap, fragCoord.xy, lod );`,
   )
 }
@@ -298,6 +298,7 @@ function patchPrint(m: THREE.MeshPhysicalMaterial, u: PrintUniforms, key: string
   const chunk = diffuse ? diffuseTransmissionChunk() : null
   m.onBeforeCompile = sh => {
     Object.assign(sh.uniforms, u)
+    sh.uniforms.uFrostBias = FROST_BIAS
     sh.vertexShader = sh.vertexShader
       .replace('#include <common>', '#include <common>\nvarying vec3 vPrP;')
       .replace('#include <begin_vertex>', '#include <begin_vertex>\nvPrP = position;')

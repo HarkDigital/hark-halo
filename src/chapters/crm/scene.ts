@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { G, closedOutline, neonPath, type NeonPath } from '../../kit/glass'
-import { glassSleeve, sleeveGlass, sleeveWalls } from '../../kit/tube'
+import { glassSleeve, leanSleeves, sleeveGlass, sleeveWalls } from '../../kit/tube'
 import { ACTIVE } from '../../kit/palette'
 
 /*
@@ -197,6 +197,7 @@ export function buildBoard(isFrameTarget: IsFrame, mobile: boolean, envMap: THRE
       tubes.map((t, i) => ({ curve: t.tube.geometry.parameters.path, closed: closed[i] })),
       R_GLASS,
       mobile,
+      leanSleeves(mobile),
     )
     const walls = sleeveWalls(color)
     const w = new THREE.Mesh(geo, walls)

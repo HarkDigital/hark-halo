@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { G, closedOutline, neonPath, type NeonPath } from '../../kit/glass'
-import { glassSleeve, sleeveGlass, sleeveWalls } from '../../kit/tube'
+import { glassSleeve, leanSleeves, sleeveGlass, sleeveWalls } from '../../kit/tube'
 
 /*
  * SHORT CIRCUIT — the security chapter's set: "your site" as a NEON SIGN in
@@ -179,7 +179,7 @@ export function buildSite(isFrameTarget: IsFrame, mobile: boolean, envMap: THREE
   const glass = sleeveGlass(R_GLASS * 0.12, mobile, envMap)
   const walls: THREE.ShaderMaterial[] = []
   const sleeve = (paths: { curve: THREE.Curve<THREE.Vector3>; closed: boolean }[], color: string, parent: THREE.Group) => {
-    const geo = glassSleeve(paths, R_GLASS, mobile)
+    const geo = glassSleeve(paths, R_GLASS, mobile, leanSleeves(mobile))
     const m = new THREE.Mesh(geo, glass)
     const wm = sleeveWalls(color)
     const w = new THREE.Mesh(geo, wm)

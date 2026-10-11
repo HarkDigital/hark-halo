@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js'
-import { G, flattenCaps, frosted, polished, smoothSides } from '../../kit/glass'
+import { FROST_BIAS, FROST_DECL, G, flattenCaps, frostLod, frosted, polished, smoothSides } from '../../kit/glass'
 import { SAMPLES, sampleS, voiceprint } from './voiceprint'
 
 /*
@@ -350,9 +350,11 @@ export function buildPane(o: { mobile: boolean; envMap: THREE.Texture | null; fr
   caps.onBeforeCompile = shader => {
     const chunk = THREE.ShaderChunk.transmission_pars_fragment
     if (!LOD_RE.test(chunk)) return
+    // (held at its tuned blur on phones, whatever the glass buffer's size: kit FROST_BIAS)
+    shader.uniforms.uFrostBias = FROST_BIAS
     shader.fragmentShader = shader.fragmentShader.replace(
       '#include <transmission_pars_fragment>',
-      chunk.replace(LOD_RE, `float lod = log2( transmissionSamplerSize.x ) * applyIorToRoughness( roughness, ior ) * ${(o.mobile ? DIFFUSE_MOBILE : DIFFUSE).toFixed(2)};`),
+      FROST_DECL + chunk.replace(LOD_RE, frostLod(`applyIorToRoughness( roughness, ior ) * ${(o.mobile ? DIFFUSE_MOBILE : DIFFUSE).toFixed(2)}`)),
     )
   }
   caps.customProgramCacheKey = () => 'voices-frost-diffuse'

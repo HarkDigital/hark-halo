@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { mergeGeometries, toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js'
 import { G, closedOutline, neonPath, type NeonPath } from './glass'
 import { extrudeInset, logoParts } from '../logo/logo'
+import { tabletArea } from './device'
 
 /*
  * TUBE — the Hark mark as neon encased in glass (the story's mark: hero,
@@ -412,17 +413,27 @@ export function buildTubeNeon(
 
 // ------------------------------------------------------------------ glass sleeves for any neon
 
+/** lean glass sleeves (glassSleeve) on phones, not tablets (kit/device), which keep 1.5x and the full ones */
+export const leanSleeves = (mobile: boolean) => mobile && !tabletArea(window.innerWidth, window.innerHeight)
+
 /**
  * Clear glass tubes round any neon paths (the tube mark's language, for other
  * signs): each curve gets a tube of radius `r`, rounded glass ends on open
  * ones. One merged geometry (position + normal), in the curves' space.
  */
-export function glassSleeve(paths: { curve: THREE.Curve<THREE.Vector3>; closed: boolean }[], r: number, mobile: boolean): THREE.BufferGeometry {
-  const radial = mobile ? 14 : 24
+export function glassSleeve(
+  paths: { curve: THREE.Curve<THREE.Vector3>; closed: boolean }[],
+  r: number,
+  mobile: boolean,
+  /** leanSleeves(mobile): phones get 10 sides and a segment per 0.02 (about 55% fewer triangles, no visible change at 2x) */
+  lean: boolean,
+): THREE.BufferGeometry {
+  const radial = lean ? 10 : mobile ? 14 : 24
+  const step = lean ? 0.02 : 0.012
   const Y = new THREE.Vector3(0, 1, 0)
   const parts: THREE.BufferGeometry[] = []
   for (const { curve, closed } of paths) {
-    const seg = Math.max(24, Math.ceil(curve.getLength() / 0.012))
+    const seg = Math.max(24, Math.ceil(curve.getLength() / step))
     parts.push(new THREE.TubeGeometry(curve, seg, r, radial, closed).toNonIndexed())
     if (closed) continue
     for (const [t, sgn] of [

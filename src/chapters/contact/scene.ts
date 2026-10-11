@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { frostedLogo, G, neonMark, type NeonPath } from '../../kit/glass'
+import { FROST_BIAS, FROST_DECL, frostLod, frostedLogo, G, neonMark, type NeonPath } from '../../kit/glass'
 import { LOGO } from '../../kit/palette'
 import { buildTubeMark, buildTubeNeon } from '../../kit/tube'
 
@@ -129,6 +129,7 @@ const NOISE = /* glsl */ `
 function patchThaw(m: THREE.MeshPhysicalMaterial, u: ThawUniforms) {
   m.onBeforeCompile = shader => {
     Object.assign(shader.uniforms, u)
+    shader.uniforms.uFrostBias = FROST_BIAS
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', '#include <common>\nvarying vec3 vThawP;')
       .replace('#include <begin_vertex>', '#include <begin_vertex>\nvThawP = position;')
@@ -175,7 +176,7 @@ function patchThaw(m: THREE.MeshPhysicalMaterial, u: ThawUniforms) {
     if (LOD_RE.test(chunk)) {
       frag = frag.replace(
         '#include <transmission_pars_fragment>',
-        chunk.replace(LOD_RE, 'float lod = log2( transmissionSamplerSize.x ) * max( applyIorToRoughness( roughness, ior ) - 0.075, 0.0 ) * 1.75;'),
+        FROST_DECL + chunk.replace(LOD_RE, frostLod('max( applyIorToRoughness( roughness, ior ) - 0.075, 0.0 ) * 1.75')),
       )
     } else if (import.meta.env.DEV) console.warn('[contact] three transmission chunk changed; thawed glass keeps the default blur')
     shader.fragmentShader = frag

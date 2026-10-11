@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { G, closedOutline, neonPath, type NeonPath } from '../../kit/glass'
-import { glassSleeve, sleeveGlass, sleeveWalls } from '../../kit/tube'
+import { glassSleeve, leanSleeves, sleeveGlass, sleeveWalls } from '../../kit/tube'
 
 /*
  * CONSTELLATION: the knowledge chapter's set, a NEON SIGN in clear glass
@@ -421,8 +421,9 @@ export function buildKnowledge(isFrameTarget: IsFrame, mobile: boolean, envMap: 
     const geo = glassSleeve(
       tubes.map(t => ({ curve: curveOf(t), closed: t.tube.geometry.parameters.closed })),
       r,
-      // (a thread's thin glass reads as round with the phones' fewer sides)
+      // (a thread's thin glass reads as round with the phones' fewer sides; lean geometry on phones only)
       mobile || r < R_GLASS,
+      leanSleeves(mobile),
     )
     const wm = sleeveWalls(color)
     const w = new THREE.Mesh(geo, wm)

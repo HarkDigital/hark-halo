@@ -9,6 +9,8 @@ import { nextFrame } from './yield'
 import type { CameraPose, Chapter, ChapterContext, ChapterDef, Frame, SegueMode } from './types'
 import { SEGUE_MODES } from './types'
 import { REDUCED_MOTION } from '../kit/motion'
+import { FROST_BIAS } from '../kit/frost'
+import { tabletArea } from '../kit/device'
 
 export interface ChapterSlot {
   def: ChapterDef
@@ -45,8 +47,17 @@ const SEGUE_WINDOW: Record<SegueMode, number> = { blinds: 0.42, glass: 0.4, neon
 const SEGUE_COPY: Record<SegueMode, number> = { blinds: 2.6, glass: 2.4, neon: 2.6, tube: 3 }
 /** Render-pixel budget: 4K/5K windows would otherwise push 15+ MP through bloom. */
 const PIXEL_BUDGET = 6e6
-/** device pixels of three's glass (transmission) buffer on desktop; it only ever shrinks with the frame */
+/**
+ * device pixels of three's glass (transmission) buffer on desktop and phones (`mobile`, not a
+ * tablet: kit/device): a phone's full-scale frame is smaller than this (a foldable's inner screen
+ * a little over), so its glass matches the frame (the neon cores are only ever seen through it);
+ * it only ever shrinks with the frame
+ */
 const GLASS_BUDGET = 1.9e6
+/** …and on tablets, from the full-scale frame (an iPad 13" about 0.56 of it, an iPad mini 0.73) */
+const TABLET_GLASS_BUDGET = 1.0e6
+/** a learned frame-rate cap (iOS Low Power Mode) is kept for the visit, so a reload doesn't probe again */
+const CAP_KEY = 'hark-frame-cap'
 
 function emptyChapter(id: string): Chapter {
   return {
@@ -111,6 +122,28 @@ export class Engine {
   /** no stepping up past this until `ceilFor` runs out (a step up that relapsed) */
   private dprCeil = 1
   private ceilFor = 0
+  /**
+   * a slow spell's first step down: the scale and frame time it started from. If no step all
+   * the way to the floor makes frames faster, the cadence is a cap (iOS Low Power Mode's
+   * 30 fps), not a slow GPU: the scale goes back and that interval is learned (`capInterval`)
+   */
+  private probeFrom = 0
+  private probeEma = 0
+  /** the probe's DPR and chapter when it began, and how long frames have been fine since */
+  private probeDpr = 0
+  private probeAt = -1
+  private probeOff = 0
+  private capInterval = 0
+  /**
+   * adaptResolution's own clock (s of counted frames), and when on it the display last ran faster
+   * than ~37.5 fps (median or average frame under 0.8 / 30 s): a 30 fps cadence within 30 s of
+   * that is a heavy chapter, not a cap
+   */
+  private adaptClock = 0
+  private fastAt = -Infinity
+  /** the frame's DPR before adaptive steps, and whether this `mobile` screen is a tablet (resize) */
+  private full = 1
+  private tablet = false
   /** time-driven cut used for long nav jumps (so we never scrub through five chapters) */
   private jump: { t: number; id: string; local: number; swapped: boolean } | null = null
   /** true while something (e.g. the rotate gate) covers the scene — skip rendering */
@@ -170,12 +203,21 @@ export class Engine {
     this.renderer.info.autoReset = false
     this.renderer.debug.checkShaderErrors = !import.meta.env.PROD
 
-    this.renderer.transmissionResolutionScale = this.mobile ? 0.5 : 1
+    // (the glass buffer's real size is set every frame from the glass budgets)
+    this.renderer.transmissionResolutionScale = 1
     this.world = new World(this.scene, this.mobile, this.renderer)
     this.scene.add(this.world.object)
     this.assets = new Assets(this.renderer)
-    // MSAA on the scene render only (Post decides by the frame's DPR)
-    this.post = new Post(this.renderer, this.scene, this.camera)
+    // MSAA on the scene render (Post decides by the frame's DPR; three's own glass buffer always
+    // multisamples). Phones and tablets (`mobile`) keep 4x at any DPR, as they had at 1.5x: at 2x
+    // without it the services louvres' edges stair-step. Desktop drops it at 1.75x and above
+    this.post = new Post(this.renderer, this.scene, this.camera, this.mobile ? Infinity : 1.75)
+    try {
+      const cap = Number(sessionStorage.getItem(CAP_KEY))
+      if (cap > 0 && cap <= 1 / 24) this.capInterval = cap
+    } catch {
+      /* storage blocked: probe again */
+    }
 
     this.frame = {
       time: 0,
@@ -501,12 +543,18 @@ export class Engine {
 
     const w = this.canvas.clientWidth || iw
     const h = this.canvas.clientHeight || ih
-    const base = Math.min(window.devicePixelRatio || 1, this.mobile ? 1.5 : 2)
+    // phones render at 2x (the r3f / three.js norm; 1.5x left thin neon soft on 3x screens),
+    // tablets keep 1.5x (their frames are 2-3x a phone's, on the same class of GPU)
+    const tablet = this.mobile && tabletArea(w, h)
+    const base = Math.min(window.devicePixelRatio || 1, tablet ? 1.5 : 2)
     const budget = Math.sqrt(PIXEL_BUDGET / Math.max(1, w * h))
-    const dpr = Math.max(this.mobile ? 1 : 0.75, Math.min(base, budget) * this.dprScale)
+    const full = Math.min(base, budget)
+    const dpr = Math.max(this.mobile ? 1 : 0.75, full * this.dprScale)
     if (!force && w === this.cw && h === this.ch && Math.abs(dpr - this.dpr) < 1e-3) return
     this.cw = w
     this.ch = h
+    this.full = full
+    this.tablet = tablet
     this.dpr = dpr
     this.quiet = 0
     this.renderer.setPixelRatio(dpr)
@@ -590,19 +638,23 @@ export class Engine {
     requestAnimationFrame(loop)
   }
 
-  /**
-   * Keep the frame rate up on weaker GPUs: drop the render resolution in
-   * steps while frames run long relative to the display's own cadence (so a
-   * 30 fps Low Power Mode cap is not mistaken for a slow GPU), and creep back
-   * up once there's headroom.
-   */
   /** Redraw on the next frame even if the view is holding still (chapters/HUD may call it). */
   wake() {
     this.quiet = 0
   }
 
+  /**
+   * Keep the frame rate up on weaker GPUs: drop the render resolution in steps while frames run
+   * long relative to the display's own cadence, and creep back up once there's headroom. A
+   * steady cap (iOS Low Power Mode's 30 fps) reads as slow frames too, so a slow spell is a
+   * probe: if no step down, all the way to the floor, makes frames faster, the scale goes back
+   * to where the spell began and that interval is taken as the display's (`capInterval`).
+   */
   private adaptResolution(raw: number, dt: number) {
+    // (a jump's frames say nothing; a probe carries on in the chapter it lands in, below)
+    if (this.jump) this.slowFor = 0
     if (document.hidden || this.frame.time < 4 || this.jump || this.quiet > 90) return
+    this.adaptClock += dt
     this.cadence.push(raw)
     if (this.cadence.length > 120) this.cadence.shift()
     if (this.cadence.length >= 60 && ++this.cadenceTick % 20 === 0) {
@@ -612,16 +664,32 @@ export class Engine {
       // the display's own interval — but never learn a GPU-bound rate as "the
       // display": anything slower than ~45 fps is treated as a slow frame
       this.baseline = Math.min(1 / 45, Math.max(1 / 144, sorted[Math.floor(sorted.length * 0.1)]))
+      const median = sorted[Math.floor(sorted.length * 0.5)]
+      if (median < 0.8 / 30) this.fastAt = this.adaptClock
+      // the cap lifted (Low Power Mode off): back to judging by the display's cadence (on the
+      // median, so a jittery capped cadence's quick frames don't clear it)
+      if (this.capInterval && median < this.capInterval * 0.8) {
+        this.capInterval = 0
+        try {
+          sessionStorage.removeItem(CAP_KEY)
+        } catch {
+          /* storage blocked */
+        }
+      }
     }
     this.perfEma += (raw - this.perfEma) * 0.05
+    // (the average too: a chapter left after a second or two at 60 fps never moves the median)
+    if (this.cadence.length >= 60 && this.perfEma < 0.8 / 30) this.fastAt = this.adaptClock
     this.perfCooldown -= dt
     this.ceilFor -= dt
     if (this.ceilFor <= 0) this.dprCeil = 1
     // a step up that pushes frames past the cadence again is reverted at once
     // and capped for a minute (otherwise it can settle between the thresholds)
+    // (under a learned cap, frames are judged against the cap's interval)
+    const ref = this.capInterval || this.baseline
     if (this.upWatch > 0) {
       this.upWatch -= dt
-      if (this.upWatch < 2.5 && this.perfEma > this.baseline * 1.12) {
+      if (this.upWatch < 2.5 && this.perfEma > ref * 1.12) {
         this.dprCeil = this.upFrom
         this.ceilFor = 60
         this.dprScale = this.upFrom
@@ -631,16 +699,61 @@ export class Engine {
         return
       }
     }
-    const slow = this.perfEma > Math.min(1 / 45, Math.max(this.baseline * 1.25, 1 / 58))
-    const fast = this.perfEma < Math.min(this.baseline * 1.1, 1 / 55)
+    const slow = this.capInterval ? this.perfEma > this.capInterval * 1.15 : this.perfEma > Math.min(1 / 45, Math.max(this.baseline * 1.25, 1 / 58))
+    const fast = this.capInterval ? this.perfEma < this.capInterval * 1.05 : this.perfEma < Math.min(this.baseline * 1.1, 1 / 55)
     this.slowFor = slow ? this.slowFor + dt : 0
     this.fastFor = fast ? this.fastFor + dt : 0
+    this.probeOff = slow ? 0 : this.probeOff + dt
+    if (this.probeFrom) {
+      // a step down that made frames faster, or a second of good frames: the GPU really was the
+      // limit, so the probe ends (stepping carries on as needed)
+      if (this.perfEma < this.probeEma * 0.85 || this.probeOff > 1) this.probeFrom = 0
+      // another chapter: the probe carries on from where it began (a cap holds across chapters;
+      // dropping it would leave the scale where the steps had got to, and a probe from there
+      // can't learn a cap), its mark raised to the average on arrival if that's higher (never
+      // lowered: an average still falling after a step would hide the next step's gain)
+      else if (this.state.index !== this.probeAt) {
+        this.probeAt = this.state.index
+        this.probeEma = Math.max(this.probeEma, this.perfEma)
+      }
+    }
     if (this.slowFor > 1.5 && this.dprScale > 0.5) {
+      if (!this.probeFrom) {
+        this.probeFrom = this.dprScale
+        this.probeEma = this.perfEma
+        this.probeDpr = this.dpr
+        this.probeAt = this.state.index
+        this.probeOff = 0
+      }
       this.dprScale = Math.max(0.5, this.dprScale - 0.15)
       this.slowFor = 0
       this.upWatch = 0
       this.perfCooldown = 6
       this.resize()
+    } else if (this.slowFor > 1.5 && this.probeFrom) {
+      // at the floor and no faster than where the spell began. A frame-rate cap only if it looks
+      // like one (24 fps or better, after shedding at least 40% of the pixels: steps that changed
+      // nothing, or a device so slow its frames hit the 100 ms clamp, are not caps; and not on a
+      // display that ran faster in the last 30 s: that's a heavy chapter, and in practice a cap
+      // that arrives mid-visit is never learned, so the floor holds, as it always did): then the
+      // scale goes back and the cap is learned. Otherwise the floor stays
+      const shed = (this.dpr / Math.max(1e-3, this.probeDpr)) ** 2
+      if (this.perfEma <= 1 / 24 && shed <= 0.6 && this.adaptClock - this.fastAt > 30) {
+        this.capInterval = this.perfEma
+        // kept for the visit only if capped from the start (Low Power Mode), never a cap that
+        // arrived mid-visit
+        if (this.fastAt === -Infinity)
+          try {
+            sessionStorage.setItem(CAP_KEY, String(this.capInterval))
+          } catch {
+            /* storage blocked: probe again next visit */
+          }
+        this.dprScale = this.probeFrom
+        this.perfCooldown = 6
+        this.resize()
+      }
+      this.probeFrom = 0
+      this.slowFor = 0
     } else if (
       this.fastFor > 8 &&
       this.dprScale < Math.min(1, this.dprCeil) &&
@@ -652,7 +765,7 @@ export class Engine {
       this.dprScale = Math.min(1, this.dprCeil, this.dprScale + 0.1)
       this.fastFor = 0
       this.upWatch = 3
-      this.perfEma = this.baseline
+      this.perfEma = ref
       this.resize()
     }
     document.documentElement.classList.toggle('lowfx', this.mobile || this.dprScale < 0.99)
@@ -735,11 +848,20 @@ export class Engine {
     const slot = this.slots[index]
     if (!slot) return
     const local = clamp((scrollVh - slot.start) / slot.def.length)
-    // one site-wide glass buffer from a device-pixel budget (~0.6 of a DPR-2
-    // frame, ~0.7 of a 1440p 1x one); never resized per chapter, and it can
-    // only shrink when adaptive DPR steps the frame down
-    const ts = this.mobile ? 0.5 : clamp(Math.sqrt(GLASS_BUDGET / Math.max(1, this.cw * this.ch * this.dpr * this.dpr)), 0.35, 1)
+    // one site-wide glass buffer from a device-pixel budget (~0.6 of a DPR-2 frame, ~0.7 of a
+    // 1440p 1x one); never resized per chapter, and it only shrinks when adaptive DPR steps the
+    // frame down. Phones and tablets (`mobile`) size it from the full-scale frame (the whole frame
+    // on a phone) and scale it with the step, never under the half-size glass they always had
+    // (the weakest phones' floor costs what it did: half-size glass at 1x)
+    let ts = clamp(Math.sqrt(GLASS_BUDGET / Math.max(1, this.cw * this.ch * this.dpr * this.dpr)), 0.35, 1)
+    if (this.mobile) {
+      const fullPx = Math.max(1, this.cw * this.ch * this.full * this.full)
+      const fit = Math.min(1, Math.sqrt((this.tablet ? TABLET_GLASS_BUDGET : GLASS_BUDGET) / fullPx))
+      ts = clamp(Math.max(fit * clamp(this.dprScale, 0.5, 1), 0.5), 0.35, 1)
+    }
     if (this.renderer.transmissionResolutionScale !== ts) this.renderer.transmissionResolutionScale = ts
+    // the frosted materials' blur, held at the width it was tuned at on phones (kit FROST_BIAS)
+    FROST_BIAS.value = this.mobile ? Math.log2((this.dpr * ts) / 0.75) : 0
 
     // glitch ramps up approaching any internal cut and back down after it
     let d = Infinity

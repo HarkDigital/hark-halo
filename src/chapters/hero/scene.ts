@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { G, edgeGlow, frostedLogo, neonMark, type FrostedLogo, type NeonPath, flattenCaps, smoothSides } from '../../kit/glass'
+import { FROST_BIAS, FROST_DECL, G, edgeGlow, frostLod, frostedLogo, neonMark, type FrostedLogo, type NeonPath, flattenCaps, smoothSides } from '../../kit/glass'
 
 /*
  * FROST — the hero set. A black gallery with one object in it.
@@ -117,9 +117,9 @@ function crispTransmissionChunk(): string | null {
     if (import.meta.env.DEV) console.warn('[hero] three transmission chunk changed; the thaw window will blur')
     return null
   }
-  return chunk.replace(
+  return FROST_DECL + chunk.replace(
     LOD_RE,
-    `float lod = log2( transmissionSamplerSize.x ) * applyIorToRoughness( roughness, ior ) * ${DIFFUSE.toFixed(2)};
+    `${frostLod(`applyIorToRoughness( roughness, ior ) * ${DIFFUSE.toFixed(2)}`)}
 		vec4 crispT = textureLod( transmissionSamplerMap, fragCoord.xy, 0.0 );
 		vec4 softT = textureBicubic( transmissionSamplerMap, fragCoord.xy, lod );
 		return mix( crispT, softT, smoothstep( 0.9, 1.8, lod ) );`,
@@ -186,6 +186,7 @@ export function buildMark(mobile: boolean, envMap: THREE.Texture | null): Pick<H
   const crisp = crispTransmissionChunk()
   caps.onBeforeCompile = sh => {
     Object.assign(sh.uniforms, capsU)
+    sh.uniforms.uFrostBias = FROST_BIAS
     sh.vertexShader = sh.vertexShader
       .replace('#include <common>', '#include <common>\nvarying vec3 vMarkP;')
       .replace('#include <begin_vertex>', '#include <begin_vertex>\nvMarkP = position;')
