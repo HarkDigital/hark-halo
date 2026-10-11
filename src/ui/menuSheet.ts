@@ -21,6 +21,8 @@ export const SECTIONS: readonly { id: string; name: string }[] = [
   { id: 'process', name: 'Process' },
   { id: 'work', name: 'Work' },
   { id: 'voices', name: 'Clients' },
+  { id: 'crm', name: 'Custom CRM' },
+  { id: 'knowledge', name: 'Knowledge AI' },
   { id: 'shield', name: 'Security' },
   { id: 'contact', name: 'Contact' },
 ]

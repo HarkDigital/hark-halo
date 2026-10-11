@@ -1020,6 +1020,33 @@ export const SECURITY = {
 }
 
 /**
+ * The two service spotlights in the story (chapters crm and knowledge, between Client voices
+ * and the security chapter), built like it: a headline in two lines and the service's own
+ * pitch over its neon sign, then the steps, ticked off as the sign acts them out, and a
+ * button to the service's page. The words are the service pages' own (src/service/data).
+ */
+export const CRM_SPOT = {
+  slug: 'custom-crm',
+  eyebrow: 'Custom CRM',
+  title: ['A CRM that works', 'the way you do.'],
+  body: 'Customer list in a spreadsheet, follow-ups in someone’s head? We build a CRM around how you actually sell, quote, and schedule, so every lead and job lives in one place.',
+  flowEyebrow: 'From lead to paid',
+  flowTitle: 'Every job, <em>in its lane.</em>',
+  steps: ['Every lead in one place', 'Follow-ups that send themselves', 'Jobs that move stage to stage', 'Reports you’ll actually read'],
+  cta: 'Explore Custom CRM →',
+}
+export const KNOWLEDGE_SPOT = {
+  slug: 'company-knowledge-ai',
+  eyebrow: 'Company Knowledge AI',
+  title: ['Ask your whole', 'company anything.'],
+  body: 'Answers buried in Drive folders, Slack threads, and old project notes? We build a private AI that searches all of it, answers in plain English, and shows its sources.',
+  flowEyebrow: 'How it answers',
+  flowTitle: 'Every answer, <em>sourced.</em>',
+  steps: ['Ask in plain English', 'It searches every connected tool', 'It answers from what it finds', 'Every claim links to its source'],
+  cta: 'Explore Company Knowledge AI →',
+}
+
+/**
  * The contact form: fields, options and messages verbatim from the classic
  * site's /contact page. Submissions POST JSON {name, email, company, service,
  * message, website (honeypot)} to `endpoint` — the classic site's own

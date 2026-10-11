@@ -1,4 +1,4 @@
-import { BRAND, CONTACT, PORTFOLIO, PROCESS, SECTIONS, SECURITY, SERVICE_CTA, SERVICES, TESTIMONIALS, WORK, portfolioUrl, serviceUrl } from '../content'
+import { BRAND, CONTACT, CRM_SPOT, KNOWLEDGE_SPOT, PORTFOLIO, PROCESS, SECTIONS, SECURITY, SERVICE_CTA, SERVICES, TESTIMONIALS, WORK, portfolioUrl, serviceUrl } from '../content'
 import { directHtml } from '../kit/contact'
 import { isPreview } from '../kit/work'
 
@@ -21,6 +21,15 @@ const ext = (href: string, label: string, anchor?: number) =>
 
 /** An in-page stop that moves the story to item i of a chapter (see Chapter.anchors). */
 const stop = (id: string, i: number, label: string) => `<a href="#${id}" data-anchor="${i}">${esc(label)}</a>`
+
+/** a service spotlight (crm, knowledge): its headline, pitch, steps and the way to its page */
+const spot = (o: typeof CRM_SPOT) => `
+    <h2 tabindex="0">${esc(o.title.join(' '))}</h2>
+    <p>${esc(o.eyebrow)}.</p>
+    <p>${esc(o.body)}</p>
+    <h3>${esc(o.flowEyebrow)}: ${esc(o.flowTitle.replace(/<[^>]+>/g, ''))}</h3>
+    <ol>${o.steps.map(s => `<li>${esc(s)}</li>`).join('')}</ol>
+    <p><a href="${esc(serviceUrl(o.slug))}" data-anchor="0">${esc(o.cta.replace(/\s*→\s*$/, ''))}</a></p>`
 
 const COPY: Record<string, () => string> = {
   hero: () => `
@@ -49,6 +58,9 @@ const COPY: Record<string, () => string> = {
       (s, i) =>
         `<li><h3>${stop('services', i, s.title)}</h3><p>${esc(s.blurb)}</p><p><a href="${esc(serviceUrl(s.slug))}" data-anchor="${i}">${esc(`${SERVICE_CTA}: ${s.title}`)}</a></p></li>`,
     ).join('')}</ol>`,
+
+  crm: () => spot(CRM_SPOT),
+  knowledge: () => spot(KNOWLEDGE_SPOT),
 
   shield: () => `
     <h2 tabindex="0">${esc(SECURITY.title)}</h2>

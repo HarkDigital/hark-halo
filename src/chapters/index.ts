@@ -34,6 +34,8 @@ export const CHAPTERS: ChapterDef[] = [
   { id: 'process', label: 'Assembly', length: 2.2, landing: 0.17, intro: 0.12, load: () => import('./process/index') },
   { id: 'work', label: 'Carousel', length: 7.0, landing: 0.12, intro: 0.06, load: () => import('./work/index') },
   { id: 'voices', label: 'Voiceprint', length: 6.0, landing: 0.08, intro: 0.06, load: () => import('./voices/index') },
+  { id: 'crm', label: 'Pipeline', length: 3.0, landing: 0.33, intro: 0.33, load: () => import('./crm/index') },
+  { id: 'knowledge', label: 'Constellation', length: 3.0, landing: 0.33, intro: 0.33, load: () => import('./knowledge/index') },
   { id: 'shield', label: 'Short circuit', length: 3.0, landing: 0.33, intro: 0.33, load: () => import('./shield/index') },
   { id: 'contact', label: LOGO.kind === 'tube' ? 'Afterglow' : 'Thaw', length: 1.5, landing: 0.3, intro: 0.3, load: () => import('./contact/index') },
 ]
