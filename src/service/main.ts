@@ -124,9 +124,10 @@ function render(i: number) {
       <ul class="svc-ints-grid">${ints.logos
         .filter(l => l.logo)
         .map((l, k) => {
-          // optical sizing: wide wordmarks a little shorter, compact ones a little taller (30 at 3.2:1)
+          // optical sizing: wide wordmarks a little shorter, compact ones a little taller (30 at 3.2:1;
+          // a stacked logo, mark over name, may stand taller still)
           const r = l.ratio ?? 3.2
-          const h = Math.min(34, 30 * Math.pow(3.2 / r, 0.4))
+          const h = Math.min(r < 1.6 ? 46 : 34, 30 * Math.pow(3.2 / r, 0.4))
           return `
         <li class="svc-int svc-rv" style="--d:${Math.min(k, 12) * 0.5}; --c:var(--neon-${'abc'[k % 3]}); --c-rgb:var(--neon-${'abc'[k % 3]}-rgb)">
           <span class="svc-int-logo" role="img" aria-label="${esc(l.name)}" style="--logo:url('${BASE}logos/${esc(l.logo!)}'); --w:${(h * r).toFixed(1)}; --h:${h.toFixed(1)}"></span>
