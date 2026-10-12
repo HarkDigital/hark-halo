@@ -448,9 +448,24 @@ html.is-svc.menu-open {
    optically (--w / --h from main.ts, in laptop px), each centred in an equal column: four to a
    row (tablets a step smaller), two on phones, so the walls (16 and 28) fill every row; the
    widest, Google Calendar, never has to shrink (a logo wider than its column would) */
+/* the label: the site's eyebrow (pill + tracked caps), twice its size, centred over the wall;
+   the optional line under it centred too */
+.svc-ints-h {
+  display: flex;
+  justify-content: center;
+  gap: calc(16 * var(--hud-px));
+  margin: 0 auto calc(56 * var(--hud-px));
+  font-size: calc(var(--ints-h, 23) * var(--hud-px));
+  letter-spacing: 0.09em;
+}
+.svc-ints-h::before {
+  width: calc(28 * var(--hud-px));
+  height: calc(10 * var(--hud-px));
+}
 .svc-ints-line {
   max-width: 46ch;
-  margin: calc(-14 * var(--hud-px)) 0 calc(44 * var(--hud-px));
+  margin: calc(-30 * var(--hud-px)) auto calc(52 * var(--hud-px));
+  text-align: center;
 }
 .svc-ints-grid {
   --k: 1;

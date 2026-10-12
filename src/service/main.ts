@@ -119,8 +119,8 @@ function render(i: number) {
   const integrations = ints
     ? `
     <section class="svc-sec svc-ints" aria-labelledby="svc-ints-h">
-      <h2 class="svc-eyebrow hud-eyebrow svc-rv" data-rv="wipe" id="svc-ints-h">${esc(ints.label)}</h2>
-      <p class="hud-body svc-ints-line svc-rv" data-rv="wipe" style="--d:1">${esc(ints.line)}</p>
+      <h2 class="svc-eyebrow hud-eyebrow svc-ints-h svc-rv" data-rv="wipe" id="svc-ints-h">${esc(ints.label)}</h2>
+      ${ints.line ? `<p class="hud-body svc-ints-line svc-rv" data-rv="wipe" style="--d:1">${esc(ints.line)}</p>` : ''}
       <ul class="svc-ints-grid" role="list">${ints.logos
         .filter(l => l.logo)
         .map((l, k) => {

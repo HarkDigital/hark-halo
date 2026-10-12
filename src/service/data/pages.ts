@@ -35,7 +35,7 @@ export interface ServicePageData {
    * / the file's height), each file padded at the foot so all six 'G's sit on one line. A tool
    * with no logo is named in the "Also …" line under the wall, after it the `byName` tools.
    */
-  integrations?: { label: string; line: string; logos: { name: string; logo?: string; ratio?: number; h?: number }[]; byName?: string[] }
+  integrations?: { label: string; line?: string; logos: { name: string; logo?: string; ratio?: number; h?: number }[]; byName?: string[] }
   cta: string
 }
 
@@ -369,7 +369,6 @@ export const SERVICE_PAGES: ServicePageData[] = [
     relatedTags: ['Software'],
     integrations: {
       label: 'Connects with',
-      line: 'If your team keeps its knowledge there, we can usually connect it.',
       logos: [
         { name: 'Google Drive', logo: 'google-drive.png', ratio: 6.36, h: 23.7 },
         { name: 'Google Docs', logo: 'google-docs.png', ratio: 5.667, h: 26.1 },
