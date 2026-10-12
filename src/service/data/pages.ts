@@ -24,12 +24,18 @@ export interface ServicePageData {
    * The tools it connects to, as a wall of logos between "What you get" and the stat
    * (main.ts). Logos show compatibility only: one flat colour for all (white, a site
    * neon on hover), no "partner" or "certified" wording. `logo` is the company's own
-   * one-colour full logo from its brand kit, self-hosted in public/logos/ (`ratio`: its
-   * width / height, for optical sizing). A tool without one (no one-colour version
-   * published, or none at all: Google's products, QuickBooks, Asana…) is named in the
-   * "Also …" line under the wall instead, after it the `byName` tools.
+   * current full logo, self-hosted in public/logos/ as a one-colour mask: its brand kit's
+   * one-colour file where there is one (Salesforce, Stripe…); otherwise its official logo
+   * flattened to one colour, white details cut out as holes: Google's six lockups from its
+   * Workspace product pages, QuickBooks from Intuit's CDN, Intercom and Basecamp from the
+   * markup of their own sites (Basecamp's mark beside its wordmark, spaced as on its share
+   * image), Asana and Microsoft 365 from the copies of their official logos on Wikimedia
+   * Commons. `ratio`: its width / height, for optical sizing; `h`: a height to use instead
+   * (laptop px): Google's six set their names at one letter size, h = 16.3 / (the 'G''s height
+   * / the file's height), each file padded at the foot so all six 'G's sit on one line. A tool
+   * with no logo is named in the "Also …" line under the wall, after it the `byName` tools.
    */
-  integrations?: { label: string; line: string; logos: { name: string; logo?: string; ratio?: number }[]; byName?: string[] }
+  integrations?: { label: string; line: string; logos: { name: string; logo?: string; ratio?: number; h?: number }[]; byName?: string[] }
   cta: string
 }
 
@@ -115,22 +121,23 @@ export const SERVICE_PAGES: ServicePageData[] = [
       label: 'Connects with',
       line: 'Your accounting, payments, email, and calendar, wired into one place.',
       logos: [
-        { name: 'QuickBooks' },
+        { name: 'QuickBooks', logo: 'quickbooks.svg', ratio: 5.371 },
         { name: 'Xero', logo: 'xero.svg', ratio: 3.552 },
         { name: 'Stripe', logo: 'stripe.svg', ratio: 2.384 },
         { name: 'Square', logo: 'square.svg', ratio: 3.989 },
         { name: 'PayPal', logo: 'paypal.png', ratio: 2.976 },
-        { name: 'Gmail' },
-        { name: 'Google Calendar' },
-        { name: 'Google Sheets' },
+        { name: 'Gmail', logo: 'gmail.png', ratio: 3.784, h: 21.7 },
+        { name: 'Google Calendar', logo: 'google-calendar.png', ratio: 7.163, h: 26.1 },
+        { name: 'Google Sheets', logo: 'google-sheets.png', ratio: 7.901, h: 21 },
+        { name: 'Microsoft 365', logo: 'microsoft365.png', ratio: 6.169 },
         { name: 'Mailchimp', logo: 'mailchimp.png', ratio: 3.672 },
         { name: 'Calendly', logo: 'calendly.svg', ratio: 4.144 },
         { name: 'Zapier', logo: 'zapier.svg', ratio: 3.676 },
         { name: 'HubSpot', logo: 'hubspot.svg', ratio: 3.528 },
+        { name: 'Salesforce', logo: 'salesforce.svg', ratio: 5.613 },
         { name: 'DocuSign', logo: 'docusign.svg', ratio: 4.971 },
         { name: 'Twilio', logo: 'twilio.svg', ratio: 2.771 },
       ],
-      byName: ['Microsoft 365', 'Salesforce'],
     },
     cta: 'Still running your customer list out of spreadsheets? That’s a custom CRM waiting to happen.',
   },
@@ -364,33 +371,34 @@ export const SERVICE_PAGES: ServicePageData[] = [
       label: 'Connects with',
       line: 'If your team keeps its knowledge there, we can usually connect it.',
       logos: [
-        { name: 'Google Drive' },
-        { name: 'Google Docs' },
-        { name: 'Google Sheets' },
-        { name: 'Gmail' },
-        { name: 'Dropbox', logo: 'dropbox.svg', ratio: 3.688 },
+        { name: 'Google Drive', logo: 'google-drive.png', ratio: 6.36, h: 23.7 },
+        { name: 'Google Docs', logo: 'google-docs.png', ratio: 5.667, h: 26.1 },
+        { name: 'Google Sheets', logo: 'google-sheets.png', ratio: 7.901, h: 21 },
+        { name: 'Gmail', logo: 'gmail.png', ratio: 3.784, h: 21.7 },
+        { name: 'Microsoft 365', logo: 'microsoft365.png', ratio: 6.169 },
+        { name: 'Dropbox', logo: 'dropbox.svg', ratio: 5.064 },
         { name: 'Box', logo: 'box.png', ratio: 1.889 },
         { name: 'Notion', logo: 'notion.svg', ratio: 3.086 },
         { name: 'Confluence', logo: 'confluence.svg', ratio: 4.583 },
         { name: 'Zoom', logo: 'zoom.png', ratio: 4.442 },
-        { name: 'Google Meet' },
-        { name: 'Google Calendar' },
-        { name: 'Asana' },
+        { name: 'Google Meet', logo: 'google-meet.svg', ratio: 6.988, h: 21.5 },
+        { name: 'Google Calendar', logo: 'google-calendar.png', ratio: 7.163, h: 26.1 },
+        { name: 'Asana', logo: 'asana.svg', ratio: 5.063 },
         { name: 'ClickUp', logo: 'clickup.svg', ratio: 4.0 },
         { name: 'Trello', logo: 'trello.svg', ratio: 2.875 },
         { name: 'Jira', logo: 'jira.svg', ratio: 2.333 },
-        { name: 'Basecamp' },
+        { name: 'Basecamp', logo: 'basecamp.svg', ratio: 4.399 },
         { name: 'Airtable', logo: 'airtable.png', ratio: 5.155 },
         { name: 'HubSpot', logo: 'hubspot.svg', ratio: 3.528 },
+        { name: 'Salesforce', logo: 'salesforce.svg', ratio: 5.613 },
         { name: 'Mailchimp', logo: 'mailchimp.png', ratio: 3.672 },
-        { name: 'QuickBooks' },
+        { name: 'QuickBooks', logo: 'quickbooks.svg', ratio: 5.371 },
         { name: 'Xero', logo: 'xero.svg', ratio: 3.552 },
         { name: 'Stripe', logo: 'stripe.svg', ratio: 2.384 },
         { name: 'Zendesk', logo: 'zendesk.svg', ratio: 1.333 },
-        { name: 'Intercom' },
+        { name: 'Intercom', logo: 'intercom.svg', ratio: 6.13 },
         { name: 'Slack', logo: 'slack.svg', ratio: 2.801 },
       ],
-      byName: ['Microsoft 365', 'Salesforce'],
     },
     cta: 'Think of the last answer you spent an hour hunting for. That’s the one we start with.',
   },

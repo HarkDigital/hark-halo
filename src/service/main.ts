@@ -121,15 +121,17 @@ function render(i: number) {
     <section class="svc-sec svc-ints" aria-labelledby="svc-ints-h">
       <h2 class="svc-eyebrow hud-eyebrow svc-rv" data-rv="wipe" id="svc-ints-h">${esc(ints.label)}</h2>
       <p class="hud-body svc-ints-line svc-rv" data-rv="wipe" style="--d:1">${esc(ints.line)}</p>
-      <ul class="svc-ints-grid">${ints.logos
+      <ul class="svc-ints-grid" role="list">${ints.logos
         .filter(l => l.logo)
         .map((l, k) => {
           // optical sizing: wide wordmarks a little shorter, compact ones a little taller (30 at 3.2:1;
-          // a stacked logo, mark over name, may stand taller still)
+          // a stacked logo, mark over name, may stand taller still). A family sharing a typeface (Google's
+          // six) gives its own heights instead, so its names all set at one letter size
           const r = l.ratio ?? 3.2
-          const h = Math.min(r < 1.6 ? 46 : 34, 30 * Math.pow(3.2 / r, 0.4))
+          const h = l.h ?? Math.min(r < 1.6 ? 46 : 34, 30 * Math.pow(3.2 / r, 0.4))
+          // (the reveal ripples along each row of four, as on laptops)
           return `
-        <li class="svc-int svc-rv" style="--d:${Math.min(k, 12) * 0.5}; --c:var(--neon-${'abc'[k % 3]}); --c-rgb:var(--neon-${'abc'[k % 3]}-rgb)">
+        <li class="svc-int svc-rv" style="--d:${((k % 4) + Math.min(Math.floor(k / 4), 3)) * 0.5}; --c:var(--neon-${'abc'[k % 3]}); --c-rgb:var(--neon-${'abc'[k % 3]}-rgb)">
           <span class="svc-int-logo" role="img" aria-label="${esc(l.name)}" style="--logo:url('${BASE}logos/${esc(l.logo!)}'); --w:${(h * r).toFixed(1)}; --h:${h.toFixed(1)}"></span>
         </li>`
         })

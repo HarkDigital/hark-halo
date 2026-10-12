@@ -25,7 +25,7 @@ One service's words appear in more places than its own page:
 
 1. **Hero:** the service title as a small label, then the **headline** (big, two lines), the **lede** (a short paragraph), and two fixed buttons ("Start a project" and "All services"). Behind it, the service's own animated **hero scene**.
 2. **What you get:** four frosted panels, each a **feature** (a title and a paragraph).
-   - *Optional:* a **Connects with** logo wall of the tools the service works with (Company Knowledge AI has one): a label, one line, the tools (Simple Icons slugs) and any tools to name in text instead. Ask for it in the build notes.
+   - *Optional:* a **Connects with** logo wall of the tools the service works with (Custom CRM and Company Knowledge AI have one): a label, one line and the tools. Each tool shows as its own full logo in one colour, four to a row (three on tablets, two on phones); any tool whose logo can't be had is named in a line under the wall instead. Ask for it in the build notes.
 3. **The number:** one big **stat** with a caps label under it.
 4. **How it works:** the fixed heading "First we listen. Then we build." and four **process steps** (a short title and one sentence each).
 5. **The longer version:** the **article**, two (sometimes three) short sections with a heading each.
