@@ -35,7 +35,7 @@ export interface ServicePageData {
    * / the file's height), each file padded at the foot so all six 'G's sit on one line. A tool
    * with no logo is named in the "Also …" line under the wall, after it the `byName` tools.
    */
-  integrations?: { label: string; line?: string; logos: { name: string; logo?: string; ratio?: number; h?: number }[]; byName?: string[] }
+  integrations?: { label: string; line?: string; more?: string; logos: { name: string; logo?: string; ratio?: number; h?: number }[]; byName?: string[] }
   cta: string
 }
 
@@ -119,6 +119,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
     relatedTags: ['Software Development'],
     integrations: {
       label: 'Connects with',
+      more: '…And many more platforms!',
       logos: [
         { name: 'QuickBooks', logo: 'quickbooks.svg', ratio: 5.371 },
         { name: 'Xero', logo: 'xero.svg', ratio: 3.552 },
@@ -368,6 +369,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
     relatedTags: ['Software'],
     integrations: {
       label: 'Connects with',
+      more: '…And many more platforms!',
       logos: [
         { name: 'Google Drive', logo: 'google-drive.png', ratio: 6.36, h: 23.7 },
         { name: 'Google Docs', logo: 'google-docs.png', ratio: 5.667, h: 26.1 },

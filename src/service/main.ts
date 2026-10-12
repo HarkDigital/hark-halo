@@ -138,6 +138,7 @@ function render(i: number) {
         </li>`
         })
         .join('')}</ul>
+      ${ints.more ? `<p class="svc-ints-more svc-rv" data-rv="wipe">${esc(ints.more)}</p>` : ''}
       ${also.length ? `<p class="svc-ints-also svc-rv" data-rv="wipe">Also ${esc(listOf(also))}.</p>` : ''}
     </section>`
     : ''
