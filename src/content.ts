@@ -226,7 +226,7 @@ export const TERMS = {
   heading: 'Terms and conditions.',
   updated: 'Last updated October 12, 2026.',
   intro:
-    'These terms cover your use of this website, which is run by Hark Digital Design (“we” or “us”). By using it, you agree to them. If you’re a client, the work we do for you is covered by the agreement we sign together, not by this page.',
+    'These terms cover your use of this website, which is run by Hark Digital Design LLC (“we” or “us”). By using it, you agree to them. If you’re a client, the work we do for you is covered by the agreement we sign together, not by this page.',
   sections: [
     {
       title: 'Using this site',
@@ -237,7 +237,7 @@ export const TERMS = {
     {
       title: 'Our content',
       text: [
-        'Apart from our clients’ work, other companies’ names and logos, and the open-source software and fonts we use under their own licenses, the words, design, graphics, animation, and code of this site belong to Hark Digital Design. You’re welcome to quote a short passage with a link back to the page. For anything more, please ask us first.',
+        'Apart from our clients’ work, other companies’ names and logos, and the open-source software and fonts we use under their own licenses, the words, design, graphics, animation, and code of this site belong to Hark Digital Design LLC. You’re welcome to quote a short passage with a link back to the page. For anything more, please ask us first.',
       ],
     },
     {
@@ -249,7 +249,7 @@ export const TERMS = {
     {
       title: 'Trademarks',
       text: [
-        'Hark Digital Design, Hark.Digital, and the Hark logo are trademarks of Hark Digital Design.',
+        'Hark Digital Design, Hark.Digital, and the Hark logo are trademarks of Hark Digital Design LLC.',
         'Other company and product names and logos on this site are trademarks of their respective owners. The logos on some of our service pages show tools we can connect your systems with. Showing them doesn’t mean those companies sponsor, endorse, or partner with us.',
         'Google Drive, Google Docs, Google Sheets, Gmail, Google Meet, and Google Calendar are trademarks of Google LLC. Microsoft 365 is a trademark of the Microsoft group of companies.',
         `If you think something here uses your work or your mark in a way it shouldn’t, email us at ${BRAND.email} and we’ll look into it.`,
@@ -279,7 +279,7 @@ export const TERMS = {
     {
       title: 'Limits on liability',
       text: [
-        'To the fullest extent the law allows, Hark Digital Design isn’t liable for any loss or damage of any kind, direct or indirect, that comes from using this site, not being able to use it, relying on its content, or visiting a site it links to.',
+        'To the fullest extent the law allows, Hark Digital Design LLC isn’t liable for any loss or damage of any kind, direct or indirect, that comes from using this site, not being able to use it, relying on its content, or visiting a site it links to.',
       ],
     },
     {
@@ -291,7 +291,7 @@ export const TERMS = {
     {
       title: 'Governing law',
       text: [
-        'These terms, and any dispute about them or this site, are governed by the laws of the Commonwealth of Pennsylvania, without regard to its conflict-of-law rules. Any such dispute will be heard in the state or federal courts in Philadelphia, Pennsylvania.',
+        'These terms, and any dispute about them or this site, are governed by the laws of the State of New Jersey, without regard to its conflict-of-law rules. Any such dispute will be heard in the state or federal courts in New Jersey.',
       ],
     },
     {
