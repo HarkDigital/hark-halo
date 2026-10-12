@@ -1,5 +1,5 @@
 import { el, rise } from '../../core/dom'
-import { BRAND, CONTACT } from '../../content'
+import { BRAND, CONTACT, termsUrl } from '../../content'
 import { directHtml } from '../../kit/contact'
 
 /*
@@ -90,12 +90,17 @@ export function buildHud(stage: HTMLElement): Hud {
     // keyboard activation: move focus to the hero's heading too
     if (e.detail === 0) hark.engine?.focusChapter('hero')
   })
+  // the colophon, then Terms & Privacy (which stays when a short phone drops the colophon: fit-4)
   const legal = el('p', 'ct-legal', undefined, foot)
+  const colo = el('span', 'ct-colo', undefined, legal)
   const parts = [`© ${new Date().getFullYear()} ${BRAND.name}`, ...BRAND.locale.split(' · ')]
   parts.forEach((p, i) => {
-    if (i) legal.append(' · ')
-    el('span', 'ct-nw', p, legal)
+    if (i) colo.append(' · ')
+    el('span', 'ct-nw', p, colo)
   })
+  colo.append(' · ')
+  const terms = el('a', 'ct-nw ct-terms', 'Terms & Privacy', legal)
+  terms.href = termsUrl()
 
   const hud: Hud = { stage, probe, wrap, panel, title, dirty: true, copiedAt: -1e9, hover: false }
 

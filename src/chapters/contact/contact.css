@@ -199,6 +199,24 @@
   line-height: 1.6;
   color: var(--fg-faint);
 }
+/* (Terms & Privacy: the line's own faint caps, underlined faintly so it reads as a link on
+   touch too, brightening on hover; padded to a 24px-tall target without moving the line.
+   Keyboard users reach it through the copy layer: Engine keyboardViaCopyLayer) */
+.stage-contact .ct-terms {
+  padding: 6px 0;
+  margin: -6px 0;
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: rgba(246, 247, 249, 0.32);
+  text-underline-offset: 3px;
+  transition:
+    color 0.25s ease,
+    text-decoration-color 0.25s ease;
+}
+.stage-contact .ct-terms:hover {
+  color: var(--fg);
+  text-decoration-color: currentColor;
+}
 .stage-contact .ct-nw {
   white-space: nowrap;
 }
@@ -334,8 +352,8 @@
 }
 
 /* fit-4: the sister concepts fold into a toggle beside Back to top, the
-   colophon line drops (the copy layer and ?read carry both) */
-.stage-contact.ct-fit-4 .ct-legal {
+   colophon drops (the copy layer and ?read carry both); Terms & Privacy stays */
+.stage-contact.ct-fit-4 .ct-colo {
   display: none;
 }
 

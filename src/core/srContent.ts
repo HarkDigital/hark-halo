@@ -1,4 +1,4 @@
-import { BRAND, CONTACT, CRM_SPOT, KNOWLEDGE_SPOT, PORTFOLIO, PROCESS, SECTIONS, SECURITY, SERVICE_CTA, SERVICES, TESTIMONIALS, WORK, portfolioUrl, serviceUrl } from '../content'
+import { BRAND, CONTACT, CRM_SPOT, KNOWLEDGE_SPOT, PORTFOLIO, PROCESS, SECTIONS, SECURITY, SERVICE_CTA, SERVICES, TESTIMONIALS, WORK, portfolioUrl, serviceUrl, termsUrl } from '../content'
 import { directHtml } from '../kit/contact'
 import { isPreview } from '../kit/work'
 
@@ -88,7 +88,7 @@ const COPY: Record<string, () => string> = {
     <p>${esc(CONTACT.body)}</p>
     <p><button type="button" data-contact-form>Contact Us</button></p>
     <p>${directHtml('sr-direct')}</p>
-    <p>© ${new Date().getFullYear()} ${esc(BRAND.name)} · ${esc(BRAND.locale)}</p>
+    <p>© ${new Date().getFullYear()} ${esc(BRAND.name)} · ${esc(BRAND.locale)} · <a href="${termsUrl()}">Terms &amp; Privacy</a></p>
     <p><a href="#hero" data-land="hero">Back to top</a></p>`,
 }
 

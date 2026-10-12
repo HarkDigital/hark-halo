@@ -1,4 +1,4 @@
-import { BRAND, CONTACT, portfolioUrl } from '../content'
+import { BRAND, CONTACT, portfolioUrl, termsUrl } from '../content'
 import { directHtml } from '../kit/contact'
 import { createContactForm } from '../ui/contactForm'
 import { mountNeonFrame } from '../service/neonFrame'
@@ -11,25 +11,26 @@ import { rise } from '../core/rise'
 
 /*
  * THE PAGE SHELL: the chrome every plain page shares (the service pages,
- * src/service/main.ts, and the Portfolio, src/portfolio/main.ts). None of it
- * touches three.js.
+ * src/service/main.ts, the Portfolio, src/portfolio/main.ts, and the terms,
+ * src/terms/main.ts). None of it touches three.js.
  *
  *   top       the brand tile (home) + Services (with its dropdown) · Work ·
  *             Contact + Start a project; on phones the story's Menu pill and
  *             sheet (ui/menuSheet.ts)
  *   contact   "Say hello." + the form (a service preselected on its own page)
  *             inside a card whose neon edge draws in on scroll
- *   footer    every service, the site's own pages, the logo, colophon
+ *   footer    every service, the site's own pages (Terms & Privacy last), the logo, colophon
  *   reveals   the service pages' entrances (service.css .svc-rv kinds)
  *   spots     the frosted panels' cursor glow (service pages)
  *
  * Off the story, "Work" means the Portfolio page (portfolioUrl()); inside
  * the story (ui/chrome.ts) it stays the chapter. The page you are on is lit:
  * a service page lights Services (and returns to that service's plate), the
- * Portfolio lights Work (aria-current="page").
+ * Portfolio lights Work (aria-current="page"); the terms light nothing up top
+ * (their footer link carries aria-current).
  */
 
-export type Current = { kind: 'service'; slug: string; back: string } | { kind: 'portfolio' }
+export type Current = { kind: 'service'; slug: string; back: string } | { kind: 'portfolio' } | { kind: 'terms' }
 
 const BASE = import.meta.env.BASE_URL
 const esc = (s: string) => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
@@ -39,6 +40,7 @@ const serviceHref = (slug: string) => `${BASE}services/${slug}/`
 export function mountTop(o: { current: Current; onOpen?: () => void; onClose?: () => void }): MenuSheet {
   const cur = o.current
   const svc = cur.kind === 'service' ? cur : null
+  const pf = cur.kind === 'portfolio'
   const work = portfolioUrl()
 
   // the Menu sheet's sections lead back into the story (Services to this service's plate);
@@ -50,8 +52,8 @@ export function mountTop(o: { current: Current; onOpen?: () => void; onClose?: (
         name: sec.name,
         href:
           sec.id === 'hero' ? BASE : sec.id === 'services' && svc ? svc.back : sec.id === 'work' ? work : `${BASE}#${sec.id}`,
-        now: svc ? sec.id === 'services' : sec.id === 'work',
-        ...(svc ? {} : { current: 'page' as const }),
+        now: svc ? sec.id === 'services' : pf && sec.id === 'work',
+        ...(pf ? { current: 'page' as const } : {}),
       },
       k,
       svc?.slug,
@@ -60,9 +62,9 @@ export function mountTop(o: { current: Current; onOpen?: () => void; onClose?: (
   const services = svc
     ? `<a class="ch-link is-active" href="${svc.back}">Services</a>`
     : `<a class="ch-link" href="${BASE}#services">Services</a>`
-  const workLink = svc
-    ? `<a class="ch-link" href="${work}">Work</a>`
-    : `<a class="ch-link is-active" href="${work}" aria-current="page">Work</a>`
+  const workLink = pf
+    ? `<a class="ch-link is-active" href="${work}" aria-current="page">Work</a>`
+    : `<a class="ch-link" href="${work}">Work</a>`
   const top = document.getElementById('svc-top')!
   top.innerHTML = `
     <header class="svc-top">
@@ -131,6 +133,7 @@ export function footerHtml(current: Current): string {
     p => `<li><a href="${serviceHref(p.slug)}"${p.slug === slug ? ' aria-current="page"' : ''}>${esc(p.title)}</a></li>`,
   ).join('')
   const workCur = current.kind === 'portfolio' ? ' aria-current="page"' : ''
+  const termsCur = current.kind === 'terms' ? ' aria-current="page"' : ''
   const year = new Date().getFullYear()
   return `
     <footer class="svc-foot">
@@ -141,13 +144,14 @@ export function footerHtml(current: Current): string {
         </nav>
         <nav class="svc-foot-col svc-rv" data-rv="list" aria-labelledby="svc-foot-nav-h">
           <p class="hud-label svc-foot-h" id="svc-foot-nav-h">Explore</p>
-          <ul>
+          <ul style="--rows2:4">
             <li><a href="${BASE}">Home</a></li>
             <li><a href="${BASE}#services">Services</a></li>
             <li><a href="${BASE}#process">Process</a></li>
             <li><a href="${portfolioUrl()}"${workCur}>Work</a></li>
             <li><a href="${BASE}#voices">Clients</a></li>
             <li><a href="${BASE}#contact">Contact</a></li>
+            <li><a href="${termsUrl()}"${termsCur}>Terms &amp; Privacy</a></li>
           </ul>
         </nav>
       </div>

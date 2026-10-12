@@ -210,6 +210,106 @@ export const PORTFOLIO = {
 }
 
 /*
+ * TERMS: the terms and conditions page (src/terms, <base>terms/), its privacy section
+ * included, linked as "Terms & Privacy" from every page's footer and the story's sign-off
+ * line. Website terms only: client work is covered by each client's own agreement. Plain
+ * English; the studio's address in a section's text becomes a mailto link (src/terms/main.ts).
+ * The title and description also go into the page's meta tags (vite.config.ts termsPage),
+ * and the whole text into its <noscript>. (Contact form going live through the hark-contact
+ * Worker? Name Cloudflare and SendGrid in the Privacy section.)
+ */
+export const TERMS = {
+  title: 'Terms and Conditions · Hark Digital',
+  description:
+    'Terms of use and privacy for the Hark Digital Design website: what you can do here, who owns what, trademarks, and how we handle your messages.',
+  eyebrow: 'Legal',
+  heading: 'Terms and conditions.',
+  updated: 'Last updated October 12, 2026.',
+  intro:
+    'These terms cover your use of this website, which is run by Hark Digital Design (“we” or “us”). By using it, you agree to them. If you’re a client, the work we do for you is covered by the agreement we sign together, not by this page.',
+  sections: [
+    {
+      title: 'Using this site',
+      text: [
+        'You’re welcome to browse, read, and share links to any page, and search engines and AI assistants are welcome to read and index it. Please don’t use the site for anything unlawful, try to break or overload it, get around its security, send spam or harmful code through its forms, or copy it wholesale to republish as your own.',
+      ],
+    },
+    {
+      title: 'Our content',
+      text: [
+        'Apart from our clients’ work, other companies’ names and logos, and the open-source software and fonts we use under their own licenses, the words, design, graphics, animation, and code of this site belong to Hark Digital Design. You’re welcome to quote a short passage with a link back to the page. For anything more, please ask us first.',
+      ],
+    },
+    {
+      title: 'Client work',
+      text: [
+        'The sites, screenshots, and videos in our portfolio show work we’ve done for our clients, and some of those sites may have changed since we handed them over. Our clients’ names, sites, and brands belong to them, and showing them here doesn’t give anyone else the right to use them.',
+      ],
+    },
+    {
+      title: 'Trademarks',
+      text: [
+        'Hark Digital Design, Hark.Digital, and the Hark logo are trademarks of Hark Digital Design.',
+        'Other company and product names and logos on this site are trademarks of their respective owners. The logos on some of our service pages show tools we can connect your systems with. Showing them doesn’t mean those companies sponsor, endorse, or partner with us.',
+        'Google Drive, Google Docs, Google Sheets, Gmail, Google Meet, and Google Calendar are trademarks of Google LLC. Microsoft 365 is a trademark of the Microsoft group of companies.',
+        `If you think something here uses your work or your mark in a way it shouldn’t, email us at ${BRAND.email} and we’ll look into it.`,
+      ],
+    },
+    {
+      title: 'Privacy',
+      text: [
+        'When you get in touch, by email or through the contact form, we receive what you send: your name, email address, and message, plus anything else you choose to add, such as a phone number or your website. We use it to reply to you and to talk about your project, and it stays in our email records. We don’t sell it, and we don’t share it with anyone for their own marketing.',
+        'Messages reach us through the email and form services that deliver them, and the company that hosts this site keeps standard server logs, such as IP addresses, to keep it secure. Those companies handle that information under their own privacy policies.',
+        'This site doesn’t use analytics, advertising, or tracking cookies, and it doesn’t follow you to other sites, so there’s nothing for a browser’s Do Not Track setting to switch off. It keeps a few display settings, such as whether sound is on, in your own browser, and they’re never sent to us.',
+        `This site is meant for adults and businesses, and we don’t knowingly collect information from children under 13. Questions about your information? Email us at ${BRAND.email}.`,
+      ],
+    },
+    {
+      title: 'Links to other sites',
+      text: [
+        'Links to client sites and other websites are there for your convenience. We don’t control those sites and aren’t responsible for their content or how they handle your information.',
+      ],
+    },
+    {
+      title: 'No guarantees',
+      text: [
+        'We work to keep this site accurate and running, but we can’t promise it always will be. It’s provided “as is” and “as available,” without warranties of any kind, express or implied. What you read here is general information about our services, not legal or other professional advice for your situation, and it may change without notice.',
+      ],
+    },
+    {
+      title: 'Limits on liability',
+      text: [
+        'To the fullest extent the law allows, Hark Digital Design isn’t liable for any loss or damage of any kind, direct or indirect, that comes from using this site, not being able to use it, relying on its content, or visiting a site it links to.',
+      ],
+    },
+    {
+      title: 'Changes to these terms',
+      text: [
+        'We may update these terms from time to time. The date at the top shows when they last changed, and using the site after a change means you accept the new version.',
+      ],
+    },
+    {
+      title: 'Governing law',
+      text: [
+        'These terms, and any dispute about them or this site, are governed by the laws of the Commonwealth of Pennsylvania, without regard to its conflict-of-law rules. Any such dispute will be heard in the state or federal courts in Philadelphia, Pennsylvania.',
+      ],
+    },
+    {
+      title: 'The fine print',
+      text: [
+        'If any part of these terms can’t be enforced, the rest still applies. If we don’t enforce a term right away, we haven’t given it up. If you and we have signed an agreement that says something different, that agreement wins.',
+      ],
+    },
+    {
+      title: 'Questions',
+      text: [`Email us at ${BRAND.email} and we’ll get back to you.`],
+    },
+  ],
+}
+/** the terms page (src/terms): <base>terms/ */
+export const termsUrl = () => `${import.meta.env.BASE_URL}terms/`
+
+/*
  * THE HOME PAGE'S 15: the story's Work chapter (its carousel, the accessible copy
  * and the Read-as-a-page fallback), in the order they run there. Kept as the first
  * 15 of PORTFOLIO_ORDER below; the first six are featured (the carousel's leaves),
@@ -1058,6 +1158,7 @@ export const KNOWLEDGE_SPOT = {
  * turnstileSiteKey  Cloudflare Turnstile's PUBLIC site key; the form shows the
  *                   check and sends its token (the Worker verifies it)
  */
+// (going live with the endpoint? name Cloudflare and SendGrid in TERMS' Privacy section)
 export const CONTACT_FORM = {
   endpoint: '',
   turnstileSiteKey: '',

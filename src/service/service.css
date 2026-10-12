@@ -926,9 +926,10 @@ html.is-svc.menu-open {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-rows: repeat(var(--rows2, 6), auto);
   }
+  /* (Explore: its seven links in two columns, four and three; --rows2 from shell.ts) */
   .svc-foot-col:not(.svc-foot-svc) ul {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: repeat(3, auto);
+    grid-template-rows: repeat(var(--rows2, 4), auto);
     grid-auto-flow: column;
   }
 }

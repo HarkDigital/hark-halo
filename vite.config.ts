@@ -4,6 +4,8 @@ import path from 'node:path'
 import { SERVICE_PAGES } from './src/service/data/pages'
 import { SERVICE_CONTENT } from './src/service/data/content'
 import { PORTFOLIO_WORK, portfolioDescription, portfolioSplit, screenSizes } from './src/kit/work'
+import { TERMS } from './src/content'
+import { termsStaticHtml } from './src/terms/render'
 
 /** where the concept is served (og:url etc.); the path part comes from --base */
 const ORIGIN = 'https://harkdigital.github.io'
@@ -187,16 +189,66 @@ function portfolioPage(): Plugin {
   }
 }
 
+/**
+ * The terms page: terms.html (src/terms/main.ts) served at <base>terms/.
+ *   dev / shots  /terms/ (and /terms, with any query) is rewritten to /terms.html
+ *   both         its title and description from content.ts TERMS, and the whole of the
+ *                terms as static HTML in its <noscript> (src/terms/render.ts)
+ *   build        dist/terms/index.html with og:url for --base; dist/terms.html goes
+ */
+function termsPage(): Plugin {
+  let outDir = 'dist'
+  let base = '/'
+  let build = false
+  const rewrite = (req: { url?: string }, _res: unknown, next: () => void) => {
+    const m = (req.url ?? '').match(/^\/terms\/?(\?.*)?$/)
+    if (m) req.url = `/terms.html${m[1] ?? ''}`
+    next()
+  }
+  return {
+    name: 'hark-terms-page',
+    configResolved(c) {
+      outDir = path.resolve(c.root, c.build.outDir)
+      base = c.base
+      build = c.command === 'build'
+    },
+    configureServer(server) {
+      server.middlewares.use(rewrite)
+    },
+    transformIndexHtml(html, ctx) {
+      if (!ctx.filename.endsWith('terms.html')) return
+      // (replacer functions, not strings: copy like "$1M" must go in as written, not as a $1 backreference)
+      return html
+        .replace(/<title>[^<]*<\/title>/, () => `<title>${esc(TERMS.title)}</title>`)
+        .replace(/(<meta\s+name="description"\s+content=")[^"]*"/, (_, open) => `${open}${esc(TERMS.description)}"`)
+        .replace(/(<meta\s+property="og:title"\s+content=")[^"]*"/, (_, open) => `${open}${esc(TERMS.title)}"`)
+        .replace(/(<meta\s+property="og:description"\s+content=")[^"]*"/, (_, open) => `${open}${esc(TERMS.description)}"`)
+        .replace(/<noscript>[\s\S]*?<\/noscript>/, () => `<noscript>\n      <div style="max-width:42rem;padding:2rem;font-family:sans-serif;line-height:1.6">${termsStaticHtml()}</div>\n    </noscript>`)
+    },
+    closeBundle() {
+      if (!build) return
+      const src = path.join(outDir, 'terms.html')
+      if (!fs.existsSync(src)) return
+      const url = `${ORIGIN}${base}terms/`
+      const page = fs.readFileSync(src, 'utf8').replace(/(<meta\s+property="og:url"\s+content=")[^"]*"/, (_, open) => `${open}${esc(url)}"`)
+      const dir = path.join(outDir, 'terms')
+      fs.mkdirSync(dir, { recursive: true })
+      fs.writeFileSync(path.join(dir, 'index.html'), page)
+      fs.rmSync(src)
+    },
+  }
+}
+
 // GitHub Pages serves from /<repo>/ — CI passes --base=/<repo>/.
 export default defineConfig({
   server: { host: true },
-  plugins: [servicePages(), portfolioPage()],
+  plugins: [servicePages(), portfolioPage(), termsPage()],
   build: {
     // Safari 15/16.3 can't parse class static blocks (three r186) — lower them
     target: ['es2020', 'safari15', 'chrome100', 'firefox100'],
     chunkSizeWarningLimit: 1500,
     rollupOptions: {
-      input: { main: 'index.html', service: 'service.html', portfolio: 'portfolio.html' },
+      input: { main: 'index.html', service: 'service.html', portfolio: 'portfolio.html', terms: 'terms.html' },
       // three.js (~180 KB gzipped, most of the story's JS) in a file of its own:
       // it only changes when three is upgraded, so a deploy doesn't make every
       // returning visitor download it again
