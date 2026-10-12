@@ -445,23 +445,28 @@ html.is-svc.menu-open {
 /* Connects with (a service's `integrations`): the tools' own one-colour logos from their
    brand kits (public/logos/), no cards. Each file is a mask, so every logo is one flat colour:
    white at rest, a site neon on hover (each its own of the three, --c). Sized optically
-   (--w / --h from main.ts, in laptop px); they flow in rows, left to right */
+   (--w / --h from main.ts, in laptop px), each centred in an equal column: five to a row on
+   laptops, four on tablets, three on phones (a logo wider than its column shrinks to fit) */
 .svc-ints-line {
   max-width: 46ch;
   margin: calc(-14 * var(--hud-px)) 0 calc(44 * var(--hud-px));
 }
 .svc-ints-grid {
   --k: 1;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: calc(40 * var(--hud-px)) calc(56 * var(--hud-px));
+  --cols: 5;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  gap: calc(40 * var(--hud-px)) calc(32 * var(--hud-px));
   margin: 0;
   padding: 0;
   list-style: none;
 }
 .svc-int {
   display: flex;
+  align-items: center;
+  justify-content: center;
+  /* (one row height for all, so every row's logos share a centre line) */
+  min-height: calc(48 * var(--k) * var(--hud-px));
   color: rgba(255, 255, 255, 0.82);
   transition:
     color 0.35s ease,
@@ -469,6 +474,7 @@ html.is-svc.menu-open {
 }
 .svc-int-logo {
   display: block;
+  max-width: 100%;
   width: calc(var(--w) * var(--k) * var(--hud-px));
   height: calc(var(--h) * var(--k) * var(--hud-px));
   background: currentColor;
@@ -493,10 +499,16 @@ html.is-svc.menu-open {
   font-size: calc(12 * var(--hud-px));
   color: rgba(255, 255, 255, 0.36);
 }
+@media (max-width: 1100px) {
+  .svc-ints-grid {
+    --cols: 4;
+  }
+}
 @media (max-width: 720px) {
   .svc-ints-grid {
     --k: 0.82;
-    gap: 30px 36px;
+    --cols: 3;
+    gap: 30px 16px;
   }
 }
 
