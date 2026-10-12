@@ -119,7 +119,6 @@ export const SERVICE_PAGES: ServicePageData[] = [
     relatedTags: ['Software Development'],
     integrations: {
       label: 'Connects with',
-      line: 'Your accounting, payments, email, and calendar, wired into one place.',
       logos: [
         { name: 'QuickBooks', logo: 'quickbooks.svg', ratio: 5.371 },
         { name: 'Xero', logo: 'xero.svg', ratio: 3.552 },

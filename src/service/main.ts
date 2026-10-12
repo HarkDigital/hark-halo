@@ -123,6 +123,8 @@ function render(i: number) {
       ${ints.line ? `<p class="hud-body svc-ints-line svc-rv" data-rv="wipe" style="--d:1">${esc(ints.line)}</p>` : ''}
       <ul class="svc-ints-grid" role="list">${ints.logos
         .filter(l => l.logo)
+        // (always in alphabetical order, whatever order the data lists them in)
+        .sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }))
         .map((l, k) => {
           // optical sizing: wide wordmarks a little shorter, compact ones a little taller (30 at 3.2:1;
           // a stacked logo, mark over name, may stand taller still). A family sharing a typeface (Google's
