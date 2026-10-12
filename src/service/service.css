@@ -496,15 +496,6 @@ html.is-svc.menu-open {
   line-height: 1.6;
   color: var(--fg-muted);
 }
-.svc-ints-tm {
-  margin: calc(10 * var(--hud-px)) 0 0;
-  font-size: calc(12 * var(--hud-px));
-  color: rgba(255, 255, 255, 0.55);
-}
-/* (straight under the wall when every tool has its logo and there's no 'Also …' line) */
-.svc-ints-grid + .svc-ints-tm {
-  margin-top: calc(44 * var(--hud-px));
-}
 /* (tablets keep four to a row, every logo a step smaller, so the widest still fits its column) */
 @media (max-width: 940px) {
   .svc-ints-grid {

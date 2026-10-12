@@ -137,7 +137,6 @@ function render(i: number) {
         })
         .join('')}</ul>
       ${also.length ? `<p class="svc-ints-also svc-rv" data-rv="wipe">Also ${esc(listOf(also))}.</p>` : ''}
-      <p class="svc-ints-tm">Product names and logos are trademarks of their respective owners.</p>
     </section>`
     : ''
   const article = content
