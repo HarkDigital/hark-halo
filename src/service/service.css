@@ -446,8 +446,8 @@ html.is-svc.menu-open {
    (public/logos/; where each comes from: pages.ts `integrations`), no cards. Every logo is one
    flat colour: white at rest, a site neon on hover (each its own of the three, --c). Sized
    optically (--w / --h from main.ts, in laptop px), each centred in an equal column: four to a
-   row, three on tablets, two on phones (the widest, Google Calendar, never has to shrink; a
-   logo wider than its column would shrink to fit) */
+   row (tablets a step smaller), two on phones, so the walls (16 and 28) fill every row; the
+   widest, Google Calendar, never has to shrink (a logo wider than its column would) */
 .svc-ints-line {
   max-width: 46ch;
   margin: calc(-14 * var(--hud-px)) 0 calc(44 * var(--hud-px));
@@ -505,9 +505,17 @@ html.is-svc.menu-open {
 .svc-ints-grid + .svc-ints-tm {
   margin-top: calc(44 * var(--hud-px));
 }
+/* (tablets keep four to a row, every logo a step smaller, so the widest still fits its column) */
 @media (max-width: 940px) {
   .svc-ints-grid {
-    --cols: 3;
+    --k: 0.86;
+    column-gap: 20px;
+  }
+}
+@media (max-width: 820px) {
+  .svc-ints-grid {
+    --k: 0.76;
+    column-gap: 16px;
   }
 }
 @media (max-width: 720px) {

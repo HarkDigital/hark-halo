@@ -388,6 +388,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
         { name: 'Trello', logo: 'trello.svg', ratio: 2.875 },
         { name: 'Jira', logo: 'jira.svg', ratio: 2.333 },
         { name: 'Basecamp', logo: 'basecamp.svg', ratio: 4.399 },
+        { name: 'Teamwork.com', logo: 'teamwork.svg', ratio: 9.036 },
         { name: 'Airtable', logo: 'airtable.png', ratio: 5.155 },
         { name: 'HubSpot', logo: 'hubspot.svg', ratio: 3.528 },
         { name: 'Salesforce', logo: 'salesforce.svg', ratio: 5.613 },
