@@ -16,7 +16,8 @@ export interface ServicePageData {
   lede: string
   features: { title: string; text: string }[]
   process: { title: string; text: string }[]
-  stat: { value: string; label: string }
+  /** the band's number and its words (verbatim), and the picture drawn of it beside them */
+  stat: { value: string; label: string; viz: StatViz }
   /** matches tags in work.ts to surface related projects */
   relatedTags: string[]
   quote?: { text: string; name: string; company: string }
@@ -38,6 +39,38 @@ export interface ServicePageData {
   integrations?: { label: string; line?: string; more?: string; logos: { name: string; logo?: string; ratio?: number; h?: number }[]; byName?: string[] }
   cta: string
 }
+
+/**
+ * The picture of a stat in its band (src/service/stat): the stat's own number drawn in glass
+ * and neon, nothing the words don't say. A counted value ('28%', '65', '10 years') counts up
+ * with its lights; a word ('Page 1', 'Now') strikes on when its picture's key light does.
+ *   years     a glass pane per year, `from` to `to` (fixed, so it can never contradict '10 years')
+ *   week      a 40-hour week, five rows of eight hours, `share` of each day lit (`hue` on the lights, 0..1)
+ *   panes     a window per live site: the count is the value itself (PORTFOLIO_WORK.length), so
+ *             a new site adds a pane; a big portfolio falls back to tiles
+ *   flow      a year through client stores, $0 at Jan to past $1M at Dec (no monthly figures)
+ *   serp      `pages` of results; only page one lights
+ *   bounce    two bars, `from` and `to` seconds of load, the second `rise` longer (1 : 1.32)
+ *   returned  busywork lifting off into your own lane (illustrative: nothing to count)
+ *   flight    plan, fly, land (no altitudes)
+ *   now       the next hours from this minute, in the viewer's own time
+ *   always    every hour of a week, 7 x 24
+ *   people    one figure lit in every `every`
+ *   tiles     `of` websites, `share` lit
+ */
+export type StatViz =
+  | { kind: 'years'; from: number; to: number }
+  | { kind: 'week'; share: number; lit: string; rest?: string; hue?: number }
+  | { kind: 'panes' }
+  | { kind: 'flow' }
+  | { kind: 'serp'; pages: number }
+  | { kind: 'bounce'; from: number; to: number; rise: number }
+  | { kind: 'returned' }
+  | { kind: 'flight' }
+  | { kind: 'now' }
+  | { kind: 'always' }
+  | { kind: 'people'; every: number }
+  | { kind: 'tiles'; share: number; of: number }
 
 export const SERVICE_PAGES: ServicePageData[] = [
   {
@@ -72,7 +105,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
       { title: 'Build', text: 'Short cycles, working software at every step. No black box.' },
       { title: 'Support', text: 'We stay after launch, updates, tweaks, and the next idea when you’re ready.' },
     ],
-    stat: { value: '10 years', label: 'Of custom software for real businesses. Portals, dashboards, and integrations since 2016.' },
+    stat: { value: '10 years', label: 'Of custom software for real businesses. Portals, dashboards, and integrations since 2016.', viz: { kind: 'years', from: 2016, to: 2026 } },
     relatedTags: ['Software'],
     quote: {
       text: 'We needed a stand-alone payment portal for our fast-growing business. Hark Digital built it on time, on budget, trained us, and followed up to make sure everything ran smooth.',
@@ -115,7 +148,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
     ],
     // Salesforce, State of Sales (2023 edition, 7,700+ sales professionals): reps spend 28 percent
     // of their week actually selling; most of the rest goes to deal management and data entry
-    stat: { value: '28%', label: 'Of a sales rep’s week goes to actually selling. Most of the rest is admin and data entry.' },
+    stat: { value: '28%', label: 'Of a sales rep’s week goes to actually selling. Most of the rest is admin and data entry.', viz: { kind: 'week', share: 0.28, lit: 'Selling', rest: 'Mostly admin and data entry' } },
     relatedTags: ['Software Development'],
     integrations: {
       label: 'Connects with',
@@ -173,7 +206,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
       { title: 'Build', text: 'Modern frameworks, accessible markup, and speed as a feature.' },
       { title: 'Launch & teach', text: 'We go live, then teach your team to run it. Support doesn’t end at launch.' },
     ],
-    stat: { value: String(PORTFOLIO_WORK.length), label: 'Live sites in the portfolio right now, from dentists to global manufacturers' },
+    stat: { value: String(PORTFOLIO_WORK.length), label: 'Live sites in the portfolio right now, from dentists to global manufacturers', viz: { kind: 'panes' } },
     relatedTags: ['Web Design'],
     quote: {
       text: 'Mike has exceptional technical ability but at his core he is an artist. He brilliantly created a clean, concise and modern website that has significantly bolstered our business.',
@@ -214,7 +247,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
       { title: 'Build & connect', text: 'Store, payments, shipping, and your back office, all talking to each other.' },
       { title: 'Grow', text: 'Conversion tuning, seasonal campaigns, and the numbers to prove what worked.' },
     ],
-    stat: { value: '$1M+', label: 'Flows through client stores we built, every single year' },
+    stat: { value: '$1M+', label: 'Flows through client stores we built, every single year', viz: { kind: 'flow' } },
     relatedTags: ['Ecommerce'],
     quote: {
       text: 'Hark Digital helped launch a successful holiday season campaign that brought us record number sales.',
@@ -255,7 +288,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
       { title: 'Publish with purpose', text: 'Content mapped to real queries, shipped on a schedule you can sustain.' },
       { title: 'Measure & compound', text: 'Rankings, traffic, citations. SEO is compound interest, we keep it compounding.' },
     ],
-    stat: { value: 'Page 1', label: 'Is where customers stop looking. Everything else is a participation trophy.' },
+    stat: { value: 'Page 1', label: 'Is where customers stop looking. Everything else is a participation trophy.', viz: { kind: 'serp', pages: 5 } },
     relatedTags: ['SEO'],
     cta: 'Google yourself. If you didn’t like what you saw, talk to us.',
   },
@@ -291,7 +324,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
       { title: 'Tune & cache', text: 'Compression, lazy-loading, a CDN, and smart caching so repeat visits feel instant.' },
       { title: 'Verify', text: 'We re-test on real devices and hand you the before-and-after scores in writing.' },
     ],
-    stat: { value: '32%', label: 'More likely a visitor bounces when mobile load time goes from one second to three' },
+    stat: { value: '32%', label: 'More likely a visitor bounces when mobile load time goes from one second to three', viz: { kind: 'bounce', from: 1, to: 3, rise: 0.32 } },
     relatedTags: ['SEO'],
     cta: 'Run your homepage through PageSpeed Insights. Not happy with the number? Let us fix it.',
   },
@@ -327,7 +360,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
       { title: 'Integrate', text: 'The pilot graduates into your real workflow, connected, secured, and documented.' },
       { title: 'Train your team', text: 'Your people learn to drive it. AI that only the consultant understands is a liability.' },
     ],
-    stat: { value: 'Hours', label: 'Returned to your week. The only AI metric that matters.' },
+    stat: { value: 'Hours', label: 'Returned to your week. The only AI metric that matters.', viz: { kind: 'returned' } },
     relatedTags: ['Software'],
     cta: 'Curious what AI could actually do for your business? Ask us for the honest version.',
   },
@@ -365,7 +398,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
     ],
     // McKinsey Global Institute, “The social economy” (July 2012): interaction workers spend
     // about 19 percent of their time searching for and gathering information
-    stat: { value: '19%', label: 'Of the average knowledge worker’s week goes to searching for and gathering information' },
+    stat: { value: '19%', label: 'Of the average knowledge worker’s week goes to searching for and gathering information', viz: { kind: 'week', share: 0.19, lit: 'Searching and gathering', hue: 0.5 } },
     relatedTags: ['Software'],
     integrations: {
       label: 'Connects with',
@@ -435,7 +468,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
       { title: 'Edit', text: 'Color-graded photo and video, cut for where it will live, web, social, or the big screen.' },
       { title: 'Deliver', text: 'Web-ready files sized for your site and socials, with full-resolution masters included.' },
     ],
-    stat: { value: 'Part 107', label: 'FAA licensed and insured. Every flight legal, planned, and professional.' },
+    stat: { value: 'Part 107', label: 'FAA licensed and insured. Every flight legal, planned, and professional.', viz: { kind: 'flight' } },
     relatedTags: ['Photography'],
     cta: 'See your business the way birds do.',
   },
@@ -471,7 +504,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
       { title: 'Restore', text: 'Back online, blocklists cleared, customers none the wiser.' },
       { title: 'Harden', text: 'Close the hole it came through and watch the door so it never happens twice.' },
     ],
-    stat: { value: 'Now', label: 'Is when a hacked site needs attention. Every hour online costs trust and traffic.' },
+    stat: { value: 'Now', label: 'Is when a hacked site needs attention. Every hour online costs trust and traffic.', viz: { kind: 'now' } },
     relatedTags: ['Security'],
     quote: {
       text: 'Very excited to have worked with Hark Digital to get our website totally fixed after a disaster experience with TWO other developers. In one month, they turned around a website that fits our needs.',
@@ -512,7 +545,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
       { title: 'Monitor', text: 'Continuous watch, because attackers don’t keep business hours.' },
       { title: 'Report', text: 'A monthly summary a business owner can actually read. No jargon, no scare tactics.' },
     ],
-    stat: { value: '24/7', label: 'Monitoring with a human who responds. Attackers don’t keep business hours.' },
+    stat: { value: '24/7', label: 'Monitoring with a human who responds. Attackers don’t keep business hours.', viz: { kind: 'always' } },
     relatedTags: ['Security'],
     cta: 'Sleep better. Put someone on watch.',
   },
@@ -548,7 +581,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
       { title: 'Verify', text: 'Re-tested the way real users actually browse: keyboard only, screen reader on, text enlarged, motion reduced.' },
       { title: 'Document & monitor', text: 'An accessibility statement, a conformance record, and monitoring so new content doesn’t quietly undo the work.' },
     ],
-    stat: { value: '1 in 4', label: 'American adults live with a disability. Not an edge case, your audience.' },
+    stat: { value: '1 in 4', label: 'American adults live with a disability. Not an edge case, your audience.', viz: { kind: 'people', every: 4 } },
     relatedTags: ['Web Design'],
     cta: 'Unplug your mouse and try to use your website. Stuck? Talk to us.',
   },
@@ -584,7 +617,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
       { title: 'Fix & speed up', text: 'Plugin cleanup, theme fixes, and performance work, or an honest recommendation to rebuild when rescue isn’t the right call.' },
       { title: 'Care plan', text: 'Monthly updates, monitoring, and small fixes so the site stays fast and patched without you thinking about it.' },
     ],
-    stat: { value: '43%', label: 'Of the web runs on WordPress. Its problems are common, so are the fixes.' },
+    stat: { value: '43%', label: 'Of the web runs on WordPress. Its problems are common, so are the fixes.', viz: { kind: 'tiles', share: 43, of: 100 } },
     relatedTags: ['Web Design'],
     cta: 'White screen? Weird redirects? Admin slower than dial-up? Tell us what WordPress is doing to you.',
   },

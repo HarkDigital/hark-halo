@@ -3,6 +3,7 @@ import '@fontsource-variable/schibsted-grotesk'
 import '../styles/base.css'
 import '../ui/ui.css'
 import './service.css'
+import './stat/stat.css'
 
 import { installPrintPolyfills } from '../ui/polyfills'
 import { applyLightsCss } from '../kit/palette'
@@ -12,6 +13,7 @@ import { SERVICE_PAGES } from './data/pages'
 import { SERVICE_CONTENT } from './data/content'
 import type { SceneHandle } from './scenes/runner'
 import { REDUCED_MOTION } from '../kit/motion'
+import { mountStat, statHtml } from './stat/band'
 
 /*
  * A SERVICE PAGE — one per service, at <base>services/<slug>/ (vite.config.ts
@@ -25,7 +27,8 @@ import { REDUCED_MOTION } from '../kit/motion'
  *   hero      the classic site's scene for the service, in glass and neon
  *             (src/service/scenes, 2D canvas), eyebrow, headline, lede, CTAs
  *   features  "What you get": four frosted panels
- *   stat      the service's number
+ *   stat      "By the numbers": the service's number, and a picture of it in
+ *             glass and neon that lights once (src/service/stat)
  *   process   "How it works": four steps on a hairline that lights on hover
  *   article   "The longer version"
  *   faq       "Questions, answered"
@@ -210,12 +213,7 @@ function render(i: number) {
     </section>
     ${integrations}
 
-    <section class="svc-stat" aria-label="By the numbers">
-      <p class="svc-stat-in svc-rv" data-rv="stat">
-        <span class="svc-stat-v">${esc(page.stat.value)}</span>
-        <span class="svc-stat-l hud-label">${esc(page.stat.label)}</span>
-      </p>
-    </section>
+    ${statHtml(page.stat)}
 
     <section class="svc-sec svc-process" aria-labelledby="svc-process-h">
       <p class="hud-eyebrow svc-rv" data-rv="wipe">How it works</p>
@@ -244,6 +242,9 @@ function render(i: number) {
   // entrances (service pages only; the story has its own): headlines come into focus word by
   // word (the story's rise), everything else by its data-rv kind (service.css), in on scroll
   bindReveals()
+
+  // the stat band lights on its own clock, once most of it is in view (not a .svc-rv)
+  mountStat(document.querySelector<HTMLElement>('.svc-stat')!, page.stat)
 
   // desktop: the hero copy is centred in the left half by the width you see (service.css)
   fitHeroCopy()

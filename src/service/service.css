@@ -12,8 +12,10 @@
   /* the active lights (kit/palette.ts sets these on <html>; Option 3 as a fallback) */
   --neon-a: #27ff86;
   --neon-b: #2f78ff;
+  --neon-c: #b24bff;
   --neon-a-rgb: 39, 255, 134;
   --neon-b-rgb: 47, 120, 255;
+  --neon-c-rgb: 178, 75, 255;
   --neon-line: linear-gradient(90deg, var(--neon-a), var(--neon-b));
 }
 
@@ -548,42 +550,7 @@ html.is-svc.menu-open {
   }
 }
 
-/* the stat: a band of light across the page */
-.svc-stat {
-  margin-top: clamp(80px, 13vh, calc(150 * var(--hud-px)));
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-  background:
-    radial-gradient(60% 140% at 12% 50%, rgba(var(--neon-a-rgb), 0.07), rgba(0, 0, 0, 0) 70%),
-    radial-gradient(50% 140% at 40% 50%, rgba(var(--neon-b-rgb), 0.06), rgba(0, 0, 0, 0) 70%),
-    #030304;
-}
-.svc-stat-in {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: calc(10 * var(--hud-px)) calc(36 * var(--hud-px));
-  max-width: var(--svc-max);
-  margin: 0 auto;
-  padding: clamp(44px, 7vh, calc(72 * var(--hud-px))) var(--gutter);
-}
-.svc-stat-v {
-  font-family: var(--font-display);
-  font-weight: 560;
-  font-size: clamp(4rem, 9.5vw, calc(9 * var(--hud-rem)));
-  line-height: 0.9;
-  letter-spacing: -0.055em;
-  color: var(--fg);
-  text-shadow:
-    0 0 30px rgba(var(--neon-a-rgb), 0.28),
-    0 0 80px rgba(var(--neon-b-rgb), 0.22);
-}
-.svc-stat-l {
-  max-width: 38ch;
-  font-size: calc(12 * var(--hud-px));
-  letter-spacing: 0.14em;
-  line-height: 1.7;
-}
+/* the stat, "By the numbers": its own sheet (stat/stat.css) */
 
 /* How it works: four steps on a hairline */
 .svc-steps {
@@ -1006,11 +973,12 @@ html.is-svc.menu-open {
      wipe    a soft band of light wipes the text in (a mask, left to right)
      panel   a neon line traces the card's edge, then its words rise
      step    a line of current runs along the steps, lighting each one's node
-     stat    the big figure strikes on like a neon sign (one stutter)
      row     FAQ rows slide in one by one, the plus spins in
      side    previous / next come in from their own sides
      list    the footer's services come in one by one
-   --d staggers siblings. */
+   --d staggers siblings. (The stat band plays on its own clock, stat/band.ts:
+   its eyebrow and words take the wipe as .svc-stat-wipe, its number the
+   svc-strike below.) */
 @property --rv-x {
   syntax: '<percentage>';
   inherits: false;
@@ -1047,7 +1015,8 @@ html.is-svc.menu-open {
 }
 
 /* wipe */
-.svc-rv[data-rv='wipe'] {
+.svc-rv[data-rv='wipe'],
+.svc-stat-wipe {
   opacity: 1;
   transform: none;
   --rv-x: 0%;
@@ -1057,7 +1026,8 @@ html.is-svc.menu-open {
 }
 /* once the band has passed, the mask comes off: a mask clips to the box, and the eyebrow
    bead's glow reaches past it */
-.svc-rv[data-rv='wipe'].is-in {
+.svc-rv[data-rv='wipe'].is-in,
+.svc-stat.is-in .svc-stat-wipe {
   --rv-x: 124%;
   animation: svc-unmask 0s linear calc(1.5s + var(--d, 0) * 110ms) forwards;
 }
@@ -1258,29 +1228,9 @@ html.is-svc.menu-open {
   }
 }
 
-/* stat: the figure strikes on like a neon sign (one stutter, well under three flashes a second) */
-.svc-rv[data-rv='stat'] {
-  opacity: 1;
-  transform: none;
-}
-.svc-rv[data-rv='stat'] .svc-stat-v {
-  opacity: 0;
-}
-/* (backwards, not both: once struck it rests on its own glow, which hover can swell) */
-.svc-rv[data-rv='stat'].is-in .svc-stat-v {
-  opacity: 1;
-  animation: svc-strike 1.4s linear 0.1s backwards;
-}
-.svc-rv[data-rv='stat'] .svc-stat-l {
-  --rv-x: 0%;
-  -webkit-mask-image: linear-gradient(100deg, #000 calc(var(--rv-x) - 22%), rgba(0, 0, 0, 0) var(--rv-x));
-  mask-image: linear-gradient(100deg, #000 calc(var(--rv-x) - 22%), rgba(0, 0, 0, 0) var(--rv-x));
-  transition: --rv-x 1.4s cubic-bezier(0.3, 0.1, 0.2, 1) 0.7s;
-}
-.svc-rv[data-rv='stat'].is-in .svc-stat-l {
-  --rv-x: 124%;
-  animation: svc-unmask 0s linear 2.1s forwards;
-}
+/* the stat's figure strikes on like a neon sign (one stutter, well under three flashes a
+   second; stat/stat.css). Backwards, not both: once struck it rests on its own glow, which
+   hover can swell */
 @keyframes svc-strike {
   0% {
     opacity: 0;
@@ -1455,15 +1405,6 @@ html.is-svc.menu-open {
   .svc-q:hover summary i {
     color: rgb(var(--spot-rgb));
     filter: drop-shadow(0 0 6px rgb(var(--spot-rgb)));
-  }
-  /* the stat: its glow swells */
-  .svc-stat-v {
-    transition: text-shadow 0.5s ease;
-  }
-  .svc-stat:hover .svc-stat-v {
-    text-shadow:
-      0 0 40px rgba(var(--neon-a-rgb), 0.55),
-      0 0 110px rgba(var(--neon-b-rgb), 0.4);
   }
   /* prev / next: the arrow leans in, a neon underline draws */
   .svc-pn-t {
