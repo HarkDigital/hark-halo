@@ -1,9 +1,12 @@
 /* ------------------------------------------------------------------
-   The stat band, "By the numbers" (stat/band.ts): the number and its words
-   in the left third, a picture of that number in glass and neon across the
-   rest (stat/viz.ts). Glass: a near-invisible fill and a hairline. Lit: a
-   neon tube (white core, colour, glow). Every size is calc(<n> *
-   var(--hud-px)), so it grows with the page on wide screens (service.css).
+   The stat band, "By the numbers" (stat/band.ts): a second hero. A
+   full-width strip, the number and its words over its left part, and a
+   picture of that number (stat/pictures) in glass and neon on the hero's
+   bloom canvases (stat/canvas.ts) across the whole band. On a tablet (and
+   windows squarer than 5:4, the hero's framed query) the copy is centred
+   over the picture; on a phone it stacks over it. Every size is
+   calc(<n> * var(--hud-px)), so it grows with the page on wide screens
+   (service.css).
    ------------------------------------------------------------------ */
 
 .svc-stat {
@@ -12,46 +15,97 @@
   position: relative;
   isolation: isolate;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  min-height: clamp(560px, 68vh, calc(760 * var(--hud-px)));
   margin-top: clamp(80px, 13vh, calc(150 * var(--hud-px)));
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
-  /* the room's light, tinted by the picture's lead colour (left) and its tail (right) */
-  background:
-    radial-gradient(38% 150% at 8% 50%, rgba(var(--lead-rgb), 0.07), rgba(0, 0, 0, 0) 70%),
-    radial-gradient(40% 150% at 46% 50%, rgba(var(--neon-b-rgb), 0.035), rgba(0, 0, 0, 0) 70%),
-    radial-gradient(40% 150% at 88% 50%, rgba(var(--tail-rgb), 0.05), rgba(0, 0, 0, 0) 70%),
-    #030304;
-}
-/* the sign lights the room: it brightens as the number strikes, and swells on hover (opacity only) */
-.svc-stat::before {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  background:
-    radial-gradient(34% 120% at 12% 50%, rgba(var(--lead-rgb), 0.11), rgba(0, 0, 0, 0) 70%),
-    radial-gradient(36% 120% at 80% 50%, rgba(var(--tail-rgb), 0.06), rgba(0, 0, 0, 0) 70%);
-  opacity: 0;
-  transition: opacity 1.4s ease;
-  pointer-events: none;
-}
-.svc-stat.is-struck::before {
-  opacity: 0.7;
+  /* true black: the room's light is cast by the picture itself (its glow layer), never painted here */
+  background: #020203;
 }
 
+/* ---------- the picture: the hero's three canvases, screened together ---------- */
+.vz {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+.vz.is-on {
+  opacity: 1;
+}
+.vz canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  mix-blend-mode: screen;
+}
+.vz-glow {
+  filter: blur(5px) brightness(1.6) saturate(1.25);
+}
+.vz-haze {
+  filter: blur(22px) brightness(1.5) saturate(1.35);
+  opacity: 0.85;
+}
+/* the picture's labels (at most three), set where it asks, in scene px times --hud-px */
+.vz-labels {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.vz-lab {
+  position: absolute;
+  font-family: var(--font-label);
+  font-weight: var(--label-weight);
+  font-size: calc(10.5 * var(--hud-px));
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--fg-faint);
+  opacity: 0;
+  transition: opacity 0.9s ease 0.5s;
+}
+.vz-lab.is-center {
+  transform: translateX(-50%);
+}
+.vz-lab.is-right {
+  transform: translateX(-100%);
+}
+.vz-lab.is-hi {
+  color: var(--fg);
+}
+.svc-stat.is-in .vz-lab {
+  opacity: 1;
+}
+
+/* the copy's side stays dark whatever the picture does (as the hero's scrim) */
+.svc-stat-scrim {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.84) 0%, rgba(0, 0, 0, 0.56) 30%, rgba(0, 0, 0, 0) 50%);
+}
+
+/* ---------- the copy ---------- */
 .svc-stat-in {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-  column-gap: calc(88 * var(--hud-px));
-  row-gap: calc(36 * var(--hud-px));
-  align-items: center;
+  position: relative;
+  z-index: 2;
+  width: 100%;
   max-width: var(--svc-max);
   margin: 0 auto;
-  padding: clamp(56px, 9vh, calc(84 * var(--hud-px))) var(--gutter);
+  padding: clamp(56px, 8vh, calc(84 * var(--hud-px))) var(--gutter);
 }
 /* (the number is sized to its column: band.ts measures --fit) */
 .svc-stat-copy {
   container-type: inline-size;
+  width: 36%;
   min-width: 0;
 }
 .svc-stat .svc-stat-eye {
@@ -64,7 +118,7 @@
   margin: calc(26 * var(--hud-px)) 0 0;
 }
 .svc-stat-v {
-  --v-size: clamp(4.25rem, 24vw, calc(9 * var(--hud-rem)));
+  --v-size: clamp(4.25rem, 24vw, calc(9.5 * var(--hud-rem)));
   --v-room: 100cqi;
   display: grid;
   justify-items: start;
@@ -91,12 +145,11 @@
 .svc-stat-ghost {
   visibility: hidden;
 }
-/* off until it strikes, like a neon sign (service.css's svc-strike: one stutter) */
+/* off until it strikes, like a neon sign (service.css's svc-strike: one stutter); pure white, no
+   coloured glow: the only colour in the band is the picture's light */
 .svc-stat-n {
   opacity: 0;
-  text-shadow:
-    0 0 30px rgba(var(--neon-a-rgb), 0.28),
-    0 0 80px rgba(var(--neon-b-rgb), 0.22);
+  text-shadow: none;
 }
 .svc-stat-n.is-lit {
   opacity: 1;
@@ -117,69 +170,78 @@
   line-height: 1.7;
 }
 
-/* at rest from the start (reduced motion, dev ?settled), or held still by the dev seek */
+/* at rest from the start (dev ?settled), or held still by the dev seek */
 .svc-stat.is-still .svc-stat-wipe {
   -webkit-mask-image: none;
   mask-image: none;
   transition: none;
 }
-.svc-stat.is-still::before,
-.svc-stat.is-still .svc-stat-n {
+.svc-stat.is-still .svc-stat-n,
+.svc-stat.is-still .vz,
+.svc-stat.is-still .vz-lab {
   transition: none;
   animation: none;
 }
 .svc-stat.is-seek *,
 .svc-stat.is-seek *::before,
-.svc-stat.is-seek *::after,
-.svc-stat.is-seek::before {
+.svc-stat.is-seek *::after {
   animation: none !important;
   transition: none !important;
 }
 
-@media (hover: hover) {
-  .svc-stat-n {
-    transition: text-shadow 0.5s ease;
+/* tablets (portrait) and windows squarer than 5:4 (the hero's framed query): the copy centred
+   on top, the picture a wide short band under it (the picture is told: --vz-mode) */
+@media (min-width: 721px) and (max-aspect-ratio: 12499/10000) {
+  .svc-stat {
+    flex-direction: column;
+    align-items: stretch;
+    min-height: 0;
   }
-  .svc-stat:hover .svc-stat-n {
-    text-shadow:
-      0 0 40px rgba(var(--neon-a-rgb), 0.55),
-      0 0 110px rgba(var(--neon-b-rgb), 0.4);
-  }
-  .svc-stat.is-struck:hover::before {
-    opacity: 1;
-  }
-}
-
-/* below a laptop: the number and its words side by side, the picture the full width under them */
-@media (max-width: 1023px), (max-aspect-ratio: 5/4) {
   .svc-stat-in {
-    grid-template-columns: minmax(0, 1fr);
-    row-gap: 40px;
-    padding: clamp(48px, 7vh, 72px) var(--gutter);
+    order: -1;
+    text-align: center;
+    padding: clamp(48px, 7vh, 72px) var(--gutter) 0;
   }
-  .svc-stat-fig {
-    flex-direction: row;
-    align-items: center;
-    gap: 40px;
+  .svc-stat-copy {
+    width: 100%;
+    max-width: 880px;
+    margin: 0 auto;
   }
   .svc-stat-v {
     --v-size: clamp(4.25rem, 13vw, 8rem);
-    --v-room: 58cqi;
-    flex: none;
+    --v-room: 100cqi;
+    justify-items: center;
   }
   .svc-stat-l {
     max-width: 46ch;
+    margin: 0 auto;
+  }
+  .svc-stat-scrim {
+    display: none;
+  }
+  .vz {
+    --vz-mode: framed;
+    position: relative;
+    inset: auto;
+    height: clamp(300px, 44vh, 520px);
+    margin-top: clamp(24px, 4vh, 40px);
   }
 }
-/* phones: one column, eyebrow to picture, the whole band within one screen */
-@media (max-width: 639px) {
-  .svc-stat-in {
-    row-gap: 30px;
-    padding: 40px var(--gutter) 44px;
-  }
-  .svc-stat-fig {
+/* phones: the copy stacked over a short full-width picture */
+@media (max-width: 720px) {
+  .svc-stat {
     flex-direction: column;
     align-items: stretch;
+    min-height: 0;
+  }
+  .svc-stat-in {
+    order: -1;
+    padding: 40px var(--gutter) 0;
+  }
+  .svc-stat-copy {
+    width: 100%;
+  }
+  .svc-stat-fig {
     gap: 18px;
     margin-top: 22px;
   }
@@ -187,1113 +249,14 @@
     --v-size: clamp(3.75rem, 23vw, 6rem);
     --v-room: 100cqi;
   }
-}
-
-/* ================= the picture: shared vocabulary ================= */
-.vz {
-  --vz-glass: rgba(255, 255, 255, 0.03);
-  --vz-edge: rgba(255, 255, 255, 0.085);
-  position: relative;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  /* (band.ts reads this gap as the picture's unit, 18 hud-px) */
-  gap: calc(18 * var(--hud-px));
-}
-/* a lit block's neon tube (on the element whose --c it is) */
-.vw-lit,
-.vp,
-.vs-page,
-.vb-up,
-.vr-seg,
-.vn-h {
-  --tube:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.62), 0 0 0 1px rgb(var(--c)), 0 0 calc(10 * var(--hud-px)) rgba(var(--c), 0.62),
-    0 0 calc(26 * var(--hud-px)) rgba(var(--c), 0.24);
-}
-.vz-head,
-.vz-foot,
-.vz-axis,
-.vz-lab {
-  font-family: var(--font-label);
-  font-weight: var(--label-weight);
-  font-size: calc(10.5 * var(--hud-px));
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  line-height: 1.3;
-  color: var(--fg-faint);
-}
-.vz-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: calc(16 * var(--hud-px));
-  font-size: calc(11 * var(--hud-px));
-}
-.vz-read {
-  color: var(--fg);
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-  transition: opacity 0.4s ease;
-}
-.vz-read b {
-  font-weight: inherit;
-  color: #ffffff;
-  text-shadow: 0 0 14px rgba(var(--lead-rgb), 0.6);
-}
-.vz-read .is-dim {
-  opacity: 0.35;
-}
-.vz-foot {
-  display: flex;
-  flex-wrap: wrap;
-  gap: calc(10 * var(--hud-px)) calc(28 * var(--hud-px));
-}
-.vz-key {
-  display: inline-flex;
-  align-items: center;
-  gap: calc(10 * var(--hud-px));
-}
-.vz-chip {
-  flex: none;
-  width: calc(18 * var(--hud-px));
-  height: calc(7 * var(--hud-px));
-  border-radius: 99px;
-  background: rgb(var(--c));
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.45),
-    0 0 10px rgba(var(--c), 0.7);
-}
-.vz-chip.is-dim {
-  background: var(--vz-glass);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
-}
-.vz-chip.is-ring {
-  background: none;
-  box-shadow:
-    0 0 0 1.5px #ffffff,
-    0 0 8px rgba(255, 255, 255, 0.6);
-}
-.vz-axis {
-  position: relative;
-  height: calc(14 * var(--hud-px));
-}
-.vz-axis span {
-  position: absolute;
-  top: 0;
-  transform: translateX(-50%);
-  white-space: nowrap;
-}
-.vz-axis span.is-start {
-  transform: none;
-}
-.vz-axis span.is-end {
-  transform: translateX(-100%);
-}
-.vz-axis .is-hi {
-  color: var(--fg);
-}
-
-/* a lit part strikes on: one quick stutter, then it rests (opacity only) */
-@keyframes vz-on {
-  0% {
-    opacity: 0;
+  .svc-stat-scrim {
+    display: none;
   }
-  22% {
-    opacity: 1;
+  .vz {
+    --vz-mode: narrow;
+    position: relative;
+    inset: auto;
+    height: clamp(260px, 44vh, 420px);
+    margin-top: 26px;
   }
-  36% {
-    opacity: 0.42;
-  }
-  58%,
-  100% {
-    opacity: 1;
-  }
-}
-/* rebuilt after it has lit (a resize, the clock): at rest, nothing replays */
-.vz-settled *,
-.vz-settled *::before,
-.vz-settled *::after {
-  animation: none !important;
-  transition: none !important;
-}
-
-/* svg neon: a wide soft halo, a bloom, the coloured tube, a white-hot core */
-.vz svg {
-  display: block;
-  overflow: visible;
-}
-.tb path {
-  fill: none;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.tb-halo {
-  stroke-width: calc(14 * var(--hud-px));
-  opacity: 0.1;
-}
-.tb-bloom {
-  stroke-width: calc(6 * var(--hud-px));
-  opacity: 0.32;
-}
-.tb-tube {
-  stroke-width: calc(2.8 * var(--hud-px));
-}
-.tb-core {
-  stroke: #ffffff;
-  stroke-width: calc(0.9 * var(--hud-px));
-  opacity: 0.85;
-}
-.vz-st {
-  font-family: var(--font-label);
-  font-weight: var(--label-weight);
-  font-size: calc(10.5 * var(--hud-px));
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  fill: var(--fg-faint);
-}
-.vz-st.is-hi {
-  fill: var(--fg);
-}
-.vz-grid {
-  stroke: rgba(255, 255, 255, 0.08);
-  stroke-width: 1;
-}
-.vz-dot {
-  fill: #ffffff;
-  opacity: 0;
-  filter: drop-shadow(0 0 calc(6 * var(--hud-px)) #ffffff) drop-shadow(0 0 calc(14 * var(--hud-px)) rgb(var(--neon-b-rgb)));
-}
-.vz-dot.on {
-  opacity: 1;
-}
-
-/* ---------- years: a glass pane per year, filled month by month ---------- */
-.vy {
-  --p: 0;
-  position: relative;
-  display: flex;
-  height: calc(172 * var(--hud-px));
-  margin-top: calc(10 * var(--hud-px));
-}
-.vy.is-narrow {
-  height: calc(118 * var(--hud-px));
-}
-.vy-pane {
-  flex: 1;
-  background: linear-gradient(to top, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.008));
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-}
-/* the lit layer, painted once and uncovered by a clip as the years fill */
-.vy-lit {
-  position: absolute;
-  inset: 0;
-  clip-path: inset(calc(-30 * var(--hud-px)) calc((1 - var(--p)) * 100%) calc(-30 * var(--hud-px)) 0);
-  pointer-events: none;
-}
-.vy-wash {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, var(--neon-a), var(--neon-b) 50%, var(--neon-c));
-  -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.34), rgba(0, 0, 0, 0.1) 55%, rgba(0, 0, 0, 0.015));
-  mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.34), rgba(0, 0, 0, 0.1) 55%, rgba(0, 0, 0, 0.015));
-}
-/* a tick a month along the foot (a phone keeps just the years' posts) */
-.vy-ticks {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: calc(10 * var(--hud-px));
-  height: calc(7 * var(--hud-px));
-  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.5) 0 1px, rgba(0, 0, 0, 0) 1px calc(100% / var(--months)));
-  opacity: 0.5;
-}
-.vy.is-narrow .vy-ticks {
-  display: none;
-}
-/* the baseline tube: white core on the lights' run, its glow a blurred copy */
-.vy-base {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1.5px;
-  height: 3px;
-  border-radius: 3px;
-  background:
-    linear-gradient(#ffffff, #ffffff) center / 100% 1px no-repeat,
-    linear-gradient(90deg, var(--neon-a), var(--neon-b), var(--neon-c));
-}
-.vy-base::before {
-  content: '';
-  position: absolute;
-  inset: -5px 0;
-  border-radius: 8px;
-  background: linear-gradient(90deg, var(--neon-a), var(--neon-b), var(--neon-c));
-  filter: blur(6px);
-  opacity: 0.6;
-}
-.vy-post {
-  position: absolute;
-  top: calc(-16 * var(--hud-px));
-  bottom: calc(-6 * var(--hud-px));
-  width: 1px;
-  margin-left: -0.5px;
-  background: rgba(255, 255, 255, 0.16);
-}
-.vy-post::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: -0.5px;
-  width: 2px;
-  border-radius: 2px;
-  background: #ffffff;
-  box-shadow:
-    0 0 0 1px rgb(var(--c)),
-    0 0 10px rgba(var(--c), 0.9),
-    0 0 26px rgba(var(--c), 0.4);
-  opacity: 0;
-}
-.vy-post.on::after {
-  opacity: 1;
-  animation: vz-on 0.45s linear backwards;
-}
-/* the white-hot head leading the fill along the baseline */
-.vy-head {
-  position: absolute;
-  bottom: calc(-9 * var(--hud-px));
-  left: calc(var(--p) * 100%);
-  width: calc(18 * var(--hud-px));
-  height: calc(18 * var(--hud-px));
-  margin-left: calc(-9 * var(--hud-px));
-  border-radius: 50%;
-  background: radial-gradient(closest-side, #ffffff 30%, rgba(255, 255, 255, 0.45) 55%, rgba(255, 255, 255, 0));
-  opacity: 0;
-  transition: opacity 0.5s ease;
-  pointer-events: none;
-}
-.vy.is-moving .vy-head {
-  opacity: 1;
-  transition-duration: 0.1s;
-}
-
-/* ---------- week: five working days of eight hours, the share lit ---------- */
-.vw {
-  --p: 0;
-  display: grid;
-  gap: calc(7 * var(--hud-px));
-}
-.vw-row,
-.vw-ruler {
-  display: grid;
-  grid-template-columns: calc(40 * var(--hud-px)) minmax(0, 1fr);
-  align-items: center;
-  gap: calc(14 * var(--hud-px));
-}
-.vw.is-narrow .vw-row,
-.vw.is-narrow .vw-ruler {
-  grid-template-columns: calc(34 * var(--hud-px)) minmax(0, 1fr);
-  gap: calc(10 * var(--hud-px));
-}
-.vw-track {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
-  gap: calc(3 * var(--hud-px));
-  height: calc(28 * var(--hud-px));
-}
-.vw.is-narrow .vw-track {
-  height: calc(22 * var(--hud-px));
-}
-.vw-track > i {
-  border-radius: calc(4 * var(--hud-px));
-  background: var(--vz-glass);
-  box-shadow: inset 0 0 0 1px var(--vz-edge);
-}
-.vw-lit {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: calc(var(--share) * var(--p) * 100%);
-  opacity: clamp(0, calc(var(--p) * 40), 1);
-  border-radius: calc(5 * var(--hud-px));
-  background: linear-gradient(90deg, rgba(var(--c), 0.36), rgba(var(--c), 0.2)), #07090c;
-  box-shadow: var(--tube);
-}
-/* its white-hot head while it grows */
-.vw-lit::after {
-  content: '';
-  position: absolute;
-  top: calc(-5 * var(--hud-px));
-  bottom: calc(-5 * var(--hud-px));
-  right: -1.5px;
-  width: 3px;
-  border-radius: 3px;
-  background: #ffffff;
-  box-shadow:
-    0 0 10px #ffffff,
-    0 0 22px rgba(var(--c), 0.9);
-  opacity: 0;
-  transition: opacity 0.5s ease;
-}
-.vw.is-moving .vw-lit::after {
-  opacity: 1;
-  transition-duration: 0.1s;
-}
-.vw-ruler .vz-axis {
-  height: calc(13 * var(--hud-px));
-}
-
-/* ---------- panes: one small lit window per live site ---------- */
-.vp-grid {
-  display: grid;
-  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
-}
-.vp {
-  position: relative;
-  aspect-ratio: 1.45;
-  border-radius: calc(4 * var(--hud-px));
-  background: var(--vz-glass);
-  box-shadow: inset 0 0 0 1px var(--vz-edge);
-}
-.vp > i {
-  position: absolute;
-  border-radius: 1px;
-  background: rgba(255, 255, 255, 0.06);
-}
-.vp > .b {
-  left: 0;
-  right: 0;
-  top: 0;
-  height: 17%;
-  border-radius: calc(4 * var(--hud-px)) calc(4 * var(--hud-px)) 0 0;
-  background: rgba(255, 255, 255, 0.05);
-}
-.vp > .h {
-  left: 13%;
-  top: 30%;
-  width: var(--hw);
-  height: var(--hh);
-}
-.vp > .l {
-  left: 13%;
-  top: var(--t);
-  width: var(--w);
-  height: 6%;
-}
-.vp::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(to bottom, rgba(var(--c), 0.2), rgba(var(--c), 0.05));
-  box-shadow: var(--tube);
-  opacity: 0;
-}
-.vp.on::after {
-  opacity: 1;
-  animation: vz-on 0.45s linear backwards;
-}
-.vp.on > .b {
-  background: rgba(var(--c), 0.35);
-}
-.vp.on > .h {
-  background: rgba(var(--c), 0.5);
-}
-.vp.on > .l {
-  background: rgba(255, 255, 255, 0.5);
-}
-.vp-grid.is-small > .vp > .h,
-.vp-grid.is-small > .vp > .l {
-  display: none;
-}
-
-/* ---------- tiles: a field of websites, the share lit ---------- */
-.vt {
-  position: relative;
-  display: grid;
-  grid-auto-flow: column;
-  grid-template-rows: repeat(5, auto);
-  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
-  gap: var(--g);
-}
-.vt > i {
-  position: relative;
-  aspect-ratio: 1;
-  border-radius: calc(4 * var(--hud-px));
-  background: var(--vz-glass);
-  box-shadow: inset 0 0 0 1px var(--vz-edge);
-}
-.vt > i::before {
-  content: '';
-  position: absolute;
-  left: 18%;
-  right: 18%;
-  top: 20%;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.1);
-}
-.vt.is-small > i {
-  border-radius: 2px;
-}
-.vt.is-small > i::before {
-  display: none;
-}
-/* the lit tiles, a column each over the glass ones, uncovered down their column by a clip */
-.vt-lit {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
-  column-gap: var(--g);
-  pointer-events: none;
-}
-.vt-col {
-  display: grid;
-  grid-template-rows: repeat(5, minmax(0, 1fr));
-  row-gap: var(--g);
-  clip-path: inset(50%);
-}
-.vt-col > i {
-  border-radius: calc(4 * var(--hud-px));
-  background:
-    radial-gradient(42% 42% at 50% 46%, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0) 100%),
-    linear-gradient(to bottom, rgba(var(--c), 0.95), rgba(var(--c), 0.72));
-  box-shadow:
-    0 0 0 1px rgb(var(--c)),
-    0 0 calc(10 * var(--hud-px)) rgba(var(--c), 0.6),
-    0 0 calc(22 * var(--hud-px)) rgba(var(--c), 0.22);
-}
-.vt.is-small .vt-col > i {
-  border-radius: 2px;
-}
-
-/* ---------- flow: a year through client stores, past the $1M line ---------- */
-.vz-grid.is-goal {
-  stroke: rgba(255, 255, 255, 0.32);
-  stroke-dasharray: 3 5;
-}
-.vfl-plus {
-  opacity: 0;
-}
-.vfl-plus.on {
-  opacity: 1;
-  animation: vz-on 0.45s linear backwards;
-}
-
-/* ---------- serp: the results; only page one glows ---------- */
-.vs {
-  display: grid;
-  grid-template-columns: repeat(var(--pages), minmax(0, 1fr));
-  gap: calc(16 * var(--hud-px));
-  align-items: start;
-}
-.vs.is-narrow {
-  gap: calc(10 * var(--hud-px));
-}
-.vs-page {
-  position: relative;
-  padding: calc(12 * var(--hud-px)) calc(12 * var(--hud-px)) calc(14 * var(--hud-px));
-  border-radius: calc(8 * var(--hud-px));
-  background: var(--vz-glass);
-  box-shadow: inset 0 0 0 1px var(--vz-edge);
-  opacity: var(--o);
-  transition: opacity 0.8s ease;
-}
-.vs.is-narrow .vs-page {
-  padding: calc(10 * var(--hud-px)) calc(9 * var(--hud-px)) calc(12 * var(--hud-px));
-}
-.vs-page.is-off {
-  opacity: 0;
-}
-.vs-page::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(to bottom, rgba(var(--c), 0.1), rgba(var(--c), 0.02));
-  box-shadow: var(--tube);
-  opacity: 0;
-  pointer-events: none;
-}
-.vs-page.on::after {
-  opacity: 1;
-  animation: vz-on 0.5s linear backwards;
-}
-.vs-page .vz-lab {
-  display: block;
-  margin-bottom: calc(10 * var(--hud-px));
-  font-size: calc(9.5 * var(--hud-px));
-  white-space: nowrap;
-}
-.vs-page.is-first .vz-lab {
-  color: var(--fg);
-}
-.vs-r {
-  display: grid;
-  gap: calc(3 * var(--hud-px));
-  padding: calc(4 * var(--hud-px)) 0;
-}
-.vs-r i {
-  display: block;
-  width: var(--w);
-  border-radius: 2px;
-}
-.vs-r .t {
-  height: calc(4 * var(--hud-px));
-  background: rgba(255, 255, 255, 0.13);
-}
-.vs-r .s {
-  height: calc(2.5 * var(--hud-px));
-  background: rgba(255, 255, 255, 0.07);
-}
-/* (blue titles, green addresses: a nod to the classic results page) */
-.vs-r.on .t {
-  background: rgb(var(--neon-b-rgb));
-  box-shadow:
-    inset 0 0 0 0.5px rgba(255, 255, 255, 0.55),
-    0 0 8px rgba(var(--neon-b-rgb), 0.85);
-  animation: vz-on 0.4s linear backwards;
-}
-.vs-r.on .s {
-  background: rgba(var(--neon-a-rgb), 0.75);
-  box-shadow: 0 0 6px rgba(var(--neon-a-rgb), 0.5);
-  animation: vz-on 0.4s linear backwards;
-}
-
-/* ---------- bounce: one second against three, the rise lit ---------- */
-.vb {
-  --p: 0;
-  display: grid;
-  gap: calc(16 * var(--hud-px));
-}
-.vb-row {
-  display: grid;
-  grid-template-columns: calc(96 * var(--hud-px)) minmax(0, 1fr);
-  gap: calc(18 * var(--hud-px));
-  align-items: center;
-}
-.vb.is-narrow .vb-row {
-  grid-template-columns: calc(62 * var(--hud-px)) minmax(0, 1fr);
-  gap: calc(12 * var(--hud-px));
-}
-.vb-meta {
-  display: grid;
-  gap: calc(9 * var(--hud-px));
-}
-.vb-meta .vz-lab b {
-  margin-right: 2px;
-  font-size: calc(15 * var(--hud-px));
-  letter-spacing: 0.04em;
-  color: #ffffff;
-}
-.vb-meter {
-  display: flex;
-  gap: calc(3 * var(--hud-px));
-}
-.vb-meter i {
-  flex: 1;
-  height: calc(5 * var(--hud-px));
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.1);
-}
-.vb-meter i.on {
-  background: rgb(var(--c));
-  box-shadow:
-    inset 0 0 0 0.5px rgba(255, 255, 255, 0.6),
-    0 0 8px rgba(var(--c), 0.8);
-}
-.vb-track {
-  position: relative;
-  height: calc(58 * var(--hud-px));
-}
-.vb.is-narrow .vb-track {
-  height: calc(46 * var(--hud-px));
-}
-/* the one-second level, dashed across both rows */
-.vb-track::before {
-  content: '';
-  position: absolute;
-  left: var(--base);
-  top: calc(-12 * var(--hud-px));
-  bottom: calc(-12 * var(--hud-px));
-  border-left: 1px dashed rgba(255, 255, 255, 0.3);
-}
-.vb-base {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: var(--base);
-  border-radius: calc(6 * var(--hud-px));
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.09));
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
-}
-.vb-up {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: calc(var(--base) + 3px);
-  width: max(0px, calc(var(--base) * var(--rise) * var(--p) - 3px));
-  opacity: clamp(0, calc(var(--p) * 30), 1);
-  border-radius: calc(6 * var(--hud-px));
-  background: linear-gradient(90deg, rgba(var(--c), 0.4), rgba(var(--c), 0.24)), #07090c;
-  box-shadow: var(--tube);
-}
-.vb-v {
-  position: absolute;
-  top: 50%;
-  left: calc(var(--base) + 16 * var(--hud-px));
-  transform: translateY(-50%);
-  white-space: nowrap;
-}
-.vb-pct {
-  left: calc(var(--base) * (1 + var(--rise) * var(--p)) + 16 * var(--hud-px));
-  font-size: calc(15 * var(--hud-px));
-  letter-spacing: 0.06em;
-  color: #ffffff;
-  text-shadow: 0 0 14px rgba(var(--c), 0.9);
-}
-.vb.is-narrow .vb-v {
-  left: calc(var(--base) + 10 * var(--hud-px));
-}
-.vb.is-narrow .vb-pct {
-  left: calc(var(--base) * (1 + var(--rise) * var(--p)) + 10 * var(--hud-px));
-}
-
-/* ---------- returned: busywork lifts off into your own lane (nothing to count) ---------- */
-.vr {
-  --lh: calc(54 * var(--hud-px));
-  --lg: calc(10 * var(--hud-px));
-  display: grid;
-  grid-template-columns: calc(78 * var(--hud-px)) minmax(0, 1fr);
-  column-gap: calc(14 * var(--hud-px));
-}
-.vr.is-narrow {
-  --lh: calc(34 * var(--hud-px));
-  --lg: calc(8 * var(--hud-px));
-  grid-template-columns: calc(64 * var(--hud-px)) minmax(0, 1fr);
-  column-gap: calc(10 * var(--hud-px));
-}
-.vr-labs {
-  display: grid;
-  grid-template-rows: var(--lh) var(--lh);
-  row-gap: var(--lg);
-  align-items: center;
-}
-.vr-lanes {
-  position: relative;
-  display: grid;
-  grid-template-rows: var(--lh) var(--lh);
-  row-gap: var(--lg);
-}
-.vr-lane {
-  position: relative;
-  border-radius: calc(6 * var(--hud-px));
-}
-.vr-up {
-  background: rgba(255, 255, 255, 0.012);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
-}
-.vr-dn {
-  background:
-    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.11) 0 1.5px, rgba(0, 0, 0, 0) 1.5px 6px),
-    rgba(255, 255, 255, 0.025);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
-}
-/* where a stretch left the busywork: the hatching fades to a dark gap */
-.vr-gone {
-  position: absolute;
-  top: 1px;
-  bottom: 1px;
-  background: #030304;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
-  opacity: 0;
-  transition: opacity 0.5s ease;
-}
-.vr-gone.on {
-  opacity: 0.86;
-}
-/* and rises one lane, into yours, as a lit pill */
-.vr-seg {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  border-radius: calc(6 * var(--hud-px));
-  background: linear-gradient(to bottom, rgba(var(--c), 0.5), rgba(var(--c), 0.24)), #07090c;
-  box-shadow: var(--tube);
-  opacity: 0;
-  transform: translateY(calc(var(--lh) + var(--lg)));
-  transition:
-    transform 0.75s var(--svc-ease),
-    opacity 0.25s ease;
-}
-.vr-seg.on {
-  opacity: 1;
-  transform: none;
-}
-.vr-scan {
-  position: absolute;
-  top: calc(-8 * var(--hud-px));
-  bottom: calc(-8 * var(--hud-px));
-  width: 2px;
-  margin-left: -1px;
-  background: #ffffff;
-  box-shadow:
-    0 0 12px #ffffff,
-    0 0 30px rgba(var(--neon-a-rgb), 0.9);
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* ---------- flight: plan, fly, land ---------- */
-.vz-ground {
-  stroke: rgba(255, 255, 255, 0.3);
-  stroke-width: 1;
-}
-.vfx-plan {
-  fill: none;
-  stroke: rgba(255, 255, 255, 0.3);
-  stroke-width: 1;
-  stroke-dasharray: 3 5;
-  opacity: 0;
-}
-.vfx-wp {
-  fill: #030304;
-  stroke: rgba(255, 255, 255, 0.7);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-.vfx-wp.on {
-  opacity: 1;
-}
-.vfx-quad {
-  opacity: 0;
-}
-.vfx-quad.on {
-  opacity: 1;
-}
-.vfx-glow {
-  fill: none;
-  stroke: #ffffff;
-  filter: drop-shadow(0 0 calc(5 * var(--hud-px)) #ffffff) drop-shadow(0 0 calc(12 * var(--hud-px)) rgb(var(--neon-b-rgb)));
-}
-.vfx-hub {
-  fill: #ffffff;
-  stroke: none;
-}
-.vfx-steps span {
-  color: var(--fg-faint);
-  transition:
-    color 0.3s ease,
-    text-shadow 0.3s ease;
-}
-.vfx-steps span.on {
-  color: #ffffff;
-  text-shadow: 0 0 12px rgb(var(--c));
-}
-
-/* ---------- now: the next hours, from this minute ---------- */
-.vn {
-  position: relative;
-  padding-top: calc(40 * var(--hud-px));
-}
-.vn-rib {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(24, minmax(0, 1fr));
-}
-.vn-h {
-  position: relative;
-  height: calc(72 * var(--hud-px));
-  border-radius: calc(4 * var(--hud-px));
-  background: var(--vz-glass);
-  box-shadow: inset 0 0 0 1px var(--vz-edge);
-}
-.vn.is-narrow .vn-h {
-  height: calc(56 * var(--hud-px));
-  border-radius: 2px;
-}
-.vn-h.past {
-  background: rgba(255, 255, 255, 0.05);
-  box-shadow: none;
-}
-.vn-h.cur {
-  overflow: hidden;
-}
-.vn-h.cur > b {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.05);
-}
-.vn-h.fut::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(to bottom, rgba(var(--c), 0.26), rgba(var(--c), 0.08));
-  box-shadow: var(--tube);
-  opacity: 0;
-}
-.vn-h.fut.on::after {
-  opacity: var(--k);
-  animation: vn-on 0.45s linear backwards;
-}
-@keyframes vn-on {
-  0% {
-    opacity: 0;
-  }
-  25% {
-    opacity: 1;
-  }
-  40% {
-    opacity: 0.3;
-  }
-  100% {
-    opacity: var(--k);
-  }
-}
-.vn-h > span {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: calc(8 * var(--hud-px));
-  text-align: center;
-  color: #ffffff;
-  opacity: 0;
-  transition: opacity 0.4s ease;
-}
-.vn-h.on > span {
-  opacity: calc(var(--k) * 0.95);
-}
-.vn-mark {
-  position: absolute;
-  z-index: 2;
-  top: calc(-14 * var(--hud-px));
-  bottom: calc(-10 * var(--hud-px));
-  width: 3px;
-  margin-left: -1.5px;
-  border-radius: 3px;
-  background: #ffffff;
-  box-shadow:
-    0 0 0 1px rgb(var(--neon-a-rgb)),
-    0 0 12px rgba(var(--neon-a-rgb), 0.95),
-    0 0 34px rgba(var(--neon-a-rgb), 0.5);
-  opacity: 0;
-}
-.vn-mark.on {
-  opacity: 1;
-}
-/* it lands on this minute with the word's stutter */
-.vn-mark.is-down {
-  animation: vz-on 0.6s linear backwards;
-}
-.vn-tag {
-  position: absolute;
-  right: calc(10 * var(--hud-px));
-  bottom: calc(100% - 10 * var(--hud-px));
-  white-space: nowrap;
-  color: var(--fg);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-/* (named once it lands: on its run in from the left edge it would hang off a phone) */
-.vn-mark.is-down .vn-tag {
-  opacity: 1;
-}
-.vn-ahead {
-  position: absolute;
-  top: calc(4 * var(--hud-px));
-  right: 0;
-  display: flex;
-  align-items: center;
-  gap: calc(10 * var(--hud-px));
-  color: var(--fg);
-  opacity: 0;
-  transition: opacity 0.6s ease 0.2s;
-}
-.vn-ahead::before {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.1));
-}
-.vn.lit .vn-ahead {
-  opacity: 1;
-}
-.vn-axis {
-  margin-top: calc(12 * var(--hud-px));
-}
-
-/* ---------- always: seven days by twenty-four hours, every one lit ---------- */
-.va {
-  --ch: calc(19 * var(--hud-px));
-  --rg: calc(5 * var(--hud-px));
-  display: grid;
-  grid-template-columns: calc(34 * var(--hud-px)) minmax(0, 1fr);
-  column-gap: calc(12 * var(--hud-px));
-  row-gap: calc(9 * var(--hud-px));
-}
-.va.is-narrow {
-  --ch: calc(16 * var(--hud-px));
-  --rg: calc(4 * var(--hud-px));
-  grid-template-columns: calc(18 * var(--hud-px)) minmax(0, 1fr);
-  column-gap: calc(8 * var(--hud-px));
-}
-.va-days {
-  display: grid;
-  row-gap: var(--rg);
-}
-.va-days span {
-  display: flex;
-  align-items: center;
-  height: var(--ch);
-}
-.va-rows {
-  position: relative;
-  display: grid;
-  row-gap: var(--rg);
-}
-.va-row,
-.va-lit {
-  display: grid;
-  grid-template-columns: repeat(24, minmax(0, 1fr));
-  gap: var(--g);
-}
-.va-row {
-  position: relative;
-}
-.va-row > i {
-  height: var(--ch);
-  border-radius: calc(3 * var(--hud-px));
-  background: var(--vz-glass);
-  box-shadow: inset 0 0 0 1px var(--vz-edge);
-}
-/* each day's lit hours, painted once and uncovered hour by hour by a clip */
-.va-lit {
-  position: absolute;
-  inset: 0;
-  clip-path: inset(50%);
-  pointer-events: none;
-}
-.va-lit > i {
-  position: relative;
-  border-radius: calc(3 * var(--hud-px));
-  background: linear-gradient(to bottom, rgba(var(--c), 0.62), rgba(var(--c), 0.38));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.4),
-    0 0 calc(8 * var(--hud-px)) rgba(var(--c), 0.42);
-}
-.va.is-narrow .va-row > i,
-.va.is-narrow .va-lit > i {
-  border-radius: 2px;
-}
-/* this hour, where you are */
-.va-lit > i.is-now::before {
-  content: '';
-  position: absolute;
-  inset: calc(-3 * var(--hud-px));
-  border-radius: calc(5 * var(--hud-px));
-  box-shadow:
-    0 0 0 1.5px #ffffff,
-    0 0 12px rgba(255, 255, 255, 0.7);
-  opacity: 0;
-  transition: opacity 0.6s ease 0.2s;
-}
-.is-done .va-lit > i.is-now::before {
-  opacity: 1;
-}
-.va-scan {
-  position: absolute;
-  top: calc(-6 * var(--hud-px));
-  bottom: calc(-6 * var(--hud-px));
-  width: 2px;
-  margin-left: -1px;
-  background: #ffffff;
-  box-shadow:
-    0 0 12px #ffffff,
-    0 0 30px rgba(var(--neon-b-rgb), 0.9);
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* ---------- people: one in every four lit ---------- */
-.vf {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: calc(24 * var(--hud-px));
-}
-.vf-g {
-  flex: 1;
-  display: flex;
-  justify-content: space-between;
-  gap: calc(6 * var(--hud-px));
-  padding-bottom: calc(12 * var(--hud-px));
-  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
-}
-.vf-fig {
-  position: relative;
-  flex: 1;
-  max-width: calc(76 * var(--hud-px));
-}
-.vf.is-narrow .vf-g {
-  justify-content: space-around;
-  gap: calc(12 * var(--hud-px));
-}
-.vf.is-narrow .vf-fig {
-  max-width: calc(58 * var(--hud-px));
-}
-.vf-fig svg {
-  width: 100%;
-  height: auto;
-}
-.vf-fig .base {
-  opacity: 0;
-  transition: opacity 0.6s ease;
-}
-.vf-fig.in .base {
-  opacity: 1;
-}
-.vf-fig .base > * {
-  fill: rgba(255, 255, 255, 0.03);
-  stroke: rgba(255, 255, 255, 0.24);
-  stroke-width: 1.2px;
-  vector-effect: non-scaling-stroke;
-}
-.vf-fig .lit {
-  opacity: 0;
-}
-.vf-fig.on .lit {
-  opacity: 1;
-  animation: vz-on 0.55s linear backwards;
-}
-.vf-fig.on .base {
-  opacity: 0;
-}
-.vf-fig .lit > * {
-  fill: none;
-  stroke: rgb(var(--c));
-  vector-effect: non-scaling-stroke;
-}
-.vf-fig .lit > .fill {
-  fill: rgba(var(--c), 0.26);
-  stroke: none;
-}
-.vf-fig .lit > .tb-halo {
-  stroke-width: calc(14 * var(--hud-px));
-  opacity: 0.14;
-}
-.vf-fig .lit > .tb-bloom {
-  stroke-width: calc(5 * var(--hud-px));
-}
-.vf-fig .lit > .tb-tube {
-  stroke-width: calc(2.2 * var(--hud-px));
-}
-.vf-fig .lit > .tb-core {
-  stroke: #ffffff;
 }
