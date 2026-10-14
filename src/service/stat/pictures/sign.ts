@@ -1,6 +1,6 @@
 import { NA, P, WHITE, rgba, strike } from '../../scenes/kit'
 import type { Builder, Label } from '../picture'
-import { TAU, breath, clamp01, hash, hot, neonTo, span, wash } from './lib'
+import { TAU, breath, clamp01, hash, hot, span, wash } from './lib'
 
 /*
  * Part 107: THE CITATION TUBE (../PICTURES.md). The licence as a real neon
@@ -211,13 +211,13 @@ export const sign: Builder<{ kind: 'sign'; text: string; cite: string }> = o => 
         const lit = clamp01((front - p.start) / p.len)
         const core = clamp01((coreF - p.start) / p.len)
         if (lit <= 0) continue
-        // the glow and colour breathe; the core stays steady
+        // the glow and colour breathe; the core stays steady (the three strokes by hand, each to
+        // its own length, as lib.ts's neonTo does, since the glow has its own breath here)
         glow.lineWidth = wt * 2.6
         glow.strokeStyle = rgba(NA, glowOn)
         if (lit < 1) glow.setLineDash([p.len * lit, p.len * 2])
         glow.stroke(p.path)
         glow.setLineDash([])
-        neonTo(pen, p.path, p.len, NA, 0, wt, lit, core)
         ctx.lineWidth = wt
         ctx.strokeStyle = rgba(NA, Math.min(1, 0.8 * on * bb * dip))
         if (lit < 1) ctx.setLineDash([p.len * lit, p.len * 2])

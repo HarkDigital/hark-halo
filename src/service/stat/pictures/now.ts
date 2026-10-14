@@ -1,6 +1,6 @@
 import { NA, NC, P, WHITE, rgba, strike } from '../../scenes/kit'
 import type { Builder } from '../picture'
-import { TAU, breath, clamp01, hash, neonTo, span, wash } from './lib'
+import { TAU, breath, clamp01, clock, hash, neonTo, span, wash } from './lib'
 
 /*
  * Now: THE CLOCK SAYS NOW (../PICTURES.md). A clock with no rim and no
@@ -11,15 +11,9 @@ import { TAU, breath, clamp01, hash, neonTo, span, wash } from './lib'
  * from twelve, the hands strike in place at the real time, and "Now" strikes
  * at the second hand's first movement. The viewer's clock is the only live
  * data; the second hand does not exist before it moves (a stopped one would
- * lie). Dev: window.__statClock fixes the instant for screenshots.
+ * lie). Dev: window.__statClock (lib.ts's clock) fixes the instant for
+ * screenshots.
  */
-declare global {
-  interface Window {
-    __statClock?: number
-  }
-}
-const clock = () => (import.meta.env.DEV && typeof window.__statClock === 'number' ? window.__statClock : Date.now())
-
 export const now: Builder<{ kind: 'now' }> = () => {
   let cx = 0, cy = 0, R = 100
   let ticks: { path: Path2D; w: number; ember: number; x: number; y: number }[] = []

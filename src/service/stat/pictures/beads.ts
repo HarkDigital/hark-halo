@@ -62,22 +62,24 @@ export const beads: Builder<{ kind: 'beads'; share: number; of: number }> = o =>
       ctx.lineWidth = 0.8
       ctx.strokeStyle = rgba(WHITE, warm)
       ctx.stroke()
-      // the unlit beads: glass spheres with a fixed highlight, in one path
+      // the unlit beads: glass spheres with a fixed highlight, in one path. Every bead the count
+      // has not reached is glass, bead `lit` too until its strike begins (at an exact count, p = 0
+      // or p = 1, it has no age yet): the curtain is always `of` beads.
       const glass = new Path2D()
       const hi = new Path2D()
-      for (let i = lit + 1; i < o.of; i++) {
+      const glints: [number, number, number][] = []
+      for (let i = Math.max(0, Math.ceil(u - 1e-6)); i < o.of; i++) {
         const [j, k] = where(i)
         const x = xs[j] + dx(j) * (1 - k / per), y = ys[per - 1 - k]
         glass.moveTo(x + r, y)
         glass.arc(x, y, r, 0, TAU)
-        let g = 0.14
-        if (pointer.inside) {
-          const d = Math.hypot(pointer.x - x, pointer.y - y)
-          if (d < 160) g += 0.36 * (1 - d / 160)
-        }
         hi.moveTo(x - r * 0.35 + 1, y - r * 0.35)
         hi.arc(x - r * 0.35, y - r * 0.35, Math.max(0.6, r * 0.18), 0, TAU)
-        void g
+        // the hand: a cold glint on the highlight of a dark bead within reach
+        if (pointer.inside) {
+          const d = Math.hypot(pointer.x - x, pointer.y - y)
+          if (d < 160) glints.push([x - r * 0.35, y - r * 0.35, 0.36 * (1 - d / 160)])
+        }
       }
       ctx.fillStyle = rgba(WHITE, 0.04)
       ctx.fill(glass)
@@ -89,6 +91,12 @@ export const beads: Builder<{ kind: 'beads'; share: number; of: number }> = o =>
       ctx.stroke(glass)
       ctx.fillStyle = rgba(WHITE, 0.14)
       ctx.fill(hi)
+      for (const [gx, gy, ga] of glints) {
+        ctx.fillStyle = rgba(WHITE, ga)
+        ctx.beginPath()
+        ctx.arc(gx, gy, Math.max(0.6, r * 0.18), 0, TAU)
+        ctx.fill()
+      }
       if (u <= 0) return
       // the lit beads: white-hot cores in green bloom, the strand lit a pitch above and below
       const pitch = ys[1] - ys[0]
@@ -98,7 +106,7 @@ export const beads: Builder<{ kind: 'beads'; share: number; of: number }> = o =>
       let cxs = 0, cys = 0
       for (let i = 0; i <= Math.min(o.of - 1, lit); i++) {
         const age = u - i
-        if (age <= 0) continue
+        if (age <= 1e-6) continue
         const [j, k] = where(i)
         const x = xs[j] + dx(j) * (1 - k / per), y = ys[per - 1 - k]
         let on = age < 1 ? strike(age * 0.42, i) : 1

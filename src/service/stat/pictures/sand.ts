@@ -8,11 +8,20 @@ import { TAU, breath, clamp01, drawMotes, glint, hash, motes, span, wash, type M
  * way: up from the lower bulb, through the waist, into the upper. Hours
  * coming back. Illustrative: it counts nothing; the heaps are fixed shapes,
  * the stream never stops and the lower heap never empties. "Hours" strikes
- * as the first grain crosses the waist upward. Afterwards the heaps breathe,
- * the waist glows with every grain, dust drifts in the light, and the hand
- * glints the glass and bends the stream a little.
+ * as the first grain crosses the waist upward: the grains climb at a rate in
+ * lengths of the stream per second, so that crossing is the same instant on
+ * every size (KEY), and the heap under the top plate grows only once grains
+ * have landed there. Afterwards the heaps breathe, the waist glows with every
+ * grain, dust drifts in the light, and the hand glints the glass and bends
+ * the stream a little.
  */
 const GRAIN = 40
+/** the leader grain's climb, in lengths of the stream per second (the rest 0.28..0.42) */
+const RATE = 0.42
+/** seconds after the trigger the first grain lifts off: the heap has just finished lighting (e = 0.30) */
+const T0 = 0.78
+/** e when the leader crosses the waist (half the stream): the key moment, "Hours" */
+const KEY = (T0 + 0.5 / RATE) / 2.6
 export const sand: Builder<{ kind: 'sand' }> = () => {
   let cx = 0, cy = 0, G = 1
   let glass = new Path2D()
@@ -23,13 +32,20 @@ export const sand: Builder<{ kind: 'sand' }> = () => {
   let grains = 0
   let dust: Mote[] = []
   let box: [number, number, number, number] = [0, 0, 1, 1]
-  const seeds = Array.from({ length: GRAIN }, (_, i) => ({ u: hash(i * 5 + 1), v: 70 + 40 * hash(i * 5 + 2), ph: hash(i * 5 + 3), sw: hash(i * 5 + 4) * TAU, r: 1 + 0.6 * hash(i * 5 + 5) }))
-  const T0 = 0.5 // seconds after the trigger the first grains lift off
+  // each grain: its place across the stream, its climb rate (lengths/s), its start (a delay of up to
+  // 1.6 lengths behind the leader), a sway phase, a size; grain 0 is the leader, first off the heap
+  const seeds = Array.from({ length: GRAIN }, (_, i) => ({
+    u: hash(i * 5 + 1),
+    v: i === 0 ? RATE : 0.28 + 0.14 * hash(i * 5 + 2),
+    ph: i === 0 ? 0 : hash(i * 5 + 3),
+    sw: hash(i * 5 + 4) * TAU,
+    r: 1 + 0.6 * hash(i * 5 + 5),
+  }))
 
   return {
     lead: [0, 0],
     dur: 2600,
-    key: (_p, e) => e >= 0.5,
+    key: (_p, e) => e >= KEY,
     init(w, h, env) {
       narrow = env.narrow
       cx = env.mode === 'wide' ? env.copyX + 0.52 * (w - env.copyX) : 0.5 * w
@@ -120,7 +136,8 @@ export const sand: Builder<{ kind: 'sand' }> = () => {
         const edgeOn = (e < 0.46 ? Math.max(0.4, strike((e - 0.3) * 2.6, 2)) : 1) * hb * (hash(Math.floor(30 * t)) < 0.004 ? 0.6 : 1)
         pen.neon(moundEdge, NA, edgeOn * (1 + 0.3 * (near > 0 && pointer.y > yMound - 0.1 * G ? near : 0)), 1.6)
       }
-      // the stream: grains rising from the mound, through the waist, into the upper bulb
+      // the stream: grains rising from the mound, through the waist, into the upper bulb (s: a
+      // grain's climb in lengths of the stream, pure in t; past 1 it has landed and goes round again)
       const ts = t - 0.25 - T0
       const len = yMound - 0.04 * G - (yTop + 0.02 * G)
       let waist = 0
@@ -130,9 +147,10 @@ export const sand: Builder<{ kind: 'sand' }> = () => {
         const bright: [number, number, number][] = []
         for (let i = 0; i < grains; i++) {
           const g = seeds[i]
-          let s = (ts * g.v) / len - g.ph * 1.6
+          let s = ts * g.v - g.ph * 1.6
           if (s < 0) continue
-          capFill = Math.max(capFill, Math.min(1, s))
+          // the upper heap grows with the grains that have landed, over the leader's next lap
+          capFill = Math.max(capFill, Math.min(1, s - 1))
           s = s % 1
           const spread = s < 0.5 ? 0.09 * G - (0.09 * G - 0.01 * G) * (s / 0.5) : 0.01 * G + (0.11 * G - 0.01 * G) * ((s - 0.5) / 0.5)
           let x = cx + (g.u - 0.5) * 2 * spread + 1.5 * Math.sin(2 * t + g.sw)
@@ -150,14 +168,14 @@ export const sand: Builder<{ kind: 'sand' }> = () => {
         ctx.fill()
         for (const [x, y, r] of bright) pen.fill(P.circle(x, y, r), NA, 1)
       }
-      // the waist glows with each grain passing; the first crossing is the key moment
-      if (e >= 0.5) {
-        const age = (e - 0.5) * 2.6
+      // the waist glows with each grain passing; the leader's crossing is the key moment
+      if (e >= KEY) {
+        const age = (e - KEY) * 2.6
         const flare = Math.max(0, 1 - age / 0.3)
         pen.fill(P.circle(cx, cy, 2 + 4 * flare), WHITE, 0.6 * flare + 0.3 * Math.min(1, waist))
         wash(pen, NA, cx, cy, 30, 30, 0.6 * flare + 0.25 * Math.min(1, waist))
       }
-      // the cap of returned sand under the top plate grows with the first grains and then rests
+      // the cap of returned sand under the top plate grows as the first grains land, then rests
       if (capFill > 0) {
         const cf = Math.min(1, capFill) * (reveal >= 1 ? hb : 1)
         ctx.save()

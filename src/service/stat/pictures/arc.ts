@@ -63,15 +63,16 @@ export const arc: Builder<{ kind: 'arc'; share: number }> = o => {
           ctx.stroke(seg(b0, b0 + (10 * Math.PI) / 180))
         }
       }
-      // the cold highlight lapping the dark glass once every 24 s (hidden over the lit arc)
+      // the cold highlight lapping the dark glass once every 24 s (never over the lit arc: clipped
+      // to the dark range a1 .. twelve)
       if (e >= 1) {
         const lap = a1 + ((t % 24) / 24) * (TAU - sweep)
         const vis = clamp01(((lap - a1) % TAU) / 0.2) * clamp01((a0 + TAU - lap) / 0.2)
         ctx.lineWidth = 1.2
         ctx.strokeStyle = rgba(WHITE, 0.55 * vis)
-        ctx.stroke(seg(lap - 0.19, lap + 0.19))
+        ctx.stroke(seg(Math.max(a1, lap - 0.19), Math.min(a0 + TAU, lap + 0.19)))
       }
-      // the cursor on the ring: a glint on the dark glass, a swell on the lit gas
+      // the cursor on the ring: a glint on the dark glass (clipped to it), a swell on the lit gas
       let near = 0, ca = 0
       if (pointer.inside) {
         const d = Math.abs(Math.hypot(pointer.x - cx, pointer.y - cy) - r)
@@ -81,9 +82,10 @@ export const arc: Builder<{ kind: 'arc'; share: number }> = o => {
           let rel = ca - a0
           rel = ((rel % TAU) + TAU) % TAU
           if (rel > sweep * p) {
+            const cu = a0 + rel
             ctx.lineWidth = 1.2
             ctx.strokeStyle = rgba(WHITE, 0.6 * near)
-            ctx.stroke(seg(ca - 0.16, ca + 0.16))
+            ctx.stroke(seg(Math.max(a1, cu - 0.16), Math.min(a0 + TAU, cu + 0.16)))
           }
         }
       }
@@ -129,7 +131,9 @@ export const arc: Builder<{ kind: 'arc'; share: number }> = o => {
       // the room's light, cast from the lit arc's midpoint
       const [mx, my] = at(a0 + (sweep * p) / 2, 0.35 * r)
       wash(pen, NA, mx, my, narrow ? 0.9 * w : 0.5 * w, narrow ? 0.9 * w : 0.5 * w, (narrow ? 0.05 : 0.055) * p * breath(t, 4.6, 0.07))
-      // dust: faint across the band, warming to green near the lit arc
+      // dust: faint across the band, warming to green near the lit arc (a shorter reach on a phone,
+      // where 200 px would warm half the band)
+      const reach = narrow ? 110 : 200
       let warmed = 0
       ctx.beginPath()
       for (const m of dust) {
@@ -138,9 +142,9 @@ export const arc: Builder<{ kind: 'arc'; share: number }> = o => {
         let rel = ((ang - a0) % TAU + TAU) % TAU
         const onArc = rel <= sweep * p
         const d = onArc ? Math.abs(Math.hypot(x - cx, y - cy) - r) : Math.min(Math.hypot(x - hx, y - hy), Math.hypot(x - cx, y - (cy - r)))
-        if (d < 200 && warmed < 10) {
+        if (d < reach && warmed < 10) {
           warmed++
-          pen.fill(P.circle(x, y, 1.6), NA, m.a * 3 * (1 - d / 200) * p)
+          pen.fill(P.circle(x, y, 1.6), NA, m.a * 3 * (1 - d / reach) * p)
         } else {
           ctx.moveTo(x + m.r, y)
           ctx.arc(x, y, m.r, 0, TAU)

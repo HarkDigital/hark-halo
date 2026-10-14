@@ -1,15 +1,16 @@
 import { NA, NB, P, WHITE, rgba, strike } from '../../scenes/kit'
 import type { Builder, Label } from '../picture'
-import { TAU, breath, clamp01, easeOut, glint, hash, hot, moteAt, motes, smooth, wash, type Mote } from './lib'
+import { TAU, breath, clamp01, clock, easeOut, glint, hash, hot, moteAt, motes, smooth, wash, type Mote } from './lib'
 
 /*
  * 24/7: SEVEN DAYS LIT (../PICTURES.md). Seven level glass tubes stacked in
  * dark air, one per day, Monday at the top, each lit blue from electrode to
  * electrode by a strike that cascades down the stack; "24/7" strikes as the
  * seventh front reaches its cap. One white-hot green bead creeps along
- * today's tube at the viewer's own hour, the only live data. Afterwards the
- * tubes breathe out of phase, one wavers at a time, dust drifts out through
- * the top, and the hand warms the lit glass.
+ * today's tube at the viewer's own hour, the only live data (lib.ts's clock,
+ * read every frame: at midnight it simply moves to the next tube). Afterwards
+ * the tubes breathe out of phase, one wavers at a time, dust drifts out
+ * through the top, and the hand warms the lit glass.
  */
 const REST = 0.78
 export const always: Builder<{ kind: 'always' }> = () => {
@@ -21,7 +22,6 @@ export const always: Builder<{ kind: 'always' }> = () => {
   let wide = false, narrow = false
   let dust: Mote[] = []
   let box: [number, number, number, number] = [0, 0, 1, 1]
-  let day0 = 0, h0 = 0
   let W = 1, H = 1
 
   return {
@@ -60,10 +60,6 @@ export const always: Builder<{ kind: 'always' }> = () => {
       }
       box = [0, 0, w, h]
       dust = motes(narrow ? 8 : wide ? 12 : 10, 247, box, [5, 9], [-6, -3])
-      // the clock, read once (live: canvas.ts rebuilds on the minute)
-      const now = new Date()
-      day0 = (now.getDay() + 6) % 7
-      h0 = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600
       if (narrow) return
       const labels: Label[] = [
         { text: 'Mon', x: x0 - 44, y: ys[0] - 5, align: 'right' },
@@ -169,11 +165,14 @@ export const always: Builder<{ kind: 'always' }> = () => {
       // the room's light, cast by the lit tubes
       const mean = levels.reduce((s, v) => s + v, 0) / 7
       wash(pen, NB, wide ? 0.72 * w : 0.5 * w, 0.5 * h, wide ? 0.55 * w : narrow ? 0.7 * w : 0.5 * w, wide ? 0.55 * w : narrow ? 0.7 * w : 0.5 * w, (narrow ? 0.05 : wide ? 0.035 : 0.03) * mean * roomBreath)
-      // the bead: a human on watch, at the viewer's hour on today's tube (from a beat after the word)
+      // the bead: a human on watch, at the viewer's hour on today's tube (from a beat after the word);
+      // the clock is read here, every frame, so it creeps in real time and never drifts from the
+      // band's own t across the minute rebuild
       if (e >= 0.82) {
         const ageB = t - (0.25 + 0.82 * 2.4)
-        const hr = (h0 + t / 3600) % 24
-        const d = (day0 + Math.floor((h0 + t / 3600) / 24)) % 7
+        const now = new Date(clock())
+        const hr = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600 + now.getMilliseconds() / 3.6e6
+        const d = (now.getDay() + 6) % 7
         const xb = x0 + (L * hr) / 24, yb = ys[d]
         let on = strike(ageB, 9) * (0.85 + 0.15 * (0.5 + 0.5 * Math.sin((TAU * t) / 2.6)))
         let r = (narrow ? 2.6 : 3.4) + 2.6 * Math.max(0, 1 - ageB / 0.4) + 0.5 * (0.5 + 0.5 * Math.sin((TAU * t) / 2.6))

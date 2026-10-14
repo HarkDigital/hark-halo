@@ -63,7 +63,7 @@ export const past: Builder<{ kind: 'past'; mark: string }> = o => {
           const v = span(0.62, 0.76, e)
           yS = yMark - 0.1 * h * smooth(v) * (1 + 0.08 * Math.sin(Math.PI * v))
           if (e >= 0.76) {
-            yS = yMark - 0.1 * h * (1 + 0.012 * (1 - span(0.76, 1, e)) * 0)
+            yS = yMark - 0.1 * h
             if (e >= 1) yS = yMark - 0.1 * h - 0.18 * h * (1 - Math.exp(-Math.max(0, t - t1) / 720))
           }
         }
@@ -105,7 +105,6 @@ export const past: Builder<{ kind: 'past'; mark: string }> = o => {
         // a cold glint on the nearest wall at the hand's height
         if (near > 0 && pointer.y > fadeTop && pointer.y < yBase && (k === 0 ? pointer.x < (xl + xr) / 2 : pointer.x >= (xl + xr) / 2)) glint(pen, x, pointer.y - 35, x, pointer.y + 35, 0.4 * near)
       }
-      pen.glass(P.circle(0, 0, 0), 0, 1)
       const foot = new Path2D()
       foot.ellipse((xl + xr) / 2, yBase, cw / 2, ry, 0, 0, TAU)
       pen.glass(foot, 0.14, 2)
@@ -226,19 +225,20 @@ export const past: Builder<{ kind: 'past'; mark: string }> = o => {
           glow.stroke()
         }
         // motes rising through the light, dimming above the surface and leaving through the top
-        ctx.beginPath()
+        const below = new Path2D()
+        const above = new Path2D()
         for (const g of grains.slice(0, narrow ? 12 : 28)) {
           const x = xl + 8 + g.u * (cw - 16) + 3 * Math.sin(1.1 * t + g.s * 6)
           const cycle = yBase + 8
           const y = cycle - ((g.v * t + g.s * 1000) % cycle)
-          const above = y < yS
-          const a = above ? 0.25 : 0.7
-          ctx.moveTo(x + 1.2, y)
-          ctx.arc(x, y, 1.2, 0, TAU)
-          void a
+          const path = y < yS ? above : below
+          path.moveTo(x + 1.2, y)
+          path.arc(x, y, 1.2, 0, TAU)
         }
         ctx.fillStyle = rgba(WHITE, 0.5 * lit)
-        ctx.fill()
+        ctx.fill(below)
+        ctx.fillStyle = rgba(WHITE, 0.2 * lit)
+        ctx.fill(above)
         // the pool on the floor and the room's light
         if (!narrow) wash(pen, NA, (xl + xr) / 2, yBase, 0.32 * w, 0.035 * h, 0.12 * lit * br * (crossed && e < 0.76 ? 1.6 : 1))
         wash(pen, NA, (xl + xr) / 2, yS, narrow ? 0.6 * w : 0.55 * w, narrow ? 0.6 * w : 0.55 * w, 0.035 * lit * br * (crossed && e < 0.76 ? 1.6 : 1))

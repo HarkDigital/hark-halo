@@ -100,36 +100,39 @@ export const gauge: Builder<{ kind: 'gauge'; share: number }> = o => {
       if (stop >= 0.12 && stop < 0.54) on *= 0.6 + 0.4 * strike(stop - 0.12, 7)
       const coreP = e >= 1 ? 1 : clamp01(1 - Math.pow(1 - Math.max(0, e - 0.05), 3)) / Math.max(1e-6, p)
       const yC = base - Math.min(L, L * Math.min(1, coreP))
-      glow.lineWidth = gas * 2.6 * (1 + 0.45 * k)
+      // the slug is a round-capped stroke whose caps are counted in, so its top edge is exactly base - L;
+      // while the level is shallower than the gas is wide it is a bead of that height, never past the base
+      const gw = Math.min(gas, L)
+      glow.lineWidth = gw * 2.6 * (1 + 0.45 * k)
       glow.strokeStyle = rgba(NB, on)
       glow.beginPath()
-      glow.moveTo(x, base - gas / 2)
-      glow.lineTo(x, yS + gas / 2)
+      glow.moveTo(x, base - gw / 2)
+      glow.lineTo(x, yS + gw / 2)
       glow.stroke()
-      ctx.lineWidth = gas
+      ctx.lineWidth = gw
       ctx.strokeStyle = rgba(NB, on * 0.8)
       ctx.beginPath()
-      ctx.moveTo(x, base - gas / 2)
-      ctx.lineTo(x, yS + gas / 2)
+      ctx.moveTo(x, base - gw / 2)
+      ctx.lineTo(x, yS + gw / 2)
       ctx.stroke()
-      // the core: a slow ripple runs up it
+      // the core: a slow ripple runs up it (a dot at the foot while it is shorter than the slug is wide)
       const cg = ctx.createLinearGradient(0, base, 0, yC)
       for (let i = 0; i <= 3; i++) {
         const y = base - (i / 3) * (base - yC)
         cg.addColorStop(i / 3, rgba(hot(NB), (0.9 + 0.06 * Math.sin(1.9 * t + 2)) * (1 + 0.08 * Math.sin(0.12 * y - 1.1 * t)) * on))
       }
-      ctx.lineWidth = gas * 0.4
+      ctx.lineWidth = gw * 0.4
       ctx.strokeStyle = cg
       ctx.beginPath()
-      ctx.moveTo(x, base - gas / 2)
-      ctx.lineTo(x, yC + gas / 2)
+      ctx.moveTo(x, base - gw / 2)
+      ctx.lineTo(x, Math.min(base - gw / 2, yC + gw / 2))
       ctx.stroke()
       // a rare dip of the core: every ~9 s, 80 ms
       if (e >= 1) {
         const slot = Math.floor((t - 2.85) / 9)
         if (t - 2.85 - slot * 9 < 0.08 && hash(slot) > 0.3) {
           ctx.fillStyle = rgba(NB, 0.3)
-          ctx.fillRect(x - gas / 2, yC, gas, Math.min(20, base - yC))
+          ctx.fillRect(x - gw / 2, yC, gw, Math.min(20, base - yC))
         }
       }
       // the meniscus: the reading edge, a shallow white-hot arc, flaring as the front stops

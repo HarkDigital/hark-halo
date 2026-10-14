@@ -8,6 +8,19 @@ import { WHITE, mix, rgba, type Pen, type RGB } from '../../scenes/kit'
  * drawn by hand so a running front can leave its white-hot core behind.
  */
 
+declare global {
+  interface Window {
+    /** dev: a fixed epoch (ms) for the live pictures, so screenshots repeat */
+    __statClock?: number
+  }
+}
+/**
+ * The viewer's clock (ms since the epoch): the only live data a picture may read, read once per
+ * frame by the pictures that show the time (now, always), never remembered from init (the band's t
+ * keeps running across the minute rebuild). Dev: window.__statClock fixes the instant.
+ */
+export const clock = () => (import.meta.env.DEV && typeof window.__statClock === 'number' ? window.__statClock : Date.now())
+
 export const TAU = Math.PI * 2
 export const clamp01 = (x: number) => (x < 0 ? 0 : x > 1 ? 1 : x)
 export const span = (a: number, b: number, e: number) => clamp01((e - a) / (b - a))

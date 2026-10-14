@@ -111,8 +111,8 @@ export const windowPane: Builder<{ kind: 'window'; of: number }> = () => {
       })
       if (e <= 0) return
       const [px, py, pw, ph] = panes[lit]
-      // the hum: the gas warms twice before it catches
-      const hum = e < 0.3 ? 0.06 * Math.pow(Math.max(0, Math.sin(span(0.1, 0.3, e) * Math.PI * 2)), 2) : 0
+      // the hum: the gas warms twice before it catches (sin² over one turn: two swells)
+      const hum = e < 0.3 ? 0.06 * Math.pow(Math.sin(span(0.1, 0.3, e) * Math.PI * 2), 2) : 0
       // the electrode at the pane's lower inner corner and the front round its edges
       const run = span(0.3, 0.52, e)
       if (e >= 0.3 && e < 0.56) {
