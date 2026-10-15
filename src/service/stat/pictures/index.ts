@@ -1,7 +1,7 @@
 import type { StatViz } from '../../data/pages'
 import type { Builder, StatPicture } from '../picture'
 import { blank } from './blank'
-import { rings } from './rings'
+import { ledger } from './ledger'
 import { ream } from './ream'
 import { lamps } from './lamps'
 import { bars } from './bars'
@@ -21,7 +21,7 @@ import { reeds } from './reeds'
  * picture is). A kind without a picture yet draws the blank: unlit glass.
  */
 const PICTURES: { [K in StatViz['kind']]?: Builder<Extract<StatViz, { kind: K }>> } = {
-  rings,
+  ledger,
   ream,
   lamps,
   bars,

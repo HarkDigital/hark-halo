@@ -46,37 +46,37 @@ the strike) against the heroes above them (full-bleed canvas scenes, real bloom,
 
 ---
 
-## software-development · "10 years" · `{ kind: 'rings', from: 2016, to: 2026 }` — Ten Rings
+## software-development · "84%" · `{ kind: 'ledger', share: 84, of: 100 }` — The Ledger
 
-A tree's cross-section in glass: ten concentric rings, one per year, lit from the centre outward as
-the number counts, the outermost (this year) burning a touch whiter. Lead NA. `lead: [0, 0]`,
-`dur: 2800`. Replaces the ten standing tubes.
+A sheet of glass ruled with a hundred lines in four columns, standing right of centre; 84 of them
+filled in by hand: a stroke of neon handwriting on each, written live by a white-hot nib as the number
+counts, in reading order, the sixteen blanks lying dark. The strokes are strokes, never words. After
+the strike the nib never stops: every second or so it dims a written line and writes it again (the
+manual process, every day). Lead NA. `lead: [0, 0]`, `dur: 2800`. Replaces the ten rings (and the
+"10 years" copy: the stat is now the customer's problem, like the other bands').
 
-- Wide: centre C = (copyX + 0.52·(w − copyX), 0.5h), outer radius R = 0.40h. Ring k = 1..n (n = to −
-  from) at radius r_k = R·(0.14 + 0.86·(k/n)^0.92). Each ring: `pen.glass(circle, 0.12, 3)` always;
-  lit: `pen.neon(circle, NA, on, 2.2)` with the kit's white-hot core; ring n's colour mix(NA, WHITE, 0.3)
-  and core w·0.55. The pith: a bead at C (glass r 3 → white-hot `pen.fill` NA once lit).
-- Strike: the pith flares at e = 0 (strike(), white, r 3 → 6 → 3). Ring k lights while n·p runs
-  k−1 → k: the gas leaves a seed angle a_k = −90° + k·37° and runs BOTH ways round the ring (two
-  arcs `pen.neon` from a_k to a_k ± π·rise with white-hot heads `pen.fill` r 3 at both fronts, cores
-  lagging 4°), meeting opposite at rise = 1 where a white weld bead flares (r 5 → 0 over 0.3 s); for
-  rise < 0.4 the gas on = 0.35 + 0.65·strike(rise/0.4·0.42, k); then on = 1 with breath. The number
-  = floor(n·p) = rings fully lit. Between rings a faint NA wash grows outward with the count (glow
-  layer, radial about C from r 0 to r_lit, 0.05).
-- Life: ring k breathes ±6% on 3.4 + 0.3k s, phase 1.3k; every 7 s a pulse of growth runs outward
-  (a faint ring of extra brightness, +0.2, 24 px wide, travelling 0 → R over 1.6 s on the glow layer);
-  one ring hiccups (dip to 0.55 for 70 ms) every 5.3 s; 18 motes drift slowly in the rings' light.
-- Hover: the ring nearest the cursor (by |dist(C) − r_k| < 40 px, lit or not) swells: on ×1.5 (cap
-  1.2), w ×1.4, and the other lit rings ease to 0.8 (reading one year, eased 6/s); on dark glass a
-  cold glint (a 24° white arc at the cursor's angle, 0.5·near). Scroll (phone): parallax by depth:
-  ring k's centre offsets by ((scroll − 0.5)·(n − k)/n·28 px) horizontally and ·14 px vertically
-  (inner rings lag: a shallow cone), and the growth pulse runs with |scrollV| (a pulse per 0.3
-  viewport heights scrolled).
-- Labels: none (the sentence says since 2016). Framed: C centred, R = 0.42h. Narrow: C centred,
-  R = min(0.42h, 0.44w), w 1.8, 10 motes.
-- Honesty: ten equal rings, 2016 at the centre and 2026 outside (from/to fixed); no projects,
-  amounts, growth: every ring the same weight. Not the hero (a circuit grid). Distinct from every
-  other band: the only concentric picture.
+- Wide: the sheet from x = copyX + 0.08w to 0.94w, y 0.14h–0.88h, a faint body (white 0.015), a
+  hairline edge, a sheen that slides with the scroll. Four columns of 25 ruled lines (white 0.07,
+  batched). Each line's stroke: a seeded polyline from its left end over 55–95% of the column, with
+  handwriting's rhythm (a sine of period ~6 steps plus a seeded wobble, amplitude 0.3 × the pitch),
+  built in init with its length.
+- Which are blank: a seeded set of 16; the 84 written take their order in reading order.
+- Strike: the nib (a white-hot bead r 2.6 with a small NA wash) flares at e = 0 on the first line;
+  line i is written while 84p runs i → i+1 (`neonTo` dash reveal, the core 10% behind, the nib at the
+  front); a written line stutters on (strike(age, seed), floor 0.4) then breathes ±5%. The number =
+  floor(84p) = lines written. The ease writes the first lines in a rush and the last slowly.
+- Life: the retyping clock (state, advanced by dt × (1 + 3·|scrollV|)): every 1.4 s a seeded written
+  line dims to 0.3 over 0.12 s, then the nib rewrites it over 0.6 s; one line flickers every 2.1 s;
+  the nib parks at the last line's end between jobs, eased 14/s toward its work.
+- Hover (laptop): the nib follows the hand to the nearest written line within 60 px and re-inks it
+  (an extra glow window ±40 px, the line ×1.3); blank lines under the hand get a cold glint. Scroll
+  (phone): the sheet tilts in parallax (24 px × 10 px), the sheen slides, the retyping runs up to four
+  times as fast while scrolling.
+- Labels: none. Framed: the sheet 0.76w × 0.76h centred. Narrow: 0.9w × 0.8h, pad 10, no cursor.
+- Honesty: 84 of 100 lines filled in by hand; the strokes carry no words or figures; nothing about
+  which processes, hours or costs. Source in pages.ts (Wakefield Research for SAP Concur, 2017). Not
+  the hero (a circuit grid). Distinct from the ream (a stack edge-on, no writing) and the pane of
+  embers (points, purple).
 
 ## custom-crm · "28%" · `{ kind: 'ream', share: 0.28 }` — The Ream
 
@@ -535,7 +535,7 @@ The clock picture reads `window.__statClock` (dev only) so its frames repeat.
 - The number is pure white: no coloured text-shadow on `.svc-stat-n` (and no hover glow).
 - The band's own CSS washes go: the room's light is cast by each picture on the glow layer.
 - `countFrom` on a picture (page-speed): p = easeOut(clamp01((e − countFrom)/(1 − countFrom))).
-- Collision map (no two bands share a device): ten rings (software) / a stack of sheets (crm) / lamps
+- Collision map (no two bands share a device): a ledger written by hand (software) / a stack of sheets (crm) / lamps
   (web) / a row of columns past a mark (ecommerce) / a lit sheet in a hall (seo) / two horizontal tubes
   (speed) / a reel winding (ai) / a glass orb (knowledge) / an aircraft (aerial) / a clock (hack) / hail
   on dark glass (security) / a window (ada) / a reed bed (wordpress).

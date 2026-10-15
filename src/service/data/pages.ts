@@ -45,7 +45,7 @@ export interface ServicePageData {
  * stat's own number drawn in glass and neon across the band, nothing the words don't say. A
  * counted value ('28%', '65', '10 years') counts up with its lights; a word ('Page 1', 'Now')
  * strikes on when its picture's key light does. Parameters only for honest facts.
- *   rings   ten concentric glass rings, a tree's cross-section, one per year `from` to `to` (fixed: never contradicts '10 years')
+ *   ledger  a ledger of `of` ruled lines on glass, `share` of them filled in by hand in neon handwriting
  *   ream    a stack of a hundred sheets of glass, `share` of them lit from the bottom
  *   lamps   a valley town at night, one lamp per live site (the count is the value: PORTFOLIO_WORK.length)
  *   bars    a row of open glass columns, every one with light past a level mark named `mark`, running off the edge
@@ -60,7 +60,7 @@ export interface ServicePageData {
  *   reeds   a bed of `of` glass stalks in a wind, `share` of them lit
  */
 export type StatViz =
-  | { kind: 'rings'; from: number; to: number }
+  | { kind: 'ledger'; share: number; of: number }
   | { kind: 'ream'; share: number }
   | { kind: 'lamps' }
   | { kind: 'bars'; mark: string }
@@ -107,7 +107,9 @@ export const SERVICE_PAGES: ServicePageData[] = [
       { title: 'Build', text: 'Short cycles, working software at every step. No black box.' },
       { title: 'Support', text: 'We stay after launch, updates, tweaks, and the next idea when you’re ready.' },
     ],
-    stat: { value: '10 years', label: 'Of custom software for real businesses. Portals, dashboards, and integrations since 2016.', viz: { kind: 'rings', from: 2016, to: 2026 } },
+    // Wakefield Research for SAP Concur (2017, 500 US small-business owners and decision makers; reported by
+    // NFIB and Small Business Trends): 84 percent of small businesses rely on some kind of manual process every day
+    stat: { value: '84%', label: 'Of small businesses still run on a manual process every day. Not a habit. A tool nobody has built them yet.', viz: { kind: 'ledger', share: 84, of: 100 } },
     relatedTags: ['Software'],
     quote: {
       text: 'We needed a stand-alone payment portal for our fast-growing business. Hark Digital built it on time, on budget, trained us, and followed up to make sure everything ran smooth.',
