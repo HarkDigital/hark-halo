@@ -251,7 +251,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
       { title: 'Build & connect', text: 'Store, payments, shipping, and your back office, all talking to each other.' },
       { title: 'Grow', text: 'Conversion tuning, seasonal campaigns, and the numbers to prove what worked.' },
     ],
-    stat: { value: '$3.5M+', label: 'Flows through client stores we built, every single year', viz: { kind: 'climb', mark: '$3.5M' } },
+    stat: { value: '$3.5M+', label: 'Flows through client sites we built, every single year', viz: { kind: 'climb', mark: '$3.5M' } },
     relatedTags: ['Ecommerce'],
     quote: {
       text: 'Hark Digital helped launch a successful holiday season campaign that brought us record number sales.',

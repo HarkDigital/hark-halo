@@ -1075,7 +1075,7 @@ export const TESTIMONIALS: Testimonial[] = [
 export const STATS = [
   { value: '10 years', label: 'Of custom software for real businesses. Portals, dashboards, and integrations since 2016.' },
   { value: String(PORTFOLIO_ORDER.length), label: 'Live sites in the portfolio right now, from dentists to global manufacturers' },
-  { value: '$3.5M+', label: 'Flows through client stores we built, every single year' },
+  { value: '$3.5M+', label: 'Flows through client sites we built, every single year' },
 ]
 
 /** The original site's section headers — they carry "listen" through the story. */
