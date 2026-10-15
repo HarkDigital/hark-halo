@@ -7,7 +7,7 @@ import { gauge } from './gauge'
 import { beads } from './beads'
 import { windowPane } from './window'
 import { loads } from './loads'
-import { always } from './always'
+import { impacts } from './impacts'
 import { past } from './past'
 import { first } from './first'
 import { lamps } from './lamps'
@@ -27,7 +27,7 @@ const PICTURES: { [K in StatViz['kind']]?: Builder<Extract<StatViz, { kind: K }>
   beads,
   window: windowPane,
   loads,
-  always,
+  impacts,
   past,
   first,
   lamps,

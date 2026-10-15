@@ -55,7 +55,7 @@ export interface ServicePageData {
  *   gauge   a sight glass between two fittings, `share` of it risen
  *   sign    one bent tube spelling `text`, with `cite` beside it
  *   now     a clock with no numerals at the viewer's own time
- *   always  seven level tubes, one per day, every one lit end to end
+ *   impacts a sheet of dark glass taking the day's attacks, an ember per hit (the count is the value)
  *   window  a window of `of` panes, one lit
  *   beads   a bead curtain, `share` of `of` beads lit from the bottom up
  */
@@ -70,7 +70,7 @@ export type StatViz =
   | { kind: 'gauge'; share: number }
   | { kind: 'sign'; text: string; cite: string }
   | { kind: 'now' }
-  | { kind: 'always' }
+  | { kind: 'impacts' }
   | { kind: 'window'; of: number }
   | { kind: 'beads'; share: number; of: number }
 
@@ -547,7 +547,9 @@ export const SERVICE_PAGES: ServicePageData[] = [
       { title: 'Monitor', text: 'Continuous watch, because attackers don’t keep business hours.' },
       { title: 'Report', text: 'A monthly summary a business owner can actually read. No jargon, no scare tactics.' },
     ],
-    stat: { value: '24/7', label: 'Monitoring with a human who responds. Attackers don’t keep business hours.', viz: { kind: 'always' } },
+    // SiteLock, Annual Website Security Report 2020 (2019 data): the average website saw 94 attacks a
+    // day, up 52 percent on the year; automated bots are the overwhelming majority of them
+    stat: { value: '94', label: 'Attacks the average website sees in a single day. Almost all of them are bots trying every door.', viz: { kind: 'impacts' } },
     relatedTags: ['Security'],
     cta: 'Sleep better. Put someone on watch.',
   },

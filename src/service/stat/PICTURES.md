@@ -407,46 +407,39 @@ the second hand's first movement. `lead: [0, 0]`, `dur: 3000`, `key: e >= 0.72`,
   anything, no cost or deadline shaped. NC on the second hand is colour by role. Not the hero (a
   glitching grid repaired by a scanline).
 
-## security · "24/7" · `{ kind: 'always' }` — Seven Days Lit
+## security · "94" · `{ kind: 'impacts' }` — Hail on the Glass
 
-Seven level glass tubes stacked in dark air, one per day (Mon at the top, Sun at the bottom), each lit
-NB from electrode to electrode by a strike that cascades down the stack; one white-hot NA bead creeps
-along today's tube at the viewer's own hour. Lead NB. Word value: `key: e >= 0.78`. `live: true`.
-`lead: [0.5, 0.5]`, `dur: 2400`.
+A sheet of dark glass standing right of centre, and the day's attacks hitting it: each a white-hot
+strike with a short purple splash and a ring on the glass, leaving a purple ember where it landed.
+The embers are the number: one per attack, the count is the value (SiteLock 2020: 94 a day), so the
+eased count makes a hailstorm that slows to single hits. Nothing gets through: the glass stays dark.
+Lead NC (the threat colour, as the hero uses it). `lead: [1, 1]`, `dur: 3000`. No "24/7" anywhere: the
+band must never read as round-the-clock support.
 
-- Wide: x0 = copyX + 0.07w, x1 = min(0.92w, w − 112), L = x1 − x0; rows y_i = 0.21h + i·(0.58h/6).
-  Built once: `gas[i]` lines x0 → x1; `sleeves` one Path2D of seven lines from x0 − 12 to x1 + 12
-  (the gas stops 12 px short of the glass ends); `collars` fourteen 12 px segments just outside the
-  sleeves (round caps: a wider glass collar); `points` fourteen electrode circles r 1.6 at x0 − 26 and
-  x1 + 26. Sleeve `pen.glass(sleeves, 0.14 → 0.17, 9.5)`; collars `pen.glass(collars, 0.22, 15)`; cold
-  points white 0.30 → 0.40; gas `pen.neon(gas[i], NB, level_i, 2.8)`; lit points `pen.fill` WHITE 0.5.
-  Room wash (glow): radial at (0.72w, 0.5h) r 0.55w NB 0.035 × mean(level) × roomBreath; per-tube
-  electrode washes r 0.15w NB 0.03 × level + flash (wide only). REST level 0.78 for all seven, equal.
-  12 motes drifting up and right out through the top hairline (0.10; 0.20 within 10 px of a lit tube).
-- The bead: hr = (h0 + t/3600) mod 24, tube d = today (Mon = 0); xb = x0 + L·hr/24 on y_d; `pen.fill`
-  r 3.4 NA plus a pure white dot r 2.0 and a glow bloom disc r 36 at 0.5 × on; idle pulse ±15% on 2.6 s.
-  It creeps in real time; at midnight it moves to the next tube at a minute rebuild.
-- Strike (constants: beat 0.065, run 0.33): tube i's pulse at q_i = 0.01 + 0.065i (a white `pen.streak`
-  64 px long runs from 0.2w under the number to the left electrode over 120 ms, wide only); gas starts
-  s_i = q_i + 0.05 with a left flare (white bead r 1.6 + 1.6·(1 − age/0.3), electrode wash flash 0.12);
-  the front runs u = easeOut((e − s_i)/0.33) with the core 72 ms behind (hand strokes: glow 7.28 at
-  0.72, colour 2.8 at 0.576, core 1.12 at 0.72) and a white head bead r 2.4; at a_i = s_i + 0.33 the
-  right flare and the tube becomes `pen.neon` with level = 0.55 + 0.45·strike(age, i + 1) (a visible
-  catch, never a blackout), settling to REST over 0.35 s. e = 0.78 KEY: the seventh tube's front reaches
-  its cap: "24/7" strikes. e ≥ 0.82 the bead strikes on (strike(ageB, 9), opening flare r 6 → 3.4).
-- Life: level_i ×(1 + 0.05 sin(2πt/(4.0 + 0.37i) + 1.9i)); gas noise ±2%; one tube at a time dips to
-  0.86 for 70 ms every 5.3 s (settled tubes only); washes breathe with their tubes; motes. Cursor (lit
-  tubes only): near_i = within x-span ? max(0, 1 − |py − y_i|/160) : 0; level + 0.2·near (cap 1); a glow
-  lens 240 × 24 at the pointer along the tube (0.3·near, ≤ 5 tubes); a 70 px cold highlight on the
-  nearest sleeve's upper wall (0.5·near); the bead within 160 px: on 1, r ×(1 + 0.5k), bloom ×(1 + k).
-- Labels: "Mon" right-aligned at x0 − 44 on y_0 − 5; "Sun" the same on y_6; "24:00" left-aligned at
-  x1 + 44 on y_0 − 5 (drop it if it reads as a tick).
-- Framed: x0 = 0.14w, x1 = 0.86w, y_i = 0.20h + i·0.60h/6, gas w 2.4, no pulses or electrode washes,
-  one centred room wash, 10 motes. Narrow: x0 = 0.09w, x1 = 0.91w, y_i = 0.17h + i·0.66h/6, gas w 2.0,
-  no labels, pulses or electrode washes, wash r 0.7w at 0.05, 8 motes.
-- Honesty: seven equal tubes (the week), every one lit end to end at one brightness (every hour of every
-  day), the viewer's real weekday and hour as one bead. No hour marks, 168, business-hours band,
-  attackers or response times (no NC). Not the hero (a round shield of arcs and a diamond).
+- Wide: the pane from x0 = copyX + 0.08w to 0.92w, y 0.19h–0.81h, square corners: a body fill white
+  0.015, `pen.glass` 0.08 → 0.14 w 4, a fixed sheen down its left third (0.02). The hits: n seeded
+  places on the pane (hash, a minimum gap of 0.45·sqrt(area/n), 14 px inside the edge) in a seeded
+  order: attacks come from anywhere, never a sweep.
+- Strike: hit i is dark while p·n < i; mid-strike while p·n ∈ [i, i+1) (a white-hot point swelling
+  1.6 → 5.6); landed at p·n ≥ i+1 with age from the eased clock inverted (e_i = 1 − (1 − (i+1)/n)^(1/3);
+  the last hit ages on t): for 0.4 s a splash: a white flash (r 6 → 1.6), six short NC streaks
+  (`pen.streak`, 12–24 px at seeded angles, growing as the flash fades), a glass ring (`pen.glass`
+  circle r 4 → 30, 0.3 → 0, clipped to the pane). Then the ember: `pen.fill` NC r 1.8 at 0.55 with a
+  glow-only disc r 6 at 0.25·on. The number = floor(p·n) = embers.
+- Life: embers breathe ±8% on 2–5 s periods, out of phase; one dims to 0.4 for 80 ms every 4.1 s; a
+  cold glint (a soft white band, 0.045) crosses the pane left to right every 9 s; every 6.3 s a stray
+  NC spark drifts in from the right edge and dies at the glass (nothing gets through; the count never
+  changes). Cursor: a white radial glint on the glass at the pointer (0.06, clipped to the pane);
+  embers within 120 px warm ×1.6 and swell ×1.4.
+- Room: an NC wash on the pane's centre r 0.45w at 0.05 × lit; a pool under the pane 0.4pw × 0.05h
+  at 0.12 × lit.
+- Labels: none. Framed: the pane 0.72w × 0.68h centred. Narrow: 0.84w × 0.72h, embers r 1.4, four
+  streaks a splash, no stray sparks, no pool.
+- Honesty: n impacts, one per attack of the average website's day; no times of day, no kinds of
+  attack, no map, nothing about who responds or when. Not the hero (a round shield of arcs and a
+  diamond with threats glancing off): a flat dark pane, no rings but the impact rings that vanish.
+  Distinct from seo's lit sheet (NB outline, ghosts) and ada's window (a lit green pane): an unlit
+  pane covered in purple embers.
 
 ## ada-accessibility · "1 in 4" · `{ kind: 'window', of: 4 }` — One Pane Lit
 
@@ -535,5 +528,5 @@ The clock picture reads `window.__statClock` (dev only) so its frames repeat.
 - `countFrom` on a picture (page-speed): p = easeOut(clamp01((e − countFrom)/(1 − countFrom))).
 - Collision map (no two bands share a device): standing tubes (software) / ring (crm) / lamps (web) /
   open column (ecommerce) / lit sheet in a hall (seo) / two horizontal tubes (speed) / hourglass (ai) /
-  sealed gauge glass (knowledge) / bent-tube sign (aerial) / clock (hack) / seven horizontal tubes
+  sealed gauge glass (knowledge) / bent-tube sign (aerial) / clock (hack) / hail on dark glass
   (security) / window (ada) / bead curtain (wordpress).
