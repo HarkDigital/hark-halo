@@ -30,7 +30,7 @@ import { rise } from '../core/rise'
  * (their footer link carries aria-current).
  */
 
-export type Current = { kind: 'service'; slug: string; back: string } | { kind: 'portfolio' } | { kind: 'terms' }
+export type Current = { kind: 'service'; slug: string; back: string } | { kind: 'portfolio' } | { kind: 'terms' } | { kind: 'lab' }
 
 const BASE = import.meta.env.BASE_URL
 const esc = (s: string) => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)

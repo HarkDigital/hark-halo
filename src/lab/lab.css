@@ -1,0 +1,84 @@
+/* ------------------------------------------------------------------
+   The lab (src/lab/main.ts): the fx drawings in cards. Each card is a
+   frosted panel with the drawing across its top (16:10, full bleed inside
+   the panel) and its words under it.
+   ------------------------------------------------------------------ */
+.lab-hero {
+  max-width: var(--svc-max);
+  margin: 0 auto;
+  padding: calc(var(--ch-y) + var(--ch-h) + clamp(48px, 9vh, 120px)) var(--gutter) 0;
+}
+.lab-h1 {
+  margin-top: calc(22 * var(--hud-px));
+  max-width: 12ch;
+}
+.lab-lede {
+  margin-top: calc(22 * var(--hud-px));
+  max-width: 52ch;
+}
+.lab-sec .lab-lede {
+  margin-bottom: calc(40 * var(--hud-px));
+}
+.lab-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: calc(18 * var(--hud-px));
+}
+.lab-card.hud-panel,
+.lab-card {
+  position: relative;
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--glass-fill);
+  box-shadow:
+    inset 0 1px 0 var(--glass-hi),
+    inset 0 0 0 1px var(--glass-edge);
+}
+.lab-fx {
+  aspect-ratio: 16 / 10;
+  width: 100%;
+  background: #000000;
+  cursor: crosshair;
+  touch-action: pan-y;
+}
+.lab-meta {
+  padding: calc(22 * var(--hud-px)) calc(24 * var(--hud-px)) calc(26 * var(--hud-px));
+}
+.lab-t {
+  margin: 0 0 calc(8 * var(--hud-px));
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 1.7vw, calc(1.7 * var(--hud-rem)));
+  font-weight: 560;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--fg);
+}
+.lab-p {
+  margin: 0;
+  font-size: calc(15.5 * var(--hud-px));
+  line-height: 1.6;
+  color: var(--fg-muted);
+}
+.lab-hint {
+  margin: calc(14 * var(--hud-px)) 0 0;
+  color: var(--fg);
+}
+.lab-code {
+  display: inline-block;
+  margin-top: calc(14 * var(--hud-px));
+  padding: calc(5 * var(--hud-px)) calc(10 * var(--hud-px));
+  font-family: var(--font-label);
+  font-weight: var(--label-weight);
+  font-size: calc(11 * var(--hud-px));
+  letter-spacing: 0.03em;
+  color: var(--fg-muted);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+@media (max-width: 860px) {
+  .lab-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

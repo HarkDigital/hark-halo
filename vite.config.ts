@@ -239,16 +239,55 @@ function termsPage(): Plugin {
   }
 }
 
+/**
+ * The lab: lab.html (src/lab/main.ts) served at <base>lab/, linked from nowhere (the mark ten
+ * ways and ten scenes, each a live drawing: src/fx). noindex in its own head.
+ *   dev / shots  /lab/ (and /lab, with any query) is rewritten to /lab.html
+ *   build        dist/lab/index.html with og:url for --base; dist/lab.html goes
+ */
+function labPage(): Plugin {
+  let outDir = 'dist'
+  let base = '/'
+  let build = false
+  const rewrite = (req: { url?: string }, _res: unknown, next: () => void) => {
+    const m = (req.url ?? '').match(/^\/lab\/?(\?.*)?$/)
+    if (m) req.url = `/lab.html${m[1] ?? ''}`
+    next()
+  }
+  return {
+    name: 'hark-lab-page',
+    configResolved(c) {
+      outDir = path.resolve(c.root, c.build.outDir)
+      base = c.base
+      build = c.command === 'build'
+    },
+    configureServer(server) {
+      server.middlewares.use(rewrite)
+    },
+    closeBundle() {
+      if (!build) return
+      const src = path.join(outDir, 'lab.html')
+      if (!fs.existsSync(src)) return
+      const url = `${ORIGIN}${base}lab/`
+      const page = fs.readFileSync(src, 'utf8').replace(/(<meta\s+property="og:url"\s+content=")[^"]*"/, (_, open) => `${open}${esc(url)}"`)
+      const dir = path.join(outDir, 'lab')
+      fs.mkdirSync(dir, { recursive: true })
+      fs.writeFileSync(path.join(dir, 'index.html'), page)
+      fs.rmSync(src)
+    },
+  }
+}
+
 // GitHub Pages serves from /<repo>/ — CI passes --base=/<repo>/.
 export default defineConfig({
   server: { host: true },
-  plugins: [servicePages(), portfolioPage(), termsPage()],
+  plugins: [servicePages(), portfolioPage(), termsPage(), labPage()],
   build: {
     // Safari 15/16.3 can't parse class static blocks (three r186) — lower them
     target: ['es2020', 'safari15', 'chrome100', 'firefox100'],
     chunkSizeWarningLimit: 1500,
     rollupOptions: {
-      input: { main: 'index.html', service: 'service.html', portfolio: 'portfolio.html', terms: 'terms.html' },
+      input: { main: 'index.html', service: 'service.html', portfolio: 'portfolio.html', terms: 'terms.html', lab: 'lab.html' },
       // three.js (~180 KB gzipped, most of the story's JS) in a file of its own:
       // it only changes when three is upgraded, so a deploy doesn't make every
       // returning visitor download it again
