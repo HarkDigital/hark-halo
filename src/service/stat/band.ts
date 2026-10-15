@@ -34,7 +34,7 @@ const SETTLED = import.meta.env.DEV && /[?&]settled\b/.test(location.search)
 const esc = (s: string) => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
 const clamp01 = (x: number) => (x < 0 ? 0 : x > 1 ? 1 : x)
 
-/** a value the band counts up to: '28%', '65', '10 years' (not '$1M+', '24/7', '1 in 4' or words) */
+/** a value the band counts up to: '28%', '65', '10 years' (not '$1M+', '1 in 4' or words) */
 function countOf(v: string) {
   const m = /^(\d+)(%|\s+years)?$/.exec(v)
   return m ? { to: Number(m[1]), fmt: (n: number) => `${n}${m[2] ?? ''}` } : null

@@ -503,7 +503,7 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
 
   security: {
     metaDescription:
-      'Website and data security for small businesses, hardening, 24/7 monitoring, tested backups, and plain-English reporting. Prevention, so there is nothing to clean up.',
+      'Website and data security for small businesses, hardening, continuous monitoring, tested backups, and plain-English reporting. Prevention, so there is nothing to clean up.',
     article: [
       {
         heading: 'Why small business websites get attacked',
@@ -542,7 +542,7 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
         a: 'Yes, because attackers don’t pick targets, software does. Bots scan the internet around the clock for outdated plugins, weak passwords, and known vulnerabilities, and they don’t care whether a site belongs to a bank or a bakery. Small business sites get hit constantly precisely because their owners assume they are too small to matter.',
       },
       {
-        q: 'What is 24/7 website monitoring?',
+        q: 'What is continuous website monitoring?',
         a: 'Software that continuously watches your site for malware, unauthorized file changes, suspicious logins, blocklist status, and downtime, with alerts a human actually responds to. Attackers do not keep business hours; monitoring shrinks the gap between “something happened” and “someone is fixing it.”',
       },
     ],

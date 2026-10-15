@@ -19,7 +19,7 @@ the strike) against the heroes above them (full-bleed canvas scenes, real bloom,
   white-hot head, the core lags and catches up when the front stops, a `strike()` stutter (its own seed
   per element), a settle. A counted value ("10 years", "28%", "65", "19%", "32%", "43%") counts with p:
   what is lit equals the number every frame, never ahead. A word value ("$1M+", "Page 1", "Hours",
-  "Part 107", "Now", "24/7", "1 in 4") strikes at a named event in the picture (`key`), never a timer.
+  "Part 107", "Now", "1 in 4") strikes at a named event in the picture (`key`), never a timer.
 - Alive after the strike for as long as it is on screen: breath (5–8% on 3–6 s periods, out of phase),
   a rare micro-flicker in one element at a time, motes or light moving on glass, and an answer to the
   cursor within ~160 px (brighten, swell, a cold glint on dark glass, a lean of the bloom). The cursor
@@ -31,7 +31,7 @@ the strike) against the heroes above them (full-bleed canvas scenes, real bloom,
 - Labels: at most three, tiny tracked caps, only where they carry meaning; no captions, readouts,
   legends, keys, axes, ticks. Nothing in the picture restates the number or derives a figure.
 - Honest to the letter: nothing the number and sentence do not say. No invented amounts, splits, times,
-  altitudes, rates. The viewer's own clock is the only live data allowed (Now, 24/7).
+  altitudes, rates. The viewer's own clock is the only live data allowed (Now).
 - Framed (tablet / portrait, `env.framed`): composed centred and wholly inside a wide short box under
   the centred copy. Narrow (phone, `env.narrow`, ~44vh): the same subject with fewer elements, never a
   different picture; ten is still ten, 1 in 4 is still four.
