@@ -4,7 +4,7 @@ import { blank } from './blank'
 import { ledger } from './ledger'
 import { ream } from './ream'
 import { lamps } from './lamps'
-import { bars } from './bars'
+import { climb } from './climb'
 import { first } from './first'
 import { loads } from './loads'
 import { spool } from './spool'
@@ -24,7 +24,7 @@ const PICTURES: { [K in StatViz['kind']]?: Builder<Extract<StatViz, { kind: K }>
   ledger,
   ream,
   lamps,
-  bars,
+  climb,
   first,
   loads,
   spool,

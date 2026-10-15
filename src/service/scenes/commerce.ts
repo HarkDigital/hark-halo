@@ -5,12 +5,17 @@ interface Ping {
   age: number
 }
 
-// a bounded, mean-reverting random walk: gentle ups and downs around a healthy
-// midline, no dramatic spikes or resets (it reads like a normal analytics chart)
-const TARGET = 0.55
+// a bounded, mean-reverting random walk around a healthy midline, with a good
+// day now and then: a surge that climbs high over a few steps and eases back
+// (it reads like an analytics chart of a store that is doing well; the dips stay
+// shallow, the peaks reach for the top)
+const TARGET = 0.58
+let boost = 0
 const nextValue = (prev: number) => {
-  const v = prev + (TARGET - prev) * 0.05 + (Math.random() - 0.5) * 0.045
-  return Math.min(0.82, Math.max(0.2, v))
+  if (Math.random() < 0.09) boost = 0.14 + Math.random() * 0.26
+  const v = prev + (TARGET - prev) * 0.05 + (Math.random() - 0.5) * 0.04 + boost * 0.5
+  boost *= 0.5
+  return Math.min(0.95, Math.max(0.3, v))
 }
 
 /*
@@ -41,9 +46,12 @@ export function commerce(): Scene {
       acc += dt
       while (acc > STEP) {
         acc -= STEP
-        values.push(nextValue(values[values.length - 1]))
+        const last = values[values.length - 1]
+        const next = nextValue(last)
+        values.push(next)
         values.shift()
-        if (Math.random() < 0.3) pings.push({ x: w * reach, age: 0 })
+        // a sale rings up, and always on a surge
+        if (Math.random() < 0.3 || next - last > 0.08) pings.push({ x: w * reach, age: 0 })
       }
 
       const cw = w * reach // the chart's width

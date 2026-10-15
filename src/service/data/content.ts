@@ -173,7 +173,7 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
       {
         heading: 'Ecommerce is more than a shopping cart',
         paragraphs: [
-          'An ecommerce site is a store, a cash register, a bookkeeper, and a salesperson that works around the clock. Done right, it does not just take orders, it shows you which products earn, which pages leak customers, and where your next dollar of marketing should go. Our clients process more than one million dollars a year through stores we built and maintain.',
+          'An ecommerce site is a store, a cash register, a bookkeeper, and a salesperson that works around the clock. Done right, it does not just take orders, it shows you which products earn, which pages leak customers, and where your next dollar of marketing should go. Our clients process more than three and a half million dollars a year through stores we built and maintain.',
           'We build stores at both ends of the spectrum: full catalogs with hundreds of products, variations, shipping rules, and tax handling, and tiny, single-purpose payment portals that let a service business take deposits or invoice payments online without phone tag. The right size is the one that fits how you actually sell.',
         ],
       },

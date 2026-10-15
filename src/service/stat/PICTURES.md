@@ -146,42 +146,39 @@ The count is n = the value; a new site adds a lamp and moves none. Lead NA. `lea
   ranked; the order is a sweep, not a timeline; no axis or map. Not the hero (a blueprint drawing).
   Risk: a starfield — keep the sky empty, the perspective strong, the horizon faint.
 
-## ecommerce · "$1M+" · `{ kind: 'bars', mark: '$1M' }` — Past the Mark, Year After Year
+## ecommerce · "$3.5M+" · `{ kind: 'climb', mark: '$3.5M' }` — The Climb
 
-A row of open columns of dark glass standing on the band's bottom hairline, every one of them with
-green light risen past the one level mark labelled $1M, the row running off the right edge of the
-band (year after year, and on). Word value: `key: e >= 0.48` (the first column crosses). `lead: [0, 0]`,
-`dur: 3400`. Replaces the single column.
+A revenue line in glass and neon rising left to right across the band, drawn live by a white-hot
+head as the strike runs: gentle ups and small dips, trending up, crossing one level mark labelled
+$3.5M and climbing on past it to the right edge, where the head keeps pushing upward. The owner asked
+for an upward-trending graph here, and for the hero's line above it to peak higher (scenes/commerce.ts
+now surges now and then): the band and the hero rhyme on purpose, the band a fixed climb with a
+crossing, the hero a live walk. Word value: `key` = the line crosses the mark (e ≈ 0.08 + 0.87·u_cross).
+`lead: [0, 0]`, `dur: 3200`.
 
-- Wide: columns of width cw = 0.07w, gap 0.035w, the first at x = copyX + 0.1w, as many as fit to
-  the right edge plus one cut by it (so they cannot be counted: about 6 on a laptop). Each column as
-  the old picture's: two wall hairlines dissolving upward (no top), a faint body, a foot ellipse;
-  the mark: one level glass hairline at y = 0.46h from x = copyX + 0.04w (fading in) off the right
-  edge, its segment inside each column lit white once that column crosses. The light in a column:
-  the old picture's gradient body (NA 0.3 at the surface → 0.07 → 0.025), a white band under the
-  surface, a rippling white-hot meniscus (`pen.neon` NA w 2 + white 0.9 px), a plume above, motes
-  rising out of the top.
-- Strike: column j (0 = left) starts its pour at e_j = 0.04 + 0.1j: the surface rises from the base to
-  the mark over 0.44 e (1 − (1 − u)^2.6), crosses it (the mark's inner segment flares white-hot with
-  strike(), the bloom lifts), surges 0.07h past, settles; the first crossing at e ≈ 0.48 is the KEY
-  moment ("$1M+" strikes); the rest follow in cascade (the last, cut by the edge, crosses at e ≈ 1).
-  After e = 1 every column creeps upward glacially at its own rate (0.4–0.9 px/min), their heights
-  drifting apart by a few px and back (pure in t: y_j = rest_j − 0.18h·(1 − exp(−(t − t1)/(600 + 200·
-  hash(j)))) + 3·sin(2πt/(40 + 9j))): no height is ever a figure.
-- Life: meniscus ripples (two waves, out of phase per column); the columns breathe out of phase; the
-  marks' inner segments glint now and then; motes; a cold glint drifts along the mark line every 9 s.
-- Hover: the column under or within 100 px of the cursor swells: its light brightens ×1.3, its
-  surface lifts 6 px (light only, eased), its mark segment glints white, its walls glint at the
-  pointer's y; the others rest. Scroll (phone): the light sloshes with the scroll: every surface tilts
-  by scrollV·4° (damped spring, 2.5 Hz, ζ 0.3) and the row parallaxes 10 px·(scroll − 0.5); a glint
-  runs along the mark with scroll.
-- Labels: "$1M" right-aligned at the mark's left end (x = copyX + 0.1w − 16), 6 px above the line,
-  hi. Framed: columns cw 0.09w gap 0.045w from 0.06w, running off the right edge; mark at 0.48h
-  across the box. Narrow: cw 0.14w gap 0.06w from 0.06w, off the right edge; mark edge to edge at
-  0.42h; no plume, fewer motes.
-- Honesty: a mark called $1M; every column's light is past it; the row goes on past the edge and no
-  column can be counted or read as a year with a figure: no $0, no months, no years, no amounts,
-  no stopping height. Not the hero (a horizontal pulse trace).
+- Wide: the line from x0 = copyX − 0.06w (its start under the scrim's tail) to 0.97w, from the floor
+  hairline at 0.84h up to 0.12h: 72 seeded points, trend u^1.1 with two sines of wobble and a hash
+  jitter, every point held within 0.06 of the running peak so no dip undoes the trend. The mark: a
+  level glass hairline at 0.62 of the climb's height from the dark gap off the right edge; the "$3.5M"
+  label left-aligned near its left end, hi. The line's glass sleeve stands before any gas.
+- Strike: e 0–0.08 glass; e 0.08–0.95 the gas front runs the line (`neonTo`, the core 3% behind) with a
+  white-hot head and a `pen.streak` tail; the area beneath the line fills with its light to the front
+  (NA 0.1 → 0 down to the floor; glow 0.14) and the line reflects on the floor (mirrored, ×0.35, 0.22);
+  the gas stutters for its first 0.7 s (floor 0.4). KEY: the front crosses the mark: the mark's segment
+  under the line lights white-hot with strike(), a bead flares at the crossing, "$3.5M+" strikes.
+  e 0.95–1 the head arrives at the right end and flares; after e = 1 it creeps upward 0.05 px/s for
+  good (never a stopping height).
+- Life: the head pulses (r ±25%, a ring at 9 px); sales ring up along the line every 0.9 s (NB rings
+  r 4 → 32 over 1.4 s at seeded points, colour by role as in the hero); the light breathes; dust
+  rises in the light under the line; a cold glint slides along the mark with the scroll.
+- Hover (laptop): the line under the hand lights (a glow window ±70 px) and a sale rings up at the
+  pointer's x every 0.7 s. Scroll (phone): the graph parallaxes (20 × 8 px); sales ring up to four
+  times as often while scrolling.
+- Labels: "$3.5M" only. Framed: the line from 0.04w to 0.97w. Narrow: 0.02w to 0.98w, floor 0.9h, top
+  0.14h, no reflection or dust, the label at the mark's right end.
+- Honesty: a line that climbs and passes a mark called $3.5M; no axis, no dates, no other figure; the
+  line's shape is seeded decoration, not data (no month or year can be read off it); the rings are
+  "sales" only in the sense the hero uses. "Every single year" stays in the sentence.
 
 ## seo-geo · "Page 1" · `{ kind: 'first' }` — Hall of Pages
 
@@ -536,6 +533,6 @@ The clock picture reads `window.__statClock` (dev only) so its frames repeat.
 - The band's own CSS washes go: the room's light is cast by each picture on the glow layer.
 - `countFrom` on a picture (page-speed): p = easeOut(clamp01((e − countFrom)/(1 − countFrom))).
 - Collision map (no two bands share a device): a ledger written by hand (software) / a stack of sheets (crm) / lamps
-  (web) / a row of columns past a mark (ecommerce) / a lit sheet in a hall (seo) / two horizontal tubes
+  (web) / a line climbing past a mark (ecommerce) / a lit sheet in a hall (seo) / two horizontal tubes
   (speed) / a reel winding (ai) / a glass orb (knowledge) / an aircraft (aerial) / a clock (hack) / hail
   on dark glass (security) / a window (ada) / a reed bed (wordpress).

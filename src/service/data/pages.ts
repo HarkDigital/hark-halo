@@ -48,7 +48,7 @@ export interface ServicePageData {
  *   ledger  a ledger of `of` ruled lines on glass, `share` of them filled in by hand in neon handwriting
  *   ream    a stack of a hundred sheets of glass, `share` of them lit from the bottom
  *   lamps   a valley town at night, one lamp per live site (the count is the value: PORTFOLIO_WORK.length)
- *   bars    a row of open glass columns, every one with light past a level mark named `mark`, running off the edge
+ *   climb   a revenue line rising left to right, crossing a level mark named `mark` and climbing on (illustrative)
  *   first   a hall of glass sheets receding; only the first is lit
  *   loads   two horizontal tubes from one start, `from` and `to` seconds, the second `rise` longer, past a plumb line
  *   spool   a glass reel winding in a line of light (illustrative: nothing to count)
@@ -63,7 +63,7 @@ export type StatViz =
   | { kind: 'ledger'; share: number; of: number }
   | { kind: 'ream'; share: number }
   | { kind: 'lamps' }
-  | { kind: 'bars'; mark: string }
+  | { kind: 'climb'; mark: string }
   | { kind: 'first' }
   | { kind: 'loads'; from: number; to: number; rise: number }
   | { kind: 'spool' }
@@ -251,7 +251,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
       { title: 'Build & connect', text: 'Store, payments, shipping, and your back office, all talking to each other.' },
       { title: 'Grow', text: 'Conversion tuning, seasonal campaigns, and the numbers to prove what worked.' },
     ],
-    stat: { value: '$1M+', label: 'Flows through client stores we built, every single year', viz: { kind: 'bars', mark: '$1M' } },
+    stat: { value: '$3.5M+', label: 'Flows through client stores we built, every single year', viz: { kind: 'climb', mark: '$3.5M' } },
     relatedTags: ['Ecommerce'],
     quote: {
       text: 'Hark Digital helped launch a successful holiday season campaign that brought us record number sales.',
