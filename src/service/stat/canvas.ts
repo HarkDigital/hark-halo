@@ -1,5 +1,5 @@
-import { Pen, type Pointer } from '../scenes/kit'
-import type { Env, Label, StatPicture } from './picture'
+import { Pen } from '../scenes/kit'
+import type { Env, Input, Label, StatPicture } from './picture'
 
 /*
  * Runs a stat picture (picture.ts) in the band's picture box (.vz, stat.css):
@@ -57,7 +57,10 @@ export function mountCanvas(host: HTMLElement, pic: StatPicture, copy: HTMLEleme
   const glow = glowC.getContext('2d')!
   const haze = hazeC.getContext('2d')!
   const pen = new Pen(ctx, glow)
-  const pointer: Pointer = { x: -9999, y: -9999, inside: false, down: false }
+  const coarse = !!(window.matchMedia?.('(hover: none)').matches || window.matchMedia?.('(pointer: coarse)').matches)
+  const pointer: Input = { x: -9999, y: -9999, inside: false, down: false, scroll: 0, scrollV: 0, coarse }
+  // dev: ?scroll=0.3 holds the band's scroll input (deterministic frames for screenshots)
+  const heldScroll = import.meta.env.DEV ? Number(new URLSearchParams(location.search).get('scroll')) : NaN
   // reads --hud-px as a length (a custom property's value is not resolved for us)
   const probe = document.createElement('i')
   probe.style.cssText = 'position:absolute;left:0;top:0;width:calc(1000 * var(--hud-px, 1px));height:0;visibility:hidden;pointer-events:none'
@@ -112,12 +115,28 @@ export function mountCanvas(host: HTMLElement, pic: StatPicture, copy: HTMLEleme
     }
   }
 
+  // the band's place in the viewport (read on scroll and resize, never in a frame)
+  let scrollRaw = 0
+  const measureScroll = () => {
+    if (Number.isFinite(heldScroll) && heldScroll >= 0) {
+      scrollRaw = heldScroll
+      return
+    }
+    const r = host.getBoundingClientRect()
+    const vh = window.innerHeight || 1
+    scrollRaw = clamp01((vh - r.top) / (vh + r.height))
+  }
+
   const loop = (now: number) => {
     raf = 0
     if (!running) return
     const dt = Math.min((now - last) / 1000, 1 / 20)
     last = now
     lit += dt * 1000
+    // the scroll's speed, smoothed, and its position
+    const v = (scrollRaw - pointer.scroll) / Math.max(1e-3, dt)
+    pointer.scrollV += (v - pointer.scrollV) * Math.min(1, 8 * dt)
+    pointer.scroll = scrollRaw
     draw(dt, lit)
     raf = requestAnimationFrame(loop)
   }
@@ -232,6 +251,7 @@ export function mountCanvas(host: HTMLElement, pic: StatPicture, copy: HTMLEleme
     if (!e.relatedTarget) pointer.inside = false
   }
   const onScroll = () => {
+    measureScroll()
     if (pointer.inside || cx > -9999) locate()
   }
   const onVis = () => {
@@ -245,7 +265,10 @@ export function mountCanvas(host: HTMLElement, pic: StatPicture, copy: HTMLEleme
   document.addEventListener('pointerout', onOut, { passive: true })
   window.addEventListener('scroll', onScroll, { passive: true })
 
-  const ro = new ResizeObserver(() => resize())
+  const ro = new ResizeObserver(() => {
+    measureScroll()
+    resize()
+  })
   ro.observe(host)
   const io = new IntersectionObserver(
     es => {
@@ -257,6 +280,8 @@ export function mountCanvas(host: HTMLElement, pic: StatPicture, copy: HTMLEleme
   )
   io.observe(host)
   document.addEventListener('visibilitychange', onVis)
+  measureScroll()
+  pointer.scroll = scrollRaw
   resize()
 
   return {
@@ -272,6 +297,9 @@ export function mountCanvas(host: HTMLElement, pic: StatPicture, copy: HTMLEleme
       raf = 0
       state = 'frozen'
       lit = Math.max(0, ms)
+      measureScroll()
+      pointer.scroll = scrollRaw
+      pointer.scrollV = 0
       draw(1 / 60, lit)
     },
     settle() {

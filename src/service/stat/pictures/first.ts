@@ -89,7 +89,9 @@ export const first: Builder<{ kind: 'first' }> = () => {
       const { ctx, glow } = pen
       const [x, y, pw, ph] = page
       // the hall leans with the hand: the vanishing points ease toward it, the near page stays
-      const want: [number, number] = pointer.inside && !narrow ? [Math.max(-22, Math.min(22, (pointer.x - w / 2) * 0.05)), Math.max(-12, Math.min(12, (pointer.y - h / 2) * 0.05))] : [0, 0]
+      // (the hand: the pointer on a laptop, the scroll on a phone; both tilt the hall)
+      const cur: [number, number] = pointer.inside && !narrow ? [Math.max(-22, Math.min(22, (pointer.x - w / 2) * 0.05)), Math.max(-12, Math.min(12, (pointer.y - h / 2) * 0.05))] : [0, 0]
+      const want: [number, number] = [cur[0] + (pointer.scroll - 0.5) * 44, cur[1] + (pointer.scroll - 0.5) * 18]
       lean = [lean[0] + (want[0] - lean[0]) * Math.min(1, 5 * dt), lean[1] + (want[1] - lean[1]) * Math.min(1, 5 * dt)]
       // the ghosts arrive far to near, then drift back once the first page is lit
       const back = e >= 0.8 ? 0.045 * easeOut(span(0.8, 1, e)) : 0

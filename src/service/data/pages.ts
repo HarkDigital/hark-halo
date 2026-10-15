@@ -45,34 +45,34 @@ export interface ServicePageData {
  * stat's own number drawn in glass and neon across the band, nothing the words don't say. A
  * counted value ('28%', '65', '10 years') counts up with its lights; a word ('Page 1', 'Now')
  * strikes on when its picture's key light does. Parameters only for honest facts.
- *   years   ten standing tubes on a mirror floor, one per year `from` to `to` (fixed: never contradicts '10 years')
- *   arc     one glass ring, `share` of it lit from twelve o'clock
+ *   rings   ten concentric glass rings, a tree's cross-section, one per year `from` to `to` (fixed: never contradicts '10 years')
+ *   ream    a stack of a hundred sheets of glass, `share` of them lit from the bottom
  *   lamps   a valley town at night, one lamp per live site (the count is the value: PORTFOLIO_WORK.length)
- *   past    an open column of glass with light risen past a level mark named `mark`, no top
+ *   bars    a row of open glass columns, every one with light past a level mark named `mark`, running off the edge
  *   first   a hall of glass sheets receding; only the first is lit
  *   loads   two horizontal tubes from one start, `from` and `to` seconds, the second `rise` longer, past a plumb line
- *   sand    an hourglass running backward (illustrative: nothing to count)
- *   gauge   a sight glass between two fittings, `share` of it risen
- *   sign    one bent tube spelling `text`, with `cite` beside it
+ *   spool   a glass reel winding in a line of light (illustrative: nothing to count)
+ *   orb     a glass sphere with light pooled in its bottom, `share` of its area
+ *   drone   a quadcopter in glass and neon that lifts off and follows the hand
  *   now     a clock with no numerals at the viewer's own time
  *   impacts a sheet of dark glass taking the day's attacks, an ember per hit (the count is the value)
  *   window  a window of `of` panes, one lit
- *   beads   a bead curtain, `share` of `of` beads lit from the bottom up
+ *   reeds   a bed of `of` glass stalks in a wind, `share` of them lit
  */
 export type StatViz =
-  | { kind: 'years'; from: number; to: number }
-  | { kind: 'arc'; share: number }
+  | { kind: 'rings'; from: number; to: number }
+  | { kind: 'ream'; share: number }
   | { kind: 'lamps' }
-  | { kind: 'past'; mark: string }
+  | { kind: 'bars'; mark: string }
   | { kind: 'first' }
   | { kind: 'loads'; from: number; to: number; rise: number }
-  | { kind: 'sand' }
-  | { kind: 'gauge'; share: number }
-  | { kind: 'sign'; text: string; cite: string }
+  | { kind: 'spool' }
+  | { kind: 'orb'; share: number }
+  | { kind: 'drone' }
   | { kind: 'now' }
   | { kind: 'impacts' }
   | { kind: 'window'; of: number }
-  | { kind: 'beads'; share: number; of: number }
+  | { kind: 'reeds'; share: number; of: number }
 
 export const SERVICE_PAGES: ServicePageData[] = [
   {
@@ -107,7 +107,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
       { title: 'Build', text: 'Short cycles, working software at every step. No black box.' },
       { title: 'Support', text: 'We stay after launch, updates, tweaks, and the next idea when you’re ready.' },
     ],
-    stat: { value: '10 years', label: 'Of custom software for real businesses. Portals, dashboards, and integrations since 2016.', viz: { kind: 'years', from: 2016, to: 2026 } },
+    stat: { value: '10 years', label: 'Of custom software for real businesses. Portals, dashboards, and integrations since 2016.', viz: { kind: 'rings', from: 2016, to: 2026 } },
     relatedTags: ['Software'],
     quote: {
       text: 'We needed a stand-alone payment portal for our fast-growing business. Hark Digital built it on time, on budget, trained us, and followed up to make sure everything ran smooth.',
@@ -150,7 +150,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
     ],
     // Salesforce, State of Sales (2023 edition, 7,700+ sales professionals): reps spend 28 percent
     // of their week actually selling; most of the rest goes to deal management and data entry
-    stat: { value: '28%', label: 'Of a sales rep’s week goes to actually selling. Most of the rest is admin and data entry.', viz: { kind: 'arc', share: 0.28 } },
+    stat: { value: '28%', label: 'Of a sales rep’s week goes to actually selling. Most of the rest is admin and data entry.', viz: { kind: 'ream', share: 0.28 } },
     relatedTags: ['Software Development'],
     integrations: {
       label: 'Connects with',
@@ -249,7 +249,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
       { title: 'Build & connect', text: 'Store, payments, shipping, and your back office, all talking to each other.' },
       { title: 'Grow', text: 'Conversion tuning, seasonal campaigns, and the numbers to prove what worked.' },
     ],
-    stat: { value: '$1M+', label: 'Flows through client stores we built, every single year', viz: { kind: 'past', mark: '$1M' } },
+    stat: { value: '$1M+', label: 'Flows through client stores we built, every single year', viz: { kind: 'bars', mark: '$1M' } },
     relatedTags: ['Ecommerce'],
     quote: {
       text: 'Hark Digital helped launch a successful holiday season campaign that brought us record number sales.',
@@ -362,7 +362,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
       { title: 'Integrate', text: 'The pilot graduates into your real workflow, connected, secured, and documented.' },
       { title: 'Train your team', text: 'Your people learn to drive it. AI that only the consultant understands is a liability.' },
     ],
-    stat: { value: 'Hours', label: 'Returned to your week. The only AI metric that matters.', viz: { kind: 'sand' } },
+    stat: { value: 'Hours', label: 'Returned to your week. The only AI metric that matters.', viz: { kind: 'spool' } },
     relatedTags: ['Software'],
     cta: 'Curious what AI could actually do for your business? Ask us for the honest version.',
   },
@@ -400,7 +400,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
     ],
     // McKinsey Global Institute, “The social economy” (July 2012): interaction workers spend
     // about 19 percent of their time searching for and gathering information
-    stat: { value: '19%', label: 'Of the average knowledge worker’s week goes to searching for and gathering information', viz: { kind: 'gauge', share: 0.19 } },
+    stat: { value: '19%', label: 'Of the average knowledge worker’s week goes to searching for and gathering information', viz: { kind: 'orb', share: 0.19 } },
     relatedTags: ['Software'],
     integrations: {
       label: 'Connects with',
@@ -470,7 +470,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
       { title: 'Edit', text: 'Color-graded photo and video, cut for where it will live, web, social, or the big screen.' },
       { title: 'Deliver', text: 'Web-ready files sized for your site and socials, with full-resolution masters included.' },
     ],
-    stat: { value: 'Part 107', label: 'FAA licensed and insured. Every flight legal, planned, and professional.', viz: { kind: 'sign', text: '107', cite: '14 CFR' } },
+    stat: { value: 'Part 107', label: 'FAA licensed and insured. Every flight legal, planned, and professional.', viz: { kind: 'drone' } },
     relatedTags: ['Photography'],
     cta: 'See your business the way birds do.',
   },
@@ -621,7 +621,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
       { title: 'Fix & speed up', text: 'Plugin cleanup, theme fixes, and performance work, or an honest recommendation to rebuild when rescue isn’t the right call.' },
       { title: 'Care plan', text: 'Monthly updates, monitoring, and small fixes so the site stays fast and patched without you thinking about it.' },
     ],
-    stat: { value: '43%', label: 'Of the web runs on WordPress. Its problems are common, so are the fixes.', viz: { kind: 'beads', share: 43, of: 100 } },
+    stat: { value: '43%', label: 'Of the web runs on WordPress. Its problems are common, so are the fixes.', viz: { kind: 'reeds', share: 43, of: 100 } },
     relatedTags: ['Web Design'],
     cta: 'White screen? Weird redirects? Admin slower than dial-up? Tell us what WordPress is doing to you.',
   },

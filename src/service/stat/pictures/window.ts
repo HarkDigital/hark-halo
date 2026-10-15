@@ -164,7 +164,8 @@ export const windowPane: Builder<{ kind: 'window'; of: number }> = () => {
         pen.neon(litEdge, NA, on * (1 + 0.4 * b), 2)
         pen.fill(P.circle(px, py + ph, 2.4), WHITE, on)
         // the shaft of light on the floor, and its pool
-        const lean = pointer.inside ? Math.max(-6, Math.min(6, (pointer.x - cx) * 0.03)) : 0
+        // (the hand: the pointer on a laptop, the scroll on a phone; both lean the shaft of light)
+        const lean = (pointer.inside ? Math.max(-14, Math.min(14, (pointer.x - cx) * 0.05)) : 0) + (pointer.scroll - 0.5) * 24
         if (!narrow) {
           const sg = glow.createLinearGradient(0, py + ph, 0, h)
           sg.addColorStop(0, rgba(NA, 0.3 * on))

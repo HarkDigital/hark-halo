@@ -88,7 +88,10 @@ export const now: Builder<{ kind: 'now' }> = () => {
       const lit = e < 0.72 ? 0.6 * clamp01((e - 0.04) / 0.28) : 0.6 + 0.4 * clamp01((e - 0.72) / 0.28)
       // the cursor
       const dC = pointer.inside ? Math.hypot(pointer.x - cx, pointer.y - cy) : 1e9
+      // (the hand: the pointer on a laptop, the scroll on a phone; both lean the dial's light)
       const want: [number, number] = pointer.inside && !narrow ? [(pointer.x - cx) * (28 / 420), (pointer.y - cy) * (28 / 420)] : [0, 0]
+      want[0] += (pointer.scroll - 0.5) * 40
+      want[1] += (pointer.scroll - 0.5) * 16
       const wl = Math.hypot(want[0], want[1])
       if (wl > 28) (want[0] *= 28 / wl), (want[1] *= 28 / wl)
       lean = [lean[0] + (want[0] - lean[0]) * Math.min(1, 8 * dt), lean[1] + (want[1] - lean[1]) * Math.min(1, 8 * dt)]

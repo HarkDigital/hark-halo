@@ -44,7 +44,7 @@ const W = parseInt(args.w ?? (mobile ? 390 : tablet ? 768 : 1440), 10)
 const H = parseInt(args.h ?? (mobile ? 844 : tablet ? 1024 : 900), 10)
 const seek = args.seek !== undefined ? parseFloat(args.seek) : null
 const slugs = !args.slugs || args.slugs === 'all' ? SLUGS : String(args.slugs).split(',')
-const suffix = `${mobile ? '-m' : tablet ? '-t' : ''}${seek !== null ? `-s${seek}` : ''}`
+const suffix = `${mobile ? '-m' : tablet ? '-t' : ''}${seek !== null ? `-s${seek}` : ''}${args.scroll !== undefined ? `-sc${args.scroll}` : ''}`
 const tag = args.tag ? `${args.tag}-` : ''
 fs.mkdirSync(out, { recursive: true })
 
@@ -83,6 +83,8 @@ try {
   for (const slug of slugs) {
     const q = new URLSearchParams({ autopilot: '1' })
     if (seek === null) q.set('settled', '1')
+    // --scroll=0.3 holds the band's scroll input (the phone's hand) at that progress
+    if (args.scroll !== undefined) q.set('scroll', String(args.scroll))
     if (args.lights) q.set('lights', String(args.lights))
     await page.goto(`http://localhost:${port}/services/${slug}/?${q}`, { waitUntil: 'load', timeout: 90000 })
     await page.waitForSelector('.svc-stat .vz', { timeout: 30000 })

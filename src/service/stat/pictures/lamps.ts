@@ -103,7 +103,8 @@ export const lamps: Builder<{ kind: 'lamps' }> = (_o, value) => {
         ctx.stroke()
       }
       // the field leans a little with the hand, by depth (near lamps most)
-      const want = pointer.inside && !narrow ? -((pointer.x - 0.7 * w) / w) * 10 * (framed ? 0.5 : 1) : 0
+      // (the hand: the pointer on a laptop, the scroll on a phone; both lean the field by depth)
+      const want = (pointer.inside && !narrow ? -((pointer.x - 0.7 * w) / w) * 18 * (framed ? 0.5 : 1) : 0) + (pointer.scroll - 0.5) * (narrow ? 30 : 24)
       lean += (want - lean) * Math.min(1, 4 * dt)
       // one lamp wavers at a time, about once a second
       const slot = Math.floor(t / 1.2)

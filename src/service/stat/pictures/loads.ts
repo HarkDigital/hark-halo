@@ -81,6 +81,10 @@ export const loads: Builder<{ kind: 'loads'; from: number; to: number; rise: num
       const qU = near(yU, x0, xL), qL = near(yL, x0, xL * 1 + L * o.rise)
       if (qU > 0) glint(pen, pointer.x - 18, yU - wt * 1.5, pointer.x + 18, yU - wt * 1.5, 0.3 * qU)
       if (qL > 0) glint(pen, pointer.x - 18, yL - wt * 1.5, pointer.x + 18, yL - wt * 1.5, 0.3 * qL)
+      // (the hand on a phone: a cold glint slides along both sleeves with the scroll)
+      const sx = x0 + L * ratio * clamp01((pointer.scroll - 0.15) / 0.7)
+      glint(pen, sx - 36, yU - wt * 1.5, Math.min(sx + 36, xL + 36), yU - wt * 1.5, 0.3)
+      glint(pen, sx - 36, yL - wt * 1.5, sx + 36, yL - wt * 1.5, 0.3)
       const caps: [number, number, RGB][] = [
         [x0, yU, NA],
         [x0 + L, yU, NA],

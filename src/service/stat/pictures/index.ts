@@ -1,19 +1,19 @@
 import type { StatViz } from '../../data/pages'
 import type { Builder, StatPicture } from '../picture'
 import { blank } from './blank'
-import { years } from './years'
-import { arc } from './arc'
-import { gauge } from './gauge'
-import { beads } from './beads'
-import { windowPane } from './window'
-import { loads } from './loads'
-import { impacts } from './impacts'
-import { past } from './past'
-import { first } from './first'
+import { rings } from './rings'
+import { ream } from './ream'
 import { lamps } from './lamps'
-import { sand } from './sand'
+import { bars } from './bars'
+import { first } from './first'
+import { loads } from './loads'
+import { spool } from './spool'
+import { orb } from './orb'
+import { drone } from './drone'
 import { now } from './now'
-import { sign } from './sign'
+import { impacts } from './impacts'
+import { windowPane } from './window'
+import { reeds } from './reeds'
 
 /*
  * The pictures, one builder per StatViz kind (data/pages.ts; the briefs are
@@ -21,19 +21,19 @@ import { sign } from './sign'
  * picture is). A kind without a picture yet draws the blank: unlit glass.
  */
 const PICTURES: { [K in StatViz['kind']]?: Builder<Extract<StatViz, { kind: K }>> } = {
-  years,
-  arc,
-  gauge,
-  beads,
-  window: windowPane,
-  loads,
-  impacts,
-  past,
-  first,
+  rings,
+  ream,
   lamps,
-  sand,
+  bars,
+  first,
+  loads,
+  spool,
+  orb,
+  drone,
   now,
-  sign,
+  impacts,
+  window: windowPane,
+  reeds,
 }
 
 /** the picture for `viz` (built once; canvas.ts calls init on every size) */

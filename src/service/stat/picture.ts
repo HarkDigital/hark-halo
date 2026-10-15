@@ -49,11 +49,26 @@ export interface Label {
   hi?: boolean
 }
 
+/**
+ * The hand, two ways: on a laptop the pointer (hover; the picture answers within
+ * ~160 px), on a phone the scroll (there is no hover: the band's progress through
+ * the viewport and the speed of the thumb are the hand). A picture answers both:
+ * light, lean, parallax, a swell; never the measured thing, never the count.
+ */
+export interface Input extends Pointer {
+  /** the band's progress through the viewport: 0 as its top enters at the bottom, 1 as its bottom leaves at the top (0.5: centred) */
+  scroll: number
+  /** the scroll's speed, in viewport heights a second, signed (down is positive), smoothed */
+  scrollV: number
+  /** a coarse pointer (a phone): hover never happens; scroll is the hand */
+  coarse: boolean
+}
+
 export interface StatPicture {
   /** (re)build for a size; up to three labels, or nothing */
   init(w: number, h: number, env: Env): Label[] | void
   /** draw the state at p (eased, the count's), e (the strike's linear clock) and t (seconds since the trigger) */
-  frame(pen: Pen, w: number, h: number, p: number, e: number, t: number, pointer: Pointer, dt: number): void
+  frame(pen: Pen, w: number, h: number, p: number, e: number, t: number, pointer: Input, dt: number): void
   /** the band glow's two tints (left, right), as places along the lights: 0 = NA, 0.5 = NB, 1 = NC */
   lead: [number, number]
   /** the strike's length (ms), when not the band's default */
