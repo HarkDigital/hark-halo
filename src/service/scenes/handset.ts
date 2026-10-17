@@ -1,8 +1,10 @@
 import { NA, NB, NC, P, WHITE, rgba, strike, type RGB, type Scene } from './kit'
 
 interface Card {
-  /** its place in the feed (unscrolled px) */
-  y: number
+  /** its slot in the feed's loop */
+  k: number
+  /** where it was drawn last frame (a jump of half the loop means it came round: a new card) */
+  yy: number
   /** lit (arriving, tapped, the hand), cools to glass */
   heat: number
   col: RGB
@@ -58,15 +60,17 @@ export function handset(): Scene {
   let lastY = 0
   let serial = 0
 
-  const card = (y: number, lit: boolean): Card => {
-    const seed = serial++
-    return { y, heat: lit ? 1 : 0, col: NA, kind: hash(seed + 0.7) < 0.35 ? 1 : 0, shift: 0, seed }
+  /** a card arrives (lit): a fresh post in slot k */
+  const arrive = (c: Card, lit: boolean) => {
+    c.seed = serial++
+    c.kind = hash(c.seed + 0.7) < 0.35 ? 1 : 0
+    c.heat = lit ? 1 : 0
+    c.col = NA
   }
   const tap = (x: number, y: number, col: RGB) => {
     taps.push({ x, y, age: 0, col })
     for (const c of cards) {
-      const cy = c.y - scroll
-      if (y >= cy && y <= cy + ch) {
+      if (y >= c.yy && y <= c.yy + ch) {
         c.heat = 1
         c.col = col
       }
@@ -92,10 +96,16 @@ export function handset(): Scene {
       feedBot = sy + SH * 0.905
       ch = SH * 0.135
       gap = SH * 0.028
+      // the feed is a loop of cards two longer than the screen, so a card leaves one end off screen
+      // and comes round to the other, arriving lit, and never flickers between the two
       cards = []
       serial = 0
       const n = Math.ceil((feedBot - feedTop) / (ch + gap)) + 2
-      for (let k = 0; k < n; k++) cards.push(card(feedTop + k * (ch + gap), false))
+      for (let k = 0; k < n; k++) {
+        const c: Card = { k, yy: NaN, heat: 0, col: NA, kind: 0, shift: 0, seed: 0 }
+        arrive(c, false)
+        cards.push(c)
+      }
       scroll = 0
       vel = 14
       taps = []
@@ -190,10 +200,10 @@ export function handset(): Scene {
       if (!inScreen) {
         tapT -= dt
         if (tapT <= 0) {
-          const seen = cards.filter(c => c.y - scroll > feedTop && c.y - scroll + ch < feedBot)
+          const seen = cards.filter(c => c.yy > feedTop && c.yy + ch < feedBot)
           if (seen.length) {
             const c = seen[Math.floor(Math.random() * seen.length)]
-            tap(sx + SW * (0.2 + Math.random() * 0.6), c.y - scroll + ch * (0.3 + Math.random() * 0.4), NB)
+            tap(sx + SW * (0.2 + Math.random() * 0.6), c.yy + ch * (0.3 + Math.random() * 0.4), NB)
           }
           tapT = 1.8 + Math.random() * 1.6
         }
@@ -211,27 +221,18 @@ export function handset(): Scene {
         tabT = 5 + Math.random() * 3
       }
 
-      // ---- the feed: cards recycle past either end (arriving lit), then cool to glass
-      let top = Infinity
-      let bot = -Infinity
-      for (const c of cards) {
-        top = Math.min(top, c.y)
-        bot = Math.max(bot, c.y)
-      }
+      // ---- the feed: a loop of cards; one that comes round the loop arrives lit, then cools to glass
+      const pitch = ch + gap
+      const L = cards.length * pitch
       const cw = SW * 0.86
       const cx0 = sx + SW * 0.07
       const rr = Math.min(10, ch * 0.16)
       for (const c of cards) {
-        if (c.y - scroll + ch < feedTop - gap * 2) {
-          Object.assign(c, card(bot + ch + gap, true))
-          bot = c.y
-        } else if (c.y - scroll > feedBot + gap * 2) {
-          Object.assign(c, card(top - ch - gap, true))
-          top = c.y
-        }
+        const y = feedTop - pitch + ((((c.k * pitch - scroll) % L) + L) % L)
+        if (!Number.isNaN(c.yy) && Math.abs(y - c.yy) > L / 2) arrive(c, true)
+        c.yy = y
         c.shift *= Math.exp(-dt * 7)
         const x = cx0 + c.shift
-        const y = c.y - scroll
         // the card under the thumb warms
         if (inScreen && !pointer.down && pointer.y >= y && pointer.y <= y + ch) c.heat = Math.max(c.heat, 0.45)
         const shape = P.rrect(x, y, cw, ch, rr)
