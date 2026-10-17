@@ -81,6 +81,14 @@ export const SERVICES: Service[] = [
   },
   {
     num: '03',
+    slug: 'app-development',
+    title: 'App Development',
+    blurb:
+      'Your customers live on their phones. Does your business? We design and build iOS and Android apps, from the first tap to the App Store, and keep them running after launch.',
+    tags: ['iOS & Android', 'App Store Launch', 'Web Apps', 'Backend & APIs'],
+  },
+  {
+    num: '04',
     slug: 'web-design',
     title: 'Web Design & Development',
     blurb:
@@ -88,7 +96,7 @@ export const SERVICES: Service[] = [
     tags: ['UI/UX', 'Responsive', 'CMS', 'Branding'],
   },
   {
-    num: '04',
+    num: '05',
     slug: 'ecommerce',
     title: 'Ecommerce',
     blurb:
@@ -96,7 +104,7 @@ export const SERVICES: Service[] = [
     tags: ['Online Stores', 'Payment Portals', 'Analytics', 'Conversion'],
   },
   {
-    num: '05',
+    num: '06',
     slug: 'seo-geo',
     title: 'SEO / GEO',
     blurb:
@@ -104,7 +112,7 @@ export const SERVICES: Service[] = [
     tags: ['Search Ranking', 'AI Discoverability', 'Local SEO', 'Content Strategy'],
   },
   {
-    num: '06',
+    num: '07',
     slug: 'page-speed',
     title: 'Page Speed',
     blurb:
@@ -112,7 +120,7 @@ export const SERVICES: Service[] = [
     tags: ['Core Web Vitals', 'PageSpeed Insights', 'GTmetrix', 'Load Time'],
   },
   {
-    num: '07',
+    num: '08',
     slug: 'ai-consulting',
     title: 'AI Consulting',
     blurb:
@@ -120,7 +128,7 @@ export const SERVICES: Service[] = [
     tags: ['Opportunity Audit', 'Custom AI Tools', 'Automation', 'Team Training'],
   },
   {
-    num: '08',
+    num: '09',
     slug: 'company-knowledge-ai',
     title: 'Company Knowledge AI',
     blurb:
@@ -128,7 +136,7 @@ export const SERVICES: Service[] = [
     tags: ['AI Knowledge Base', 'Private AI Assistant', 'Chat With Your Documents', 'Internal Search'],
   },
   {
-    num: '09',
+    num: '10',
     slug: 'aerial-media',
     title: 'Aerial Photography & Video',
     blurb:
@@ -136,7 +144,7 @@ export const SERVICES: Service[] = [
     tags: ['Drone Video', 'Real Estate', 'Inspections', 'Cinematic'],
   },
   {
-    num: '10',
+    num: '11',
     slug: 'hack-remediation',
     title: 'Hack Remediation',
     blurb:
@@ -144,7 +152,7 @@ export const SERVICES: Service[] = [
     tags: ['Malware Removal', 'Breach Response', 'Recovery', 'Blocklist Removal'],
   },
   {
-    num: '11',
+    num: '12',
     slug: 'security',
     title: 'Website & Data Security',
     blurb:
@@ -152,7 +160,7 @@ export const SERVICES: Service[] = [
     tags: ['Hardening', 'Monitoring', 'Backups', 'SSL & Compliance'],
   },
   {
-    num: '12',
+    num: '13',
     slug: 'ada-accessibility',
     title: 'ADA Accessibility',
     blurb:
@@ -160,7 +168,7 @@ export const SERVICES: Service[] = [
     tags: ['WCAG Audits', 'Remediation', 'Screen Reader Testing', 'ADA Compliance'],
   },
   {
-    num: '13',
+    num: '14',
     slug: 'wordpress',
     title: 'WordPress',
     blurb:
@@ -1166,6 +1174,7 @@ export const CONTACT_FORM = {
     'Web Design & Development',
     'Software Development',
     'Custom CRM',
+    'App Development',
     'Ecommerce',
     'SEO / GEO',
     'Page Speed',

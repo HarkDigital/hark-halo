@@ -9,7 +9,7 @@ export interface ServicePageData {
   slug: string
   num: string
   title: string
-  scene: 'dataflow' | 'blueprint' | 'commerce' | 'radar' | 'velocity' | 'neural' | 'aerial' | 'glitch' | 'shield' | 'focus' | 'blocks' | 'sift' | 'network' | 'constellation' | 'pipeline'
+  scene: 'dataflow' | 'blueprint' | 'commerce' | 'radar' | 'velocity' | 'neural' | 'aerial' | 'glitch' | 'shield' | 'focus' | 'blocks' | 'sift' | 'network' | 'constellation' | 'pipeline' | 'handset'
   headline: string
   /** part of the headline rendered in the signal color */
   headlineAccent?: string
@@ -58,6 +58,7 @@ export interface ServicePageData {
  *   impacts a sheet of dark glass taking the day's attacks, an ember per hit (the count is the value)
  *   window  a window of `of` panes, one lit
  *   reeds   a bed of `of` glass stalks in a wind, `share` of them lit
+ *   halo    a ring of `of` glass beads on a wire, `share` of them lit clockwise from the top
  */
 export type StatViz =
   | { kind: 'ledger'; share: number; of: number }
@@ -73,6 +74,7 @@ export type StatViz =
   | { kind: 'impacts' }
   | { kind: 'window'; of: number }
   | { kind: 'reeds'; share: number; of: number }
+  | { kind: 'halo'; share: number; of: number }
 
 export const SERVICE_PAGES: ServicePageData[] = [
   {
@@ -179,8 +181,46 @@ export const SERVICE_PAGES: ServicePageData[] = [
     cta: 'Still running your customer list out of spreadsheets? That’s a custom CRM waiting to happen.',
   },
   {
-    slug: 'web-design',
+    slug: 'app-development',
     num: '03',
+    title: 'App Development',
+    scene: 'handset',
+    headline: 'Worth its place on the',
+    headlineAccent: 'home screen.',
+    lede: 'Most apps get opened once and forgotten. The ones that stay do one real job well and feel native to the phone in hand. We design, build, and ship iOS and Android apps, then keep them running long after launch day.',
+    features: [
+      {
+        title: 'iOS & Android, done right',
+        text: 'Native apps for iPhone and Android, built with each platform’s own tools, so they feel like they belong: the gestures, the notifications, the camera, the share sheet. One codebase where it makes sense, two where it matters, and we tell you which before a line is written.',
+      },
+      {
+        title: 'From idea to the App Store',
+        text: 'We take it the whole way: the screens, the code, the accounts, the review, and the day it goes live. Apple’s guidelines, Google’s policies, privacy labels, and TestFlight betas on your own team’s phones before the public sees a thing. Shipping is the job, not the afterthought.',
+      },
+      {
+        title: 'Web apps and PWAs',
+        text: 'Not everything belongs in an app store. A progressive web app installs from a link, runs on any phone, and updates without a release. For field crews, customers who order once a month, or a tool your staff opens every morning, it is often the honest answer, and we say so.',
+      },
+      {
+        title: 'Backend, data, and sync',
+        text: 'An app is only the half you can see. Behind it we build the accounts, the database, the payments, and the APIs that keep every phone in step with each other and with the systems you already run. Offline when the signal drops, caught up the moment it returns.',
+      },
+    ],
+    process: [
+      { title: 'Listen', text: 'We learn the one job your app has to do, who opens it, and what their phone is doing when they do.' },
+      { title: 'Prototype', text: 'A clickable mock-up on a real phone first. You tap through it and change your mind while that is still easy.' },
+      { title: 'Build', text: 'Short cycles, a new TestFlight or Play beta at every step, and your team using it before the public does.' },
+      { title: 'Launch & maintain', text: 'Store listings, review, release, then the updates every new iOS and Android version demands.' },
+    ],
+    // eMarketer, US Time Spent with Mobile 2019: US adults spend 88 percent of their mobile time in apps
+    // (Comscore’s 2017 US Mobile App Report put it at 87 percent)
+    stat: { value: '88%', label: 'Of the time people spend on their phones is in apps, not the browser.', viz: { kind: 'halo', share: 88, of: 100 } },
+    relatedTags: ['Software'],
+    cta: 'Pick up your phone. If your business isn’t on the home screen, let’s put it there.',
+  },
+  {
+    slug: 'web-design',
+    num: '04',
     title: 'Web Design & Development',
     scene: 'blueprint',
     headline: 'Beautiful. Functional.',
@@ -221,7 +261,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
   },
   {
     slug: 'ecommerce',
-    num: '04',
+    num: '05',
     title: 'Ecommerce',
     scene: 'commerce',
     headline: 'Open 24/7. Even when',
@@ -262,7 +302,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
   },
   {
     slug: 'seo-geo',
-    num: '05',
+    num: '06',
     title: 'SEO / GEO',
     scene: 'radar',
     headline: 'Be the',
@@ -298,7 +338,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
   },
   {
     slug: 'page-speed',
-    num: '06',
+    num: '07',
     title: 'Page Speed',
     scene: 'velocity',
     headline: 'Slow is the new',
@@ -334,7 +374,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
   },
   {
     slug: 'ai-consulting',
-    num: '07',
+    num: '08',
     title: 'AI Consulting',
     scene: 'sift',
     headline: 'AI without the',
@@ -370,7 +410,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
   },
   {
     slug: 'company-knowledge-ai',
-    num: '08',
+    num: '09',
     title: 'Company Knowledge AI',
     scene: 'constellation',
     headline: 'Ask your whole company',
@@ -442,7 +482,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
   },
   {
     slug: 'aerial-media',
-    num: '09',
+    num: '10',
     title: 'Aerial Photography & Video',
     scene: 'aerial',
     headline: 'Your business, from',
@@ -478,7 +518,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
   },
   {
     slug: 'hack-remediation',
-    num: '10',
+    num: '11',
     title: 'Hack Remediation',
     scene: 'glitch',
     headline: 'Breathe. Then',
@@ -519,7 +559,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
   },
   {
     slug: 'security',
-    num: '11',
+    num: '12',
     title: 'Website & Data Security',
     scene: 'shield',
     headline: 'The best hack is the one that',
@@ -557,7 +597,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
   },
   {
     slug: 'ada-accessibility',
-    num: '12',
+    num: '13',
     title: 'ADA Accessibility',
     scene: 'focus',
     headline: 'Every visitor.',
@@ -593,7 +633,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
   },
   {
     slug: 'wordpress',
-    num: '13',
+    num: '14',
     title: 'WordPress',
     scene: 'blocks',
     headline: 'WordPress, without the',

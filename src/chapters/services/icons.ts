@@ -97,6 +97,13 @@ const GLYPHS: Record<string, (g: Ctx) => void> = {
     poly(g, [[4, 0], [30, 0]])
     poly(g, [[4, 12], [21, 12]])
   },
+  // a phone, a tap rippling on its screen
+  'app-development': g => {
+    rrect(g, -25, -45, 50, 90, 9)
+    poly(g, [[-8, -37], [8, -37]])
+    circle(g, 0, 6, 4, true)
+    circle(g, 0, 6, 15)
+  },
   // a browser window with a layout grid
   'web-design': g => {
     rrect(g, -45, -34, 90, 68, 5)

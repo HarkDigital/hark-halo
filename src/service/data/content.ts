@@ -119,6 +119,53 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
     ],
   },
 
+  'app-development': {
+    metaDescription:
+      'Mobile app development in Philadelphia: iOS and Android apps, web apps, and the backends behind them, designed, built, and shipped to the App Store and Google Play. Hark Digital, est. 2016.',
+    article: [
+      {
+        heading: 'What a mobile app is for, and what a website already does',
+        paragraphs: [
+          'A mobile app is software installed on a phone, built for its screen, its sensors, and its notifications, one tap from the home screen. A website reaches everyone with a link; an app earns a permanent place with the people who come back. That is the whole decision. Customers who find you once need your website. Customers who order every week, check a status every day, or work in the field with no signal are the ones an app is for.',
+          'Hark Digital builds iOS and Android apps in Philadelphia: ordering and loyalty for shops and restaurants, field tools for crews and inspectors, customer portals that live in a pocket, and games like Phade, a sports pick’em app for friends. When a website would do the job, we say so first.',
+        ],
+      },
+      {
+        heading: 'Native, cross-platform, or web app: how we choose',
+        paragraphs: [
+          'Native apps are written with Apple’s and Google’s own tools, Swift and Kotlin, and they are the standard for anything that leans on the camera, location, offline storage, or heavy animation. Cross-platform frameworks like React Native and Flutter build one codebase for both stores, a fair trade for many business apps and a poor one for a few. A progressive web app (PWA) is a website that installs like an app and runs anywhere, with no store review between you and an update.',
+          'We pick by the job, not the fashion. The questions that decide it: who uses it, how often, on what phones, with what signal, and what it has to talk to. Then we prototype on a real phone before building, ship betas through TestFlight and Google Play to your own team, and stay on after launch for the updates every new iOS and Android release demands.',
+        ],
+      },
+    ],
+    faqs: [
+      {
+        q: 'Does my business need an app, or is a website enough?',
+        a: 'A website is enough when customers find you, do one thing, and leave. An app earns its place when the same people come back often, need push notifications, use the camera or location, or work somewhere the signal drops. We ask about your customers’ habits first and tell you honestly which one you need, even when the answer is the website you already have.',
+      },
+      {
+        q: 'What is the difference between a native app and a web app?',
+        a: 'A native app is installed from the App Store or Google Play and written for that phone, so it gets full use of the camera, notifications, and offline storage. A web app runs in the browser, installs from a link, and updates instantly with no store review. Native wins on polish and device features; web wins on reach and simplicity. Many businesses need the web app first.',
+      },
+      {
+        q: 'How does an app get into the App Store?',
+        a: 'Apple reviews every app against its guidelines before it is listed, and Google Play runs its own policy checks. We set up the developer accounts in your name, prepare the listings, screenshots, and privacy details, submit the builds, and answer the reviewers’ questions. Rejections happen and are usually small fixes; we handle the back-and-forth until it is live.',
+      },
+      {
+        q: 'Who owns the app and the developer accounts?',
+        a: 'You do. The Apple and Google developer accounts are opened in your business’s name, the code lives in a repository you can access, and the backend runs on accounts you control. If we ever part ways, another developer can pick it up without asking our permission.',
+      },
+      {
+        q: 'Can the app work with the software I already use?',
+        a: 'Almost always. If your point of sale, booking system, CRM, or accounting tool has an API, the app can read from it and write to it, so an order placed on a phone lands in the same place as one placed at the counter. We map those connections before the first screen is designed.',
+      },
+      {
+        q: 'What happens after the app launches?',
+        a: 'The work changes shape. Apple and Google ship new operating systems every year, phones change, and your business changes, so an app that is never updated slowly stops working. We watch crashes and reviews, keep the app current with each new iOS and Android release, and add the features your users ask for.',
+      },
+    ],
+  },
+
   'web-design': {
     metaDescription:
       `Web design in Philadelphia and beyond, beautiful, functional websites that load fast, rank well, and turn visitors into customers. ${PORTFOLIO_WORK.length} live projects, from dentists to global manufacturers.`,

@@ -9,6 +9,7 @@ import { constellation } from './constellation'
 import { dataflow } from './dataflow'
 import { focus } from './focus'
 import { glitch } from './glitch'
+import { handset } from './handset'
 import { pipeline } from './pipeline'
 import { radar } from './radar'
 import { shield } from './shield'
@@ -29,6 +30,7 @@ const SCENES: Partial<Record<ServicePageData['scene'], () => Scene>> = {
   sift,
   aerial,
   glitch,
+  handset,
   shield,
   focus,
   blocks,

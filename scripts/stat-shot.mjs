@@ -18,6 +18,7 @@ const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 const SLUGS = [
   'software-development',
   'custom-crm',
+  'app-development',
   'web-design',
   'ecommerce',
   'seo-geo',

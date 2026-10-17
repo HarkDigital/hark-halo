@@ -517,6 +517,41 @@ sends a gust through them. Lead NA. `lead: [0, 0]`, `dur: 2800`. Replaces the be
 - Honesty: 43 of 100 stalks lit; the field is a field, the wind is wind; no site is a stalk. Not the
   hero (content blocks assembling). Distinct: the only picture with wind.
 
+## app-development · "88%" · `{ kind: 'halo', share: 88, of: 100 }` — The Halo
+
+A ring of a hundred glass beads threaded on a glass wire, standing right of centre; 88 of them lit
+green clockwise from the top as the count runs, the gas running round the wire behind a white-hot
+head and each bead striking on as the head passes it; the twelve at the end of the round stay dark
+glass. The lit beads are the number. The ring leans toward the hand and turns with the scroll;
+nothing lit ever changes. Lead NA. `lead: [0, 0]`, `dur: 2800`.
+
+- Wide: C = (copyX + 0.52·(w − copyX), 0.5h), R = min(0.36h, 0.3·(w − copyX)); bead radius
+  rb = max(2, 0.019R) (a hundred on the circumference leaves a gap of ~0.025R between beads). The
+  wire: a glass ellipse (`pen.glass` 0.14 w 2) of rx = R·cos θx, ry = R·cos θy, the ring's tilt
+  (below); bead i at angle −π/2 + 2πi/100 + spin on that ellipse, with a depth z = ux·sin θx +
+  uy·sin θy that draws the near side larger (×(1 + 0.25z)) and after the far side. Dark bead: a glass
+  rim r rb (0.16). Lit bead: a tube seen end on: its bloom on the glow layer, the coloured bead (NA 0.85) and a white-hot core (0.5rb) on the sharp layer. The lit stretch of the wire
+  from the top to the front: `pen.neon` NA 0.32 w 1.2 (an elliptical arc).
+- Strike: bead i lights while 88p runs i → i+1 (the head's own bead at 0.9u); i.e. the number =
+  floor(88p) = beads lit, every frame. The head: a white-hot bead r 1.5rb at the front with a
+  `pen.streak` of NA 2.5 beads long behind it, gone at e = 1. A lit bead stutters for its first
+  0.42 s (strike(age, i), floor 0.35) and settles, breathing ±6% on its own 3–5 s period.
+- Life: a shimmer circles the ring (one bead at a time brightened +0.3 within 0.35 rad, round in
+  ~11 s); one lit bead dips to 0.5 for 60 ms every 2.1 s; the lit wire breathes; 16 motes in the
+  ring's light; a cold glint slides round the wire every 9 s (sharp layer); the room's wash (NA 0.07
+  × lit/88) leans with the tilt.
+- Hover (laptop): the ring leans toward the hand: θx = 0.5·clamp((x − C.x)/1.5R), θy = 0.45·clamp((y −
+  C.y)/1.5R), eased 4/s, back to flat when the pointer leaves; beads within 160 px brighten ×1.4 and
+  swell ×1.3, dark beads get a cold glint on their rim. Scroll (phone): the ring turns with the
+  scroll, spin = (scroll − 0.5)·0.9 rad (the lit stretch turns with it; what is lit does not change),
+  and tilts by scrollV (θy = 0.36·clamp(scrollV)).
+- Labels: none. Framed: C centred, R = min(0.36h, 0.3w). Narrow: C centred, R = min(0.36h, 0.4w),
+  rb ≥ 1.6, no motes, no glint.
+- Honesty: 100 beads, 88 lit, nothing else; the ring is a ring (no hands, no ticks, no numerals: not
+  a clock, which has no rim), the dark twelve sit together at the end of the round; no hours, no
+  apps named, no browser drawn. Source in pages.ts (eMarketer, US Time Spent with Mobile 2019). Not
+  the hero (a phone with an app on its screen). Distinct: the only ring.
+
 ---
 
 ## Seeing them
@@ -533,6 +568,6 @@ The clock picture reads `window.__statClock` (dev only) so its frames repeat.
 - The band's own CSS washes go: the room's light is cast by each picture on the glow layer.
 - `countFrom` on a picture (page-speed): p = easeOut(clamp01((e − countFrom)/(1 − countFrom))).
 - Collision map (no two bands share a device): a ledger written by hand (software) / a stack of sheets (crm) / lamps
-  (web) / a line climbing past a mark (ecommerce) / a lit sheet in a hall (seo) / two horizontal tubes
+  (web) / a ring of beads (app) / a line climbing past a mark (ecommerce) / a lit sheet in a hall (seo) / two horizontal tubes
   (speed) / a reel winding (ai) / a glass orb (knowledge) / an aircraft (aerial) / a clock (hack) / hail
   on dark glass (security) / a window (ada) / a reed bed (wordpress).
