@@ -519,38 +519,48 @@ sends a gust through them. Lead NA. `lead: [0, 0]`, `dur: 2800`. Replaces the be
 
 ## app-development · "88%" · `{ kind: 'halo', share: 88, of: 100 }` — The Halo
 
-A ring of a hundred glass beads threaded on a glass wire, standing right of centre; 88 of them lit
-green clockwise from the top as the count runs, the gas running round the wire behind a white-hot
-head and each bead striking on as the head passes it; the twelve at the end of the round stay dark
-glass. The lit beads are the number. The ring leans toward the hand and turns with the scroll;
-nothing lit ever changes. Lead NA. `lead: [0, 0]`, `dur: 2800`.
+A ring of a hundred glass beads threaded on a glass wire, hovering tilted in the dark right of
+centre, seen from a little above and in perspective (the near beads large, the far ones small), its
+reflection in the dark glass floor beneath it. 88 of the beads light green as the count runs, the
+gas running round the wire behind a white-hot head and each bead flaring as the head passes it; the
+twelve at the end of the round stay dark glass. The lit beads are the number. Afterwards the ring
+turns, slowly on its own and faster under the hand, and a comet of light runs the lit stretch every
+seven seconds. Nothing lit ever changes. Lead NA. `lead: [0, 0]`, `dur: 2800`.
 
-- Wide: C = (copyX + 0.52·(w − copyX), 0.5h), R = min(0.36h, 0.3·(w − copyX)); bead radius
-  rb = max(2, 0.019R) (a hundred on the circumference leaves a gap of ~0.025R between beads). The
-  wire: a glass ellipse (`pen.glass` 0.14 w 2) of rx = R·cos θx, ry = R·cos θy, the ring's tilt
-  (below); bead i at angle −π/2 + 2πi/100 + spin on that ellipse, with a depth z = ux·sin θx +
-  uy·sin θy that draws the near side larger (×(1 + 0.25z)) and after the far side. Dark bead: a glass
-  rim r rb (0.16). Lit bead: a tube seen end on: its bloom on the glow layer, the coloured bead (NA 0.85) and a white-hot core (0.5rb) on the sharp layer. The lit stretch of the wire
-  from the top to the front: `pen.neon` NA 0.32 w 1.2 (an elliptical arc).
-- Strike: bead i lights while 88p runs i → i+1 (the head's own bead at 0.9u); i.e. the number =
-  floor(88p) = beads lit, every frame. The head: a white-hot bead r 1.5rb at the front with a
-  `pen.streak` of NA 2.5 beads long behind it, gone at e = 1. A lit bead stutters for its first
-  0.42 s (strike(age, i), floor 0.35) and settles, breathing ±6% on its own 3–5 s period.
-- Life: a shimmer circles the ring (one bead at a time brightened +0.3 within 0.35 rad, round in
-  ~11 s); one lit bead dips to 0.5 for 60 ms every 2.1 s; the lit wire breathes; 16 motes in the
-  ring's light; a cold glint slides round the wire every 9 s (sharp layer); the room's wash (NA 0.07
-  × lit/88) leans with the tilt.
-- Hover (laptop): the ring leans toward the hand: θx = 0.5·clamp((x − C.x)/1.5R), θy = 0.45·clamp((y −
-  C.y)/1.5R), eased 4/s, back to flat when the pointer leaves; beads within 160 px brighten ×1.4 and
-  swell ×1.3, dark beads get a cold glint on their rim. Scroll (phone): the ring turns with the
-  scroll, spin = (scroll − 0.5)·0.9 rad (the lit stretch turns with it; what is lit does not change),
-  and tilts by scrollV (θy = 0.36·clamp(scrollV)).
-- Labels: none. Framed: C centred, R = min(0.36h, 0.3w). Narrow: C centred, R = min(0.36h, 0.4w),
-  rb ≥ 1.6, no motes, no glint.
+- Wide: C = (copyX + 0.52·(w − copyX), 0.44h), R = min(0.42h, 0.32·(w − copyX)); bead radius
+  rb = max(2, 0.02R). The ring's plane is tilted θ = 1.0 rad from the view (TILT) and the beads
+  are projected with a camera at F = 3.2R: bead i at angle a = −π/2 + 2πi/100 + φ, screen x = C.x +
+  R·cos a·s, y = C.y + R·sin a·cos θ·s, s = F/(F − R·sin a·sin θ), drawn far to near (sorted by
+  sin a). The wire: a closed polyline through the projected beads (`pen.glass` 0.14 w 2); the lit
+  stretch from bead 0 to the front: `pen.neon` NA 0.3 w 1.2 on the same polyline. Dark bead: a glass
+  rim r rb·s (0.16). Lit bead: a tube seen end on: its bloom on the glow layer (r 1.1·rb·s), the
+  coloured bead (NA 0.85) and a white-hot core (0.5·rb·s) on the sharp layer. The floor: a glass
+  hairline at y_F = C.y + 0.74R + 0.04h fading in from under the scrim, the ring's light pooled on it
+  (NA wash 1.2R × 0.12R, 0.16 × lit/88); every lit bead's reflection below it at 2y_F − y, bloom and
+  colour only, at 0.32 × (1 − its height over the floor / 0.6R).
+- Strike: bead i lights while 88p runs i → i+1 (the head's own bead at 0.9u), so the number =
+  floor(88p) = beads lit, every frame. The head: a white-hot bead r 1.5rb·s with an NA bloom, the
+  wire hot behind it for six beads (`pen.neon` 0.9 w 1.8); a bead flares as it lands (+0.9 decaying
+  over 0.12 s), stutters for its first 0.42 s (strike(age, i), floor 0.35) and settles, breathing ±6%
+  on its own 3–5 s period.
+- Life: the ring turns at 0.07 rad/s for good (the dark twelve come round the back and past the
+  front); the comet: every 7 s from the strike's end a head of light (white-hot, NA bloom) runs the
+  lit stretch top to front in 5.5 s, the nine beads behind it brightened in a falling tail and the
+  wire hot behind it, and the last lit bead flares as it arrives; one lit bead dips to 0.5 for 60 ms
+  every 2.1 s; the lit wire breathes; 18 motes rise in the ring's light; a cold glint slides round
+  the wire every 9 s (sharp layer); the room's wash (NA 0.06 × lit/88) leans with the tilt.
+- Hover (laptop): a sideways flick of the hand spins the ring (spin velocity += Δx/R·0.9, with
+  friction e^(−1.6t)); the hand's height tilts it ±0.25 rad about TILT (eased 4/s, back when it
+  leaves); beads within 160 px brighten ×1.4 and swell ×1.3, dark beads get a cold glint on their
+  rim. Scroll (phone): the ring turns with the scroll, φ += (scroll − 0.5)·2.2 rad, and tilts by
+  scrollV (±0.2 rad). Nothing the hand does changes which beads are lit.
+- Labels: none. Framed: C centred, R = min(0.42h, 0.3w). Narrow: C centred, R = min(0.4h, 0.42w),
+  rb ≥ 1.6, no motes, no glint; the floor and reflection stay.
 - Honesty: 100 beads, 88 lit, nothing else; the ring is a ring (no hands, no ticks, no numerals: not
-  a clock, which has no rim), the dark twelve sit together at the end of the round; no hours, no
-  apps named, no browser drawn. Source in pages.ts (eMarketer, US Time Spent with Mobile 2019). Not
-  the hero (a phone with an app on its screen). Distinct: the only ring.
+  a clock, which has no rim), the dark twelve sit together at the end of the round; the turn and
+  the comet are light and pose, never the count; no hours, no apps named, no browser drawn. Source
+  in pages.ts (eMarketer, US Time Spent with Mobile 2019). Not the hero (a phone with an app on its
+  screen). Distinct: the only ring, and the only reflection.
 
 ---
 
