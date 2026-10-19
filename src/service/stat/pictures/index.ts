@@ -15,6 +15,7 @@ import { impacts } from './impacts'
 import { windowPane } from './window'
 import { reeds } from './reeds'
 import { halo } from './halo'
+import { voxels } from './voxels'
 
 /*
  * The pictures, one builder per StatViz kind (data/pages.ts; the briefs are
@@ -36,6 +37,7 @@ const PICTURES: { [K in StatViz['kind']]?: Builder<Extract<StatViz, { kind: K }>
   window: windowPane,
   reeds,
   halo,
+  voxels,
 }
 
 /** the picture for `viz` (built once; canvas.ts calls init on every size) */

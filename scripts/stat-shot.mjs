@@ -26,6 +26,7 @@ const SLUGS = [
   'ai-consulting',
   'company-knowledge-ai',
   'aerial-media',
+  '3d-modeling',
   'hack-remediation',
   'security',
   'ada-accessibility',

@@ -562,6 +562,42 @@ seven seconds. Nothing lit ever changes. Lead NA. `lead: [0, 0]`, `dur: 2800`.
   in pages.ts (eMarketer, US Time Spent with Mobile 2019). Not the hero (a phone with an app on its
   screen). Distinct: the only ring, and the only reflection.
 
+## 3d-modeling · "94%" · `{ kind: 'voxels', base: 100, lift: 94 }` — The Lift
+
+A slab of a hundred glass cubes, ten by ten, lying on the dark floor right of centre, seen from above
+and to one side (turned 0.62 rad, looking down 0.62 rad, a little perspective): the conversions
+without 3D. On it a second layer of a hundred cells, 94 of them lit green cube by cube as the count
+runs, each dropping into its cell and flaring as it lands; the six left empty sit together at the
+front corner, the last cells of the front row. The lit cubes are the number; the dark slab under them
+is what they are a lift on. Lead NA. `lead: [0, 0]`, `dur: 2800`.
+
+- Wide: the block's footprint at rest spans ~13.9 cells across: cell c = min(0.62·(w − copyX),
+  1.15h) / 13.9, centred at (copyX + 0.52·(w − copyX), 0.5h); the floor hairline at 0.5h + 4.3c with the
+  lit layer's light pooled on it (NA 0.12 × lit/94). The slab: its top ruled ten by ten and its two
+  near faces ruled by the cell, one batched glass path (0.13 w 1.6), a faint body on its top (white
+  0.012). A lit cube: its top face washed (NA 0.07), outlined in neon (0.62 w 1.2), its near vertical
+  edges and lower rim in neon (0.32 w 1). An empty cell: the same outline in glass (0.1).
+- Strike: cell i (reading order from the back row, left to right at rest) lights while 94p runs
+  i → i+1: it falls from 1.6 cells above, (1 − u)² × 1.6, outlined white-hot as it lands; a landed cube
+  stutters (strike(age, i), floor 0.4, age 0.12 s per count unit) and flares (+0.9·e^(−age/0.12)). The
+  number = floor(94p) = cubes lit, every frame.
+- Life: the settled cubes are drawn in two checkerboard paths that breathe out of phase (±6% on 3.7 s
+  and 4.6 s; every inner edge belongs to one cube of each, so the grid stays even); a wave of light
+  runs diagonally across the lit layer every 6.5 s (+0.45 within 1.5 cells); one lit cube dips to
+  0.5 for 60 ms every 2.3 s; the block sways ±0.05 rad on its own; 16 motes in its light; a cold glint
+  slides along the slab's front edge every 10 s.
+- Hover (laptop): the block turns toward the hand (yaw 0.2·clamp((x − C.x)/8c), tilt 0.1·clamp((y −
+  C.y)/6c), eased 4/s); lit cubes within 160 px brighten ×1.4 and rise up to 0.18c, back when the
+  pointer leaves. Scroll (phone): the block turns with the scroll, yaw = (scroll − 0.5)·0.7, and tips
+  with scrollV (0.12·clamp(scrollV)).
+- Labels: none. Framed: centred, the footprint min(0.5w, 1.2h). Narrow: centred, min(0.8w, 1.25h), no
+  motes, no glint.
+- Honesty: a hundred dark cubes and 94 lit over them, nothing else; no shoppers, products, carts or
+  currency drawn; the lit layer never changes after the count. Source in pages.ts (Shopify changelog,
+  May 2022: merchants who add 3D content see a 94% conversion lift on average, Shopify's own figure).
+  Not the hero (a vessel on a turntable). Distinct: the only cubes, the only picture of a lift over a
+  base.
+
 ---
 
 ## Seeing them
@@ -579,5 +615,5 @@ The clock picture reads `window.__statClock` (dev only) so its frames repeat.
 - `countFrom` on a picture (page-speed): p = easeOut(clamp01((e − countFrom)/(1 − countFrom))).
 - Collision map (no two bands share a device): a ledger written by hand (software) / a stack of sheets (crm) / lamps
   (web) / a ring of beads (app) / a line climbing past a mark (ecommerce) / a lit sheet in a hall (seo) / two horizontal tubes
-  (speed) / a reel winding (ai) / a glass orb (knowledge) / an aircraft (aerial) / a clock (hack) / hail
+  (speed) / a reel winding (ai) / a glass orb (knowledge) / an aircraft (aerial) / a block of cubes (3d) / a clock (hack) / hail
   on dark glass (security) / a window (ada) / a reed bed (wordpress).

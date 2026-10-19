@@ -501,6 +501,53 @@ export const SERVICE_CONTENT: Record<string, ServiceContent> = {
     ],
   },
 
+  '3d-modeling': {
+    metaDescription:
+      '3D product modeling in Philadelphia: accurate 3D models, interactive viewers, product configurators, and AR previews for ecommerce and small business websites. Hark Digital, est. 2016.',
+    article: [
+      {
+        heading: 'What 3D modeling is, and why stores use it',
+        paragraphs: [
+          '3D modeling is building a digital version of a physical object: its shape, its materials, and the way light falls on it, accurate enough to turn over in your hand on a screen. For a business, a good model is an asset that keeps working. One file can drive an interactive viewer on your product page, a configurator, an augmented reality preview, and every product render you will ever need.',
+          'It earns its place where photos struggle: products with options, products with moving parts, products whose size is hard to judge, and anything shoppers want to see from the back. Shopify reports that merchants who add 3D content to their stores see a 94 percent conversion lift on average. When a product sells fine from two photos and a paragraph, we will tell you so.',
+        ],
+      },
+      {
+        heading: 'How we build 3D models that work on the web',
+        paragraphs: [
+          'We model from your CAD files, drawings, or photos and measurements, then optimize every model for the browser: real-time materials, compressed textures, and a polygon budget a mid-range phone can draw smoothly. The files are the web’s standard glTF and GLB, plus USDZ for Apple’s Quick Look, so one model works in a viewer, on Shopify, and in augmented reality.',
+          'Then we build the viewer around it: drag to rotate, pinch to zoom, hotspots that explain a feature, and options that swap in place. Hark Digital builds it in Philadelphia with three.js and WebGL, the same technology behind this site, and tests it on real devices so it loads light and still works on older ones.',
+        ],
+      },
+    ],
+    faqs: [
+      {
+        q: 'Do I need a 3D model, or are good photos enough?',
+        a: 'Good photos are enough when a product is simple, has no options, and its size is obvious. A 3D model earns its place when shoppers need to see every side, compare options, understand moving parts, or judge how something fits in their space. We look at your products and your returns, and tell you honestly which ones would benefit.',
+      },
+      {
+        q: 'What files do you need to make a 3D model?',
+        a: 'CAD files are the best start, since they already hold the exact geometry: STEP, IGES, SolidWorks, and Fusion exports all work. Without CAD, we work from technical drawings, measurements, and a set of photos from every side. The more exact the source, the more exact the model, and we tell you up front what we can and can’t reproduce from what you have.',
+      },
+      {
+        q: 'Will a 3D model slow down my product pages?',
+        a: 'Not when it is built for the web. We keep models light with compressed geometry and textures, load the viewer only when it scrolls into view, and show a still image until the model is ready, so the rest of the page never waits for it. We test on mid-range phones on cell data, not just a fast laptop.',
+      },
+      {
+        q: 'How do 3D models work on Shopify or WooCommerce?',
+        a: 'Shopify supports 3D models on product pages, with augmented reality on iPhone and Android built in, so a model uploads with the product like a photo. WooCommerce and custom stores take a 3D viewer we embed in the product template. Either way the model lives with the product, so it shows up wherever that product does.',
+      },
+      {
+        q: 'What is the difference between a 3D render and a 3D viewer?',
+        a: 'A render is a finished image or video made from the model, lit and framed like a studio photo, and it looks the same for everyone. A viewer is the model itself, live on the page, that each shopper turns, zooms, and configures for themselves. Renders suit listings, ads, and catalogs; a viewer suits the product page, where people decide.',
+      },
+      {
+        q: 'How does “view in your room” augmented reality work?',
+        a: 'On a phone, the shopper taps a button and the product appears in their room through the camera, at its real size, to walk around and look at. iPhones use Apple’s Quick Look with a USDZ file; Android phones use Google’s Scene Viewer with a GLB file. There is no app to download, and we export both formats from the same model.',
+      },
+    ],
+  },
+
   'hack-remediation': {
     metaDescription:
       'Hacked website? Emergency malware removal, cleanup, and recovery, we find the breach, remove the infection, clear Google warnings, and harden your site so it stays clean.',

@@ -14,6 +14,7 @@ import { pipeline } from './pipeline'
 import { radar } from './radar'
 import { shield } from './shield'
 import { sift } from './sift'
+import { turntable } from './turntable'
 import { velocity } from './velocity'
 
 /*
@@ -31,6 +32,7 @@ const SCENES: Partial<Record<ServicePageData['scene'], () => Scene>> = {
   aerial,
   glitch,
   handset,
+  turntable,
   shield,
   focus,
   blocks,

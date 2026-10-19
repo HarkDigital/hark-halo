@@ -9,7 +9,7 @@ export interface ServicePageData {
   slug: string
   num: string
   title: string
-  scene: 'dataflow' | 'blueprint' | 'commerce' | 'radar' | 'velocity' | 'neural' | 'aerial' | 'glitch' | 'shield' | 'focus' | 'blocks' | 'sift' | 'network' | 'constellation' | 'pipeline' | 'handset'
+  scene: 'dataflow' | 'blueprint' | 'commerce' | 'radar' | 'velocity' | 'neural' | 'aerial' | 'glitch' | 'shield' | 'focus' | 'blocks' | 'sift' | 'network' | 'constellation' | 'pipeline' | 'handset' | 'turntable'
   headline: string
   /** part of the headline rendered in the signal color */
   headlineAccent?: string
@@ -59,6 +59,7 @@ export interface ServicePageData {
  *   window  a window of `of` panes, one lit
  *   reeds   a bed of `of` glass stalks in a wind, `share` of them lit
  *   halo    a ring of `of` glass beads on a wire, `share` of them lit clockwise from the top
+ *   voxels  a slab of `base` glass cubes on the floor and a layer over it, `lift` of its cubes lit one by one
  */
 export type StatViz =
   | { kind: 'ledger'; share: number; of: number }
@@ -75,6 +76,7 @@ export type StatViz =
   | { kind: 'window'; of: number }
   | { kind: 'reeds'; share: number; of: number }
   | { kind: 'halo'; share: number; of: number }
+  | { kind: 'voxels'; base: number; lift: number }
 
 export const SERVICE_PAGES: ServicePageData[] = [
   {
@@ -517,8 +519,46 @@ export const SERVICE_PAGES: ServicePageData[] = [
     cta: 'See your business the way birds do.',
   },
   {
-    slug: 'hack-remediation',
+    slug: '3d-modeling',
     num: '11',
+    title: '3D Modeling',
+    scene: 'turntable',
+    headline: 'The next best thing to',
+    headlineAccent: 'holding it.',
+    lede: 'A photo shows one side of a product. A 3D model shows all of them. We build accurate, lightweight models of what you sell and put them to work on your site: turn it over, zoom in, change the finish, and see it in your own room.',
+    features: [
+      {
+        title: 'True to the product',
+        text: 'We build each model from your CAD files, drawings, or photos and measurements, to the product’s real dimensions, materials, and parts. Every seam, hinge, and logo sits where it does in real life, because a model that is almost right does more harm than a good photo. You approve it from every angle first.',
+      },
+      {
+        title: '3D on your product pages',
+        text: 'An interactive viewer right on the page: drag to turn it, pinch to zoom, tap to open the lid. Built with three.js and WebGL, it loads without holding up the page and shows a still image on the rare device that can’t draw it. It works with Shopify, WooCommerce, and custom stores, right where shoppers decide.',
+      },
+      {
+        title: 'Every option, configured',
+        text: 'Colors, sizes, materials, add-ons: a configurator shows the exact combination a customer picks, the moment they pick it, instead of a grid of swatches and a leap of faith. Each option is modeled once and combined on the fly, so a product with hundreds of combinations never needs a photo of each one.',
+      },
+      {
+        title: 'AR and renders, one model',
+        text: 'The same model does more than one job. It powers “view in your room” on iPhone and Android with no app to install, and it renders clean stills and turntable videos for listings, ads, and catalogs without a photo shoot. When the product changes, you update the model, not the whole shoot.',
+      },
+    ],
+    process: [
+      { title: 'Listen', text: 'We learn what shoppers need to see before they buy, and what your photos are failing to show them.' },
+      { title: 'Model', text: 'A true-to-size model from your CAD files, drawings, or photos, checked by you from every angle.' },
+      { title: 'Build the viewer', text: 'The model goes to work on your site: a 3D viewer, a configurator, AR, or all three, tested on real phones.' },
+      { title: 'Measure & refine', text: 'We watch what shoppers turn, zoom, and change, then refine the model and the page around it.' },
+    ],
+    // Shopify, “Shop adds 3D and augmented reality (AR) previews” (changelog, May 11 2022): “Merchants who
+    // add 3D content to their stores see a 94% conversion lift, on average.” (Shopify’s own platform figure)
+    stat: { value: '94%', label: 'Average conversion lift for online stores that add 3D models of their products', viz: { kind: 'voxels', base: 100, lift: 94 } },
+    relatedTags: ['Ecommerce'],
+    cta: 'Look at your best seller’s page. If shoppers can’t turn it over, let’s fix that.',
+  },
+  {
+    slug: 'hack-remediation',
+    num: '12',
     title: 'Hack Remediation',
     scene: 'glitch',
     headline: 'Breathe. Then',
@@ -559,7 +599,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
   },
   {
     slug: 'security',
-    num: '12',
+    num: '13',
     title: 'Website & Data Security',
     scene: 'shield',
     headline: 'The best hack is the one that',
@@ -597,7 +637,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
   },
   {
     slug: 'ada-accessibility',
-    num: '13',
+    num: '14',
     title: 'ADA Accessibility',
     scene: 'focus',
     headline: 'Every visitor.',
@@ -633,7 +673,7 @@ export const SERVICE_PAGES: ServicePageData[] = [
   },
   {
     slug: 'wordpress',
-    num: '14',
+    num: '15',
     title: 'WordPress',
     scene: 'blocks',
     headline: 'WordPress, without the',

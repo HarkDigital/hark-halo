@@ -193,6 +193,15 @@ const GLYPHS: Record<string, (g: Ctx) => void> = {
       circle(g, sx * 30, sy * 30, 1.6, true)
     }
   },
+  // a wireframe cube, its corners picked out as vertices
+  '3d-modeling': g => {
+    const top: Pt = [0, -35], r: Pt = [30, -18], br: Pt = [30, 17], b: Pt = [0, 34], bl: Pt = [-30, 17], l: Pt = [-30, -18]
+    const c: Pt = [0, -1]
+    poly(g, [top, r, br, b, bl, l], true)
+    poly(g, [l, c, r])
+    poly(g, [c, b])
+    for (const [x, y] of [top, r, br, b, bl, l, c]) circle(g, x, y, 3, true)
+  },
   // a cross: repair
   'hack-remediation': g => {
     const a = 11

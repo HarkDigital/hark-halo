@@ -145,6 +145,14 @@ export const SERVICES: Service[] = [
   },
   {
     num: '11',
+    slug: '3d-modeling',
+    title: '3D Modeling',
+    blurb:
+      'Products that only sell in person? We model what you sell in 3D for your website, so shoppers can turn it, zoom in, change the options, and see it in their own room.',
+    tags: ['3D Product Models', 'Product Configurators', 'AR Previews', '3D Renders'],
+  },
+  {
+    num: '12',
     slug: 'hack-remediation',
     title: 'Hack Remediation',
     blurb:
@@ -152,7 +160,7 @@ export const SERVICES: Service[] = [
     tags: ['Malware Removal', 'Breach Response', 'Recovery', 'Blocklist Removal'],
   },
   {
-    num: '12',
+    num: '13',
     slug: 'security',
     title: 'Website & Data Security',
     blurb:
@@ -160,7 +168,7 @@ export const SERVICES: Service[] = [
     tags: ['Hardening', 'Monitoring', 'Backups', 'SSL & Compliance'],
   },
   {
-    num: '13',
+    num: '14',
     slug: 'ada-accessibility',
     title: 'ADA Accessibility',
     blurb:
@@ -168,7 +176,7 @@ export const SERVICES: Service[] = [
     tags: ['WCAG Audits', 'Remediation', 'Screen Reader Testing', 'ADA Compliance'],
   },
   {
-    num: '14',
+    num: '15',
     slug: 'wordpress',
     title: 'WordPress',
     blurb:
@@ -1181,6 +1189,7 @@ export const CONTACT_FORM = {
     'AI Consulting',
     'Company Knowledge AI',
     'Aerial Photography & Video',
+    '3D Modeling',
     'Hack Remediation',
     'Website & Data Security',
     'ADA Accessibility',
