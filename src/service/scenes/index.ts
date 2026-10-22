@@ -1,4 +1,4 @@
-import type { ServicePageData } from '../data/pages'
+import type { SceneName } from '../data/pages'
 import type { Scene } from './kit'
 import { runScene, type SceneHandle } from './runner'
 import { aerial } from './aerial'
@@ -22,7 +22,7 @@ import { velocity } from './velocity'
  * classic 2026 site's hero animation for that service, ported to glass and
  * neon (./kit). Loaded after the copy is up; see ./runner for the canvases.
  */
-const SCENES: Partial<Record<ServicePageData['scene'], () => Scene>> = {
+export const SERVICE_SCENES: Partial<Record<SceneName, () => Scene>> = {
   dataflow,
   blueprint,
   commerce,
@@ -40,6 +40,6 @@ const SCENES: Partial<Record<ServicePageData['scene'], () => Scene>> = {
   pipeline,
 }
 
-export function mountScene(host: HTMLElement, name: ServicePageData['scene'], o: { reduced: boolean }): SceneHandle {
-  return runScene(host, (SCENES[name] ?? dataflow)(), o)
+export function mountScene(host: HTMLElement, name: SceneName, o: { reduced: boolean }): SceneHandle {
+  return runScene(host, (SERVICE_SCENES[name] ?? dataflow)(), o)
 }

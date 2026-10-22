@@ -5,11 +5,13 @@
 
 import { PORTFOLIO_WORK } from '../../kit/work'
 
+export type SceneName = 'dataflow' | 'blueprint' | 'commerce' | 'radar' | 'velocity' | 'neural' | 'aerial' | 'glitch' | 'shield' | 'focus' | 'blocks' | 'sift' | 'network' | 'constellation' | 'pipeline' | 'handset' | 'turntable'
+
 export interface ServicePageData {
   slug: string
   num: string
   title: string
-  scene: 'dataflow' | 'blueprint' | 'commerce' | 'radar' | 'velocity' | 'neural' | 'aerial' | 'glitch' | 'shield' | 'focus' | 'blocks' | 'sift' | 'network' | 'constellation' | 'pipeline' | 'handset' | 'turntable'
+  scene: SceneName
   headline: string
   /** part of the headline rendered in the signal color */
   headlineAccent?: string
