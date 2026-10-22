@@ -1,6 +1,6 @@
 import { BRAND } from '../content'
 import { logoSvg, markOutlineSvg } from './mark'
-import { bindServicesSub, servicesMenuSub } from './servicesMenu'
+import { bindServicesSub } from './servicesMenu'
 import { holdInert, releaseInert } from './inert'
 
 /*
@@ -8,7 +8,7 @@ import { holdInert, releaseInert } from './inert'
  * service page and the Portfolio (page/shell.ts). A "Menu" pill opens a full-screen black
  * frosted sheet, a real modal dialog (focus trap, Escape, the layers behind
  * it inert with a fallback, focus back to Menu on close): the sections as big
- * plain names (Services opens the service pages beneath it; the
+ * plain names (Services and Industries open their pages beneath them; the
  * section you are in is lit, with a glass bead), 'Start a project'
  * (and the host's own extra button), the address, and the mark drawn as a
  * hairline behind it all.
@@ -38,6 +38,8 @@ export interface MenuRow {
   now?: boolean
   /** what the lit row is to the page: 'location' (a section of it, the default) or 'page' (this page) */
   current?: 'page' | 'location'
+  /** a list that opens beneath the row (servicesMenuSub / industriesMenuSub) */
+  sub?: string
 }
 
 const MENU_QUERY = '(max-width: 720px)'
@@ -50,14 +52,14 @@ export function menuButtonHtml(sheetId: string): string {
   return `<button class="ch-menu-btn ch-chip" type="button" aria-expanded="false" aria-controls="${sheetId}" aria-haspopup="dialog"><span class="ch-menu-t">Menu</span>${MENU_IC}</button>`
 }
 
-/** one section row (`now`: the section you are in; `current`: this service page, in the sub-list) */
-export function menuRowHtml(r: MenuRow, i: number, current?: string): string {
-  const more = r.id === 'services'
+/** one section row (`now`: the section you are in; `sub`: the pages beneath it, the current one marked) */
+export function menuRowHtml(r: MenuRow, i: number): string {
+  const more = !!r.sub
   const now = r.now ? ' is-now' : ''
   // as the story's update() marks the chapter you are on (ui/chrome.ts)
   const cur = r.now ? ` aria-current="${r.current ?? 'location'}"` : ''
   const go = r.go ? ` data-go="${r.id}"` : ''
-  return `<li style="--i:${i}"${more ? ' class="ch-ml-li--more"' : ''}><a class="ch-ml${now}" href="${r.href}"${go}${cur}><span class="ch-ml-name">${esc(r.name)}</span></a>${more ? servicesMenuSub(current) : ''}</li>`
+  return `<li style="--i:${i}"${more ? ' class="ch-ml-li--more"' : ''}><a class="ch-ml${now}" href="${r.href}" data-sec="${esc(r.id)}"${go}${cur}><span class="ch-ml-name">${esc(r.name)}</span></a>${r.sub ?? ''}</li>`
 }
 
 /** the sheet itself (hidden until opened); `rows` from menuRowHtml, `foot` its buttons */

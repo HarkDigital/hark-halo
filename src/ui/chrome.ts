@@ -1,10 +1,10 @@
 import type { Engine, EngineState } from '../core/Engine'
 import type { Frame } from '../core/types'
 import type { Sound } from './sound'
-import { BRAND, MICROCOPY, portfolioUrl } from '../content'
+import { BRAND, MICROCOPY, industriesUrl, portfolioUrl } from '../content'
 import { logoSvg } from './mark'
-import { bindServicesMenu, servicesMenuItem } from './servicesMenu'
-import { bindMenuSheet, menuButtonHtml, menuRowHtml, menuSheetHtml, sectionName } from './menuSheet'
+import { bindServicesMenu, industriesMenuItem, industriesMenuSub, servicesMenuItem, servicesMenuSub } from './servicesMenu'
+import { bindMenuSheet, menuButtonHtml, menuRowHtml, menuSheetHtml, sectionName, type MenuRow } from './menuSheet'
 import { mountRotateGate } from './rotate'
 import { bindScene, holdScene, releaseScene } from './scene'
 import { noteChapter } from './fallback'
@@ -47,7 +47,13 @@ import { REDUCED_MOTION } from '../kit/motion'
  * Navigation always uses engine.land(id) (lands on settled copy; long jumps cut).
  */
 
-const NAV = ['services', 'work', 'contact']
+/** the capsule's links: chapters (data-go), and the pages off the story (Industries, Work: a plain href) */
+const NAV: { id: string; name?: string; href?: string; dd?: 'services' | 'industries' }[] = [
+  { id: 'services', dd: 'services' },
+  { id: 'industries', name: 'Industries', href: industriesUrl(), dd: 'industries' },
+  { id: 'work', href: portfolioUrl() },
+  { id: 'contact' },
+]
 const READ_LABEL = 'Read as a page'
 /** the static page (main.ts renders the fallback for ?read; it scrolls to the #chapter) */
 const readHref = (id: string) => `?read#${id}`
@@ -71,11 +77,12 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
 
   const brandInner = `<span class="ch-logo" aria-hidden="true">${logoSvg('ch-logo-svg')}</span>`
 
-  // (Services carries the dropdown of the service pages; Work goes straight to the Portfolio page)
-  const links = NAV.filter(id => indexOf(id) >= 0)
-    .map(id => {
-      const a = id === 'work' ? `<a class="ch-link" href="${portfolioUrl()}">${biz(id)}</a>` : `<a class="ch-link" href="#${id}" data-go="${id}">${biz(id)}</a>`
-      return id === 'services' ? servicesMenuItem(a) : `<li>${a}</li>`
+  // (Services and Industries carry the dropdowns of their pages; Industries and Work go straight to their pages)
+  const links = NAV.filter(n => n.href || indexOf(n.id) >= 0)
+    .map(n => {
+      const name = n.name ?? biz(n.id)
+      const a = n.href ? `<a class="ch-link" href="${n.href}">${name}</a>` : `<a class="ch-link" href="#${n.id}" data-go="${n.id}">${name}</a>`
+      return n.dd === 'services' ? servicesMenuItem(a) : n.dd === 'industries' ? industriesMenuItem(a) : `<li>${a}</li>`
     })
     .join('')
 
@@ -86,17 +93,16 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
     )
     .join('')
 
-  // the Menu sheet's rows: plain names, no numbers or chapter nicknames (Work opens the Portfolio page)
-  const menuItems = slots
-    .map((s, i) =>
-      menuRowHtml(
-        s.def.id === 'work'
-          ? { id: s.def.id, name: biz(s.def.id, s.def.label), href: portfolioUrl() }
-          : { id: s.def.id, name: biz(s.def.id, s.def.label), href: `#${s.def.id}`, go: true },
-        i,
-      ),
-    )
-    .join('')
+  // the Menu sheet's rows: plain names, no numbers or chapter nicknames (Work opens the Portfolio
+  // page; the Industries row, no chapter of its own, follows Services and opens the index)
+  const menuRows: MenuRow[] = []
+  for (const s of slots) {
+    const name = biz(s.def.id, s.def.label)
+    if (s.def.id === 'work') menuRows.push({ id: s.def.id, name, href: portfolioUrl() })
+    else menuRows.push({ id: s.def.id, name, href: `#${s.def.id}`, go: true, ...(s.def.id === 'services' ? { sub: servicesMenuSub() } : {}) })
+    if (s.def.id === 'services') menuRows.push({ id: 'industries', name: 'Industries', href: industriesUrl(), sub: industriesMenuSub() })
+  }
+  const menuItems = menuRows.map((r, i) => menuRowHtml(r, i)).join('')
 
   // motion follows the visitor's system setting (there is no switch)
   const motionOn = !reduced
@@ -142,7 +148,8 @@ export function createChrome(root: HTMLElement, engine: Engine, sound: Sound) {
   const menuBtn = $<HTMLButtonElement>('.ch-top .ch-menu-btn')
   const navEls = [...root.querySelectorAll<HTMLAnchorElement>('.ch-link')]
   const pipEls = [...root.querySelectorAll<HTMLButtonElement>('.ch-pip')]
-  const menuLinks = [...root.querySelectorAll<HTMLAnchorElement>('.ch-ml')]
+  // (by chapter: the sheet has rows that are no chapter, Industries)
+  const menuLinks = slots.map(s => root.querySelector<HTMLAnchorElement>(`.ch-ml[data-sec="${s.def.id}"]`)!)
   const readLinks = [...root.querySelectorAll<HTMLAnchorElement>('[data-read]')]
 
   // ---------------------------------------------------------------- navigation

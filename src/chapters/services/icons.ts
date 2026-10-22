@@ -78,8 +78,8 @@ function sparkle(g: Ctx, x: number, y: number, r: number) {
   g.stroke()
 }
 
-/** One glyph per service slug (fallback: a diamond). */
-const GLYPHS: Record<string, (g: Ctx) => void> = {
+/** One glyph per service slug (fallback: a diamond). Also drawn alone, on the industry pages' service panels (drawGlyph). */
+export const GLYPHS: Record<string, (g: Ctx) => void> = {
   // </> — code
   'software-development': g => {
     poly(g, [[-19, -23], [-42, 0], [-19, 23]])
@@ -254,7 +254,7 @@ const GLYPHS: Record<string, (g: Ctx) => void> = {
   },
 }
 
-const diamond = (g: Ctx) =>
+export const diamond = (g: Ctx) =>
   poly(
     g,
     [
@@ -280,6 +280,40 @@ function spacedWidth(g: Ctx, text: string, track: number) {
   let w = -track
   for (const ch of text) w += g.measureText(ch).width + track
   return w
+}
+
+/**
+ * One glyph on its own canvas, `size` CSS px square (the industry pages' "Services that
+ * fit" panels): a soft pass in `glow` (a neon) under the crisp hairlines in `color`.
+ * Drawn once at the device's pixel ratio; the canvas keeps its CSS size.
+ */
+export function drawGlyph(canvas: HTMLCanvasElement, slug: string, o: { size: number; color: string; glow?: string }) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1)
+  canvas.width = canvas.height = Math.round(o.size * dpr)
+  canvas.style.width = canvas.style.height = `${o.size}px`
+  const g = canvas.getContext('2d')
+  if (!g) return
+  const glyph = GLYPHS[slug] ?? diamond
+  g.setTransform(dpr, 0, 0, dpr, 0, 0)
+  g.translate(o.size / 2, o.size / 2)
+  g.scale(o.size / 100, o.size / 100)
+  g.lineCap = 'round'
+  g.lineJoin = 'round'
+  if (o.glow) {
+    g.lineWidth = 3.4
+    g.strokeStyle = o.glow
+    g.fillStyle = o.glow
+    g.shadowColor = o.glow
+    g.shadowBlur = 14
+    g.globalAlpha = 0.85
+    glyph(g)
+    g.shadowBlur = 0
+    g.globalAlpha = 1
+  }
+  g.lineWidth = 2.6
+  g.strokeStyle = o.color
+  g.fillStyle = o.color
+  glyph(g)
 }
 
 export const COLS = 3

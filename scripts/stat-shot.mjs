@@ -2,7 +2,10 @@
 //
 //   node scripts/stat-shot.mjs [--slugs=all|custom-crm,seo-geo] [--port=5179] [--out=shots/stat]
 //                              [--w=1440] [--h=900] [--mobile] [--tablet] [--seek=1.2]
-//                              [--page] [--tag=name] [--lights=3]
+//                              [--page] [--tag=name] [--lights=3] [--industries]
+//
+// --industries shoots the industry pages' bands instead (/industries/<slug>/, src/industry;
+// --slugs then names industries: manufacturing,restaurants…).
 //
 // Each band is captured at rest (?settled) unless --seek=<seconds> draws it that long after
 // its trigger (window.__statSeek, dev only). --page captures the whole viewport with the
@@ -15,7 +18,8 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-const SLUGS = [
+const INDUSTRY_SLUGS = ['manufacturing', 'construction', 'restaurants', 'retail', 'transportation', 'healthcare', 'senior-living', 'nonprofits', 'real-estate', 'professional-services']
+const SERVICE_SLUGS = [
   'software-development',
   'custom-crm',
   'app-development',
@@ -45,6 +49,8 @@ const tablet = !!args.tablet
 const W = parseInt(args.w ?? (mobile ? 390 : tablet ? 768 : 1440), 10)
 const H = parseInt(args.h ?? (mobile ? 844 : tablet ? 1024 : 900), 10)
 const seek = args.seek !== undefined ? parseFloat(args.seek) : null
+const kind = args.industries ? 'industries' : 'services'
+const SLUGS = args.industries ? INDUSTRY_SLUGS : SERVICE_SLUGS
 const slugs = !args.slugs || args.slugs === 'all' ? SLUGS : String(args.slugs).split(',')
 const suffix = `${mobile ? '-m' : tablet ? '-t' : ''}${seek !== null ? `-s${seek}` : ''}${args.scroll !== undefined ? `-sc${args.scroll}` : ''}`
 const tag = args.tag ? `${args.tag}-` : ''
@@ -88,7 +94,7 @@ try {
     // --scroll=0.3 holds the band's scroll input (the phone's hand) at that progress
     if (args.scroll !== undefined) q.set('scroll', String(args.scroll))
     if (args.lights) q.set('lights', String(args.lights))
-    await page.goto(`http://localhost:${port}/services/${slug}/?${q}`, { waitUntil: 'load', timeout: 90000 })
+    await page.goto(`http://localhost:${port}/${kind}/${slug}/?${q}`, { waitUntil: 'load', timeout: 90000 })
     await page.waitForSelector('.svc-stat .vz', { timeout: 30000 })
     await page.evaluate(() => document.fonts?.ready)
     // the band to the centre of the screen (its own trigger fires here; ?settled rests it)

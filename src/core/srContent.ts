@@ -1,4 +1,4 @@
-import { BRAND, CONTACT, CRM_SPOT, KNOWLEDGE_SPOT, PORTFOLIO, PROCESS, SECTIONS, SECURITY, SERVICE_CTA, SERVICES, TESTIMONIALS, WORK, portfolioUrl, serviceUrl, termsUrl } from '../content'
+import { BRAND, CONTACT, CRM_SPOT, KNOWLEDGE_SPOT, PORTFOLIO, PROCESS, SECTIONS, SECURITY, SERVICE_CTA, SERVICES, TESTIMONIALS, WORK, industriesUrl, portfolioUrl, serviceUrl, termsUrl } from '../content'
 import { directHtml } from '../kit/contact'
 import { isPreview } from '../kit/work'
 
@@ -36,7 +36,7 @@ const COPY: Record<string, () => string> = {
     <p class="sr-kicker">${esc(BRAND.name)} · ${esc(BRAND.locale)}</p>
     <h1 tabindex="0">${esc(BRAND.tagline)}</h1>
     <p>${esc(BRAND.manifesto)}</p>
-    <p><a href="#work" data-land="work" data-anchor="0">See the work</a> · <a href="#contact" data-land="contact" data-anchor="0">Start a project</a></p>`,
+    <p><a href="#work" data-land="work" data-anchor="0">See the work</a> · <a href="${esc(industriesUrl())}">Industries</a> · <a href="#contact" data-land="contact" data-anchor="0">Start a project</a></p>`,
 
   work: () => `
     <h2 tabindex="0">${esc(SECTIONS.work.title)}</h2>

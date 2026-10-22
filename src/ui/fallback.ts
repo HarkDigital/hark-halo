@@ -1,4 +1,4 @@
-import { BRAND, CONTACT, portfolioUrl } from '../content'
+import { BRAND, CONTACT, industriesUrl, portfolioUrl } from '../content'
 import { CHAPTER_COPY_IDS, buildChapterCopy } from '../core/srContent'
 import { CHAPTERS } from '../chapters/index'
 import { logoSvg, markOutlineSvg, markSvg } from './mark'
@@ -77,6 +77,7 @@ export function renderFallback(root: HTMLElement, at?: string) {
     <nav class="fb-nav" aria-label="Primary">
       <a class="fb-link" href="${portfolioUrl()}">Work</a>
       <a class="fb-link" href="#services">Services</a>
+      <a class="fb-link" href="${industriesUrl()}">Industries</a>
       <a class="fb-link" href="#contact">Contact</a>
       ${live}
       <a class="hud-btn fb-cta" href="${CONTACT.href}">Start a project</a>

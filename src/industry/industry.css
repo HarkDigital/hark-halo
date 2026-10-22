@@ -1,0 +1,140 @@
+/* ------------------------------------------------------------------
+   The industry pages and their index (src/industry/main.ts): the service
+   page's language (service.css) with two sections of their own, the clients'
+   stage (the Portfolio's wall, portfolio.css, on a subset) and the service
+   panels, and the index's hero and plates. Sizes in calc(<n> * var(--hud-px))
+   grow with the page on wide screens, as service.css's do.
+   ------------------------------------------------------------------ */
+
+/* ---------------- the index: a hero without art, then the plates ---------------- */
+.ind-hero {
+  position: relative;
+  z-index: 1;
+  max-width: var(--svc-max);
+  margin: 0 auto;
+  padding: var(--safe-top) var(--gutter) 0;
+}
+.ind-h1 {
+  max-width: 12ch;
+}
+.ind-lede {
+  max-width: 58ch;
+  margin: calc(26 * var(--hud-px)) 0 0;
+}
+.ind-plates-sec {
+  padding-top: clamp(48px, 7vh, calc(80 * var(--hud-px)));
+}
+
+/* the plates (index) and the service panels (a page): the feature panels' grid and padding */
+.ind-plates,
+.ind-fit-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: calc(14 * var(--hud-px));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ind-plate.hud-panel,
+.ind-fit.hud-panel {
+  position: relative;
+  padding: calc(30 * var(--hud-px)) calc(32 * var(--hud-px)) calc(34 * var(--hud-px));
+  overflow: hidden;
+  transition: border-color 0.3s ease;
+}
+/* a neon hairline comes into focus along the top edge on hover, in the panel's own light (--c) */
+.ind-plate::after,
+.ind-fit::after {
+  content: '';
+  position: absolute;
+  left: calc(24 * var(--hud-px));
+  right: calc(24 * var(--hud-px));
+  top: 0;
+  height: 1px;
+  background: var(--c, var(--neon-a));
+  box-shadow: 0 0 12px var(--c, var(--neon-a));
+  opacity: 0;
+  transform: scaleX(0.3);
+  transition:
+    opacity 0.4s ease,
+    transform 0.8s var(--svc-ease);
+}
+.ind-plate:hover::after,
+.ind-plate:focus-within::after,
+.ind-fit:hover::after,
+.ind-fit:focus-within::after {
+  opacity: 0.9;
+  transform: none;
+}
+/* the whole panel is the link (its one real link stretched over it) */
+.ind-fit-a {
+  color: inherit;
+  text-decoration: none;
+}
+.ind-fit-a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.ind-fit-a:focus-visible {
+  outline: none;
+}
+.ind-plate:focus-within,
+.ind-fit:focus-within {
+  outline: 2px solid var(--paper);
+  outline-offset: 2px;
+}
+.ind-plate-n {
+  display: block;
+  margin: 0 0 calc(14 * var(--hud-px));
+  color: var(--fg-faint);
+}
+.ind-glyph {
+  display: block;
+  width: 56px;
+  height: 56px;
+  margin: calc(-4 * var(--hud-px)) 0 calc(14 * var(--hud-px)) calc(-6 * var(--hud-px));
+}
+.ind-fit-cta {
+  display: block;
+  margin: calc(18 * var(--hud-px)) 0 0;
+  color: var(--fg-faint);
+  transition: color 0.25s ease;
+}
+.ind-fit-arrow {
+  display: inline-block;
+  transition: transform 0.35s var(--svc-ease);
+}
+.ind-plate:hover .ind-fit-cta,
+.ind-fit:hover .ind-fit-cta {
+  color: var(--fg);
+}
+.ind-plate:hover .ind-fit-arrow,
+.ind-fit:hover .ind-fit-arrow {
+  transform: translateX(4px);
+}
+
+/* ---------------- the clients: the Portfolio's stage, under its own heading ---------------- */
+.ind-clients-sec {
+  padding-bottom: 0;
+}
+/* (no rail here: the first room keeps only a short distance from the heading) */
+.ind-clients > .pf-room:first-child {
+  padding-top: clamp(28px, 4vh, 48px);
+}
+
+@media (max-width: 720px) {
+  .ind-plates,
+  .ind-fit-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  .ind-plate.hud-panel,
+  .ind-fit.hud-panel {
+    padding: 24px 22px 26px;
+  }
+  .ind-glyph {
+    width: 48px;
+    height: 48px;
+  }
+}

@@ -185,6 +185,110 @@ export const SERVICES: Service[] = [
   },
 ]
 
+/*
+ * THE INDUSTRIES: a page per line of work at <base>industries/<slug>/ (src/industry), and
+ * the index of them at <base>industries/. This list is the nav-weight copy (the header
+ * dropdown, the phone sheet, the footer, the index plates); each page's own words are in
+ * src/industry/data/<slug>.ts, so the story never carries them. Order: the nav's, the
+ * index's and the pages' previous / next ring.
+ */
+export interface Industry {
+  num: string
+  slug: string
+  title: string
+  /** the index plate's blurb */
+  blurb: string
+}
+
+export const INDUSTRIES: Industry[] = [
+  {
+    num: '01',
+    slug: 'manufacturing',
+    title: 'Manufacturing',
+    blurb:
+      'Spec sheets in PDFs and quotes by phone? We build manufacturer websites, searchable product catalogs, dealer portals, and the software behind the plant, so buyers find you and engineers find the part.',
+  },
+  {
+    num: '02',
+    slug: 'construction',
+    title: 'Construction & Trades',
+    blurb:
+      'Jobs won by word of mouth and a website from 2014? We build contractor sites that show the work, win the estimate request, and run the back office, from scheduling crews to the final invoice.',
+  },
+  {
+    num: '03',
+    slug: 'restaurants',
+    title: 'Restaurants & Bars',
+    blurb:
+      'Orders coming through an app that takes a cut? We build restaurant websites with online ordering that is yours, menus you update from your phone, reservations, events, and gift cards that sell.',
+  },
+  {
+    num: '04',
+    slug: 'retail',
+    title: 'Retail & Ecommerce',
+    blurb:
+      'Selling three products or three thousand, we build stores that are fast, secure, and easy to run, from the product pages to the checkout to the analytics that show what actually sells.',
+  },
+  {
+    num: '05',
+    slug: 'transportation',
+    title: 'Transportation & Logistics',
+    blurb:
+      'Dispatch on a whiteboard and quotes in an inbox? We build websites and software for carriers, brokers, and fleets: customer portals, load tracking, driver tools, and the integrations that tie them together.',
+  },
+  {
+    num: '06',
+    slug: 'healthcare',
+    title: 'Healthcare',
+    blurb:
+      'Phones ringing with questions a website should answer? We build practice sites that book appointments, keep patient data private, meet accessibility law, and show up when someone searches for care nearby.',
+  },
+  {
+    num: '07',
+    slug: 'senior-living',
+    title: 'Senior Living',
+    blurb:
+      'Families research a community online long before they visit. We build senior living websites that answer their questions, show the place honestly, and make the first call easy for residents and the people who love them.',
+  },
+  {
+    num: '08',
+    slug: 'nonprofits',
+    title: 'Nonprofits',
+    blurb:
+      'Donations through a form that looks borrowed? We build nonprofit websites with giving that is simple, events and tickets that sell themselves, and stories told well enough to move people to act.',
+  },
+  {
+    num: '09',
+    slug: 'real-estate',
+    title: 'Real Estate',
+    blurb:
+      'Listings, lots, and the people behind them. We build real estate websites for brokerages, investors, and developers, with property search, aerial photography, and portals your clients actually use.',
+  },
+  {
+    num: '10',
+    slug: 'professional-services',
+    title: 'Professional Services',
+    blurb:
+      'Your expertise is the product, and your website is the first consultation. We build sites for law firms, advisors, insurers, and agencies that earn trust fast and make getting in touch easy.',
+  },
+]
+
+/** an industry's own page (src/industry, one per slug: <base>industries/<slug>/) */
+export const industryUrl = (slug: string) => `${import.meta.env.BASE_URL}industries/${slug}/`
+/** the index of the industries (src/industry): <base>industries/ */
+export const industriesUrl = () => `${import.meta.env.BASE_URL}industries/`
+/** the index page's own words (the plates are INDUSTRIES) */
+export const INDUSTRIES_PAGE = {
+  eyebrow: 'Industries',
+  title: 'Built for',
+  titleAccent: 'your trade.',
+  lede: 'Every business has its own problems, and the best websites and software come from knowing them. Here is what we build for the industries we know best, and the clients we built it for.',
+  description:
+    'Websites and software by Hark Digital for manufacturers, contractors, restaurants, retailers, carriers, medical practices, senior living, nonprofits, real estate, and professional firms. Philadelphia, est. 2016.',
+  /** the index plate's button */
+  cta: 'Explore the industry',
+}
+
 export interface WorkItem {
   id: string
   name: string

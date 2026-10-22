@@ -4,7 +4,8 @@ import path from 'node:path'
 import { SERVICE_PAGES } from './src/service/data/pages'
 import { SERVICE_CONTENT } from './src/service/data/content'
 import { PORTFOLIO_WORK, portfolioDescription, portfolioSplit, screenSizes } from './src/kit/work'
-import { TERMS } from './src/content'
+import { CONTACT_FORM, INDUSTRIES, INDUSTRIES_PAGE, TERMS } from './src/content'
+import { INDUSTRY_PAGES } from './src/industry/data/index'
 import { termsStaticHtml } from './src/terms/render'
 
 /** where the concept is served (og:url etc.); the path part comes from --base */
@@ -12,24 +13,34 @@ const ORIGIN = 'https://harkdigital.github.io'
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
 
+interface StaticPage {
+  /** the path under <base>, no slashes around it: 'services/page-speed', 'industries', 'lab' */
+  dir: string
+  /** replaced in the shell's head when given (og:url always: <ORIGIN><base><dir>/) */
+  title?: string
+  description?: string
+}
+
 /**
- * The service pages: ONE html entry (service.html, src/service/main.ts)
- * served at <base>services/<slug>/.
- *   dev / shots  /services/<slug>/ is rewritten to /service.html
- *   build        dist/services/<slug>/index.html per service, each with its
- *                own title, description and og tags; dist/service.html goes
+ * Pages served from ONE html shell: the service pages (service.html, src/service/main.ts, at
+ * <base>services/<slug>/), the industry pages and their index (industry.html,
+ * src/industry/main.ts, at <base>industries/ and <base>industries/<slug>/) and the lab
+ * (lab.html, <base>lab/, linked from nowhere, noindex in its own head).
+ *   dev / shots  a path `isPage` accepts (query stripped) is rewritten to /<shell>
+ *   build        dist/<dir>/index.html per page, each with its own title, description and
+ *                og tags where given, and og:url always; dist/<shell> goes
  */
-function servicePages(): Plugin {
+function staticPages(o: { name: string; shell: string; isPage: (path: string) => boolean; pages: () => StaticPage[]; check?: (warn: (msg: string) => void) => void }): Plugin {
   let outDir = 'dist'
   let base = '/'
   let build = false
   const rewrite = (req: { url?: string }, _res: unknown, next: () => void) => {
-    const m = (req.url ?? '').match(/^\/services\/([a-z0-9-]+)\/?(\?.*)?$/)
-    if (m) req.url = `/service.html${m[2] ?? ''}`
+    const m = (req.url ?? '').match(/^([^?]*)(\?.*)?$/)
+    if (m && o.isPage(m[1])) req.url = `/${o.shell}${m[2] ?? ''}`
     next()
   }
   return {
-    name: 'hark-service-pages',
+    name: o.name,
     configResolved(c) {
       outDir = path.resolve(c.root, c.build.outDir)
       base = c.base
@@ -38,23 +49,31 @@ function servicePages(): Plugin {
     configureServer(server) {
       server.middlewares.use(rewrite)
     },
+    buildStart() {
+      o.check?.(msg => this.warn(msg))
+    },
     closeBundle() {
       if (!build) return
-      const src = path.join(outDir, 'service.html')
+      const src = path.join(outDir, o.shell)
       if (!fs.existsSync(src)) return
       const html = fs.readFileSync(src, 'utf8')
-      for (const p of SERVICE_PAGES) {
-        const title = `${p.title} · Hark Digital`
-        const desc = SERVICE_CONTENT[p.slug]?.metaDescription ?? p.lede
-        const url = `${ORIGIN}${base}services/${p.slug}/`
+      for (const p of o.pages()) {
+        const url = `${ORIGIN}${base}${p.dir}/`
         // (replacer functions, not strings: copy like "$1M" must go in as written, not as a $1 backreference)
-        const page = html
-          .replace(/<title>[^<]*<\/title>/, () => `<title>${esc(title)}</title>`)
-          .replace(/(<meta\s+name="description"\s+content=")[^"]*"/, (_, open) => `${open}${esc(desc)}"`)
-          .replace(/(<meta\s+property="og:url"\s+content=")[^"]*"/, (_, open) => `${open}${esc(url)}"`)
-          .replace(/(<meta\s+property="og:title"\s+content=")[^"]*"/, (_, open) => `${open}${esc(title)}"`)
-          .replace(/(<meta\s+property="og:description"\s+content=")[^"]*"/, (_, open) => `${open}${esc(desc)}"`)
-        const dir = path.join(outDir, 'services', p.slug)
+        let page = html.replace(/(<meta\s+property="og:url"\s+content=")[^"]*"/, (_, open) => `${open}${esc(url)}"`)
+        if (p.title !== undefined) {
+          const title = p.title
+          page = page
+            .replace(/<title>[^<]*<\/title>/, () => `<title>${esc(title)}</title>`)
+            .replace(/(<meta\s+property="og:title"\s+content=")[^"]*"/, (_, open) => `${open}${esc(title)}"`)
+        }
+        if (p.description !== undefined) {
+          const desc = p.description
+          page = page
+            .replace(/(<meta\s+name="description"\s+content=")[^"]*"/, (_, open) => `${open}${esc(desc)}"`)
+            .replace(/(<meta\s+property="og:description"\s+content=")[^"]*"/, (_, open) => `${open}${esc(desc)}"`)
+        }
+        const dir = path.join(outDir, ...p.dir.split('/'))
         fs.mkdirSync(dir, { recursive: true })
         fs.writeFileSync(path.join(dir, 'index.html'), page)
       }
@@ -62,6 +81,44 @@ function servicePages(): Plugin {
     },
   }
 }
+
+const servicePages = () =>
+  staticPages({
+    name: 'hark-service-pages',
+    shell: 'service.html',
+    isPage: p => /^\/services\/[a-z0-9-]+\/?$/.test(p),
+    pages: () =>
+      SERVICE_PAGES.map(p => ({ dir: `services/${p.slug}`, title: `${p.title} · Hark Digital`, description: SERVICE_CONTENT[p.slug]?.metaDescription ?? p.lede })),
+  })
+
+const industryPages = () =>
+  staticPages({
+    name: 'hark-industry-pages',
+    shell: 'industry.html',
+    isPage: p => /^\/industries(\/[a-z0-9-]+)?\/?$/.test(p),
+    pages: () => [
+      { dir: 'industries', title: 'Industries · Hark Digital', description: INDUSTRIES_PAGE.description },
+      ...INDUSTRIES.map(i => ({ dir: `industries/${i.slug}`, title: `${i.title} · Hark Digital`, description: INDUSTRY_PAGES[i.slug]?.metaDescription })),
+    ],
+    // the data's cross-references: a page per industry, and every id it names is real
+    check: warn => {
+      const sites = new Set(PORTFOLIO_WORK.map(w => w.id))
+      const services = new Set(SERVICE_PAGES.map(p => p.slug))
+      for (const i of INDUSTRIES) {
+        const page = INDUSTRY_PAGES[i.slug]
+        if (!page) {
+          warn(`[industries] ${i.slug}: no page in src/industry/data (it is in INDUSTRIES)`)
+          continue
+        }
+        for (const id of page.clients) if (!sites.has(id)) warn(`[industries] ${i.slug}: client "${id}" is not on the Portfolio (PORTFOLIO_WORK)`)
+        for (const s of page.services) if (!services.has(s)) warn(`[industries] ${i.slug}: service "${s}" is not a service page`)
+        if (page.formService && !CONTACT_FORM.services.includes(page.formService)) warn(`[industries] ${i.slug}: formService "${page.formService}" is not in CONTACT_FORM.services`)
+      }
+      for (const slug of Object.keys(INDUSTRY_PAGES)) if (!INDUSTRIES.some(i => i.slug === slug)) warn(`[industries] ${slug}: a page with no INDUSTRIES entry (content.ts)`)
+    },
+  })
+
+const labPage = () => staticPages({ name: 'hark-lab-page', shell: 'lab.html', isPage: p => /^\/lab\/?$/.test(p), pages: () => [{ dir: 'lab' }] })
 
 /**
  * The Portfolio page: portfolio.html (src/portfolio/main.ts) served at <base>portfolio/.
@@ -239,55 +296,16 @@ function termsPage(): Plugin {
   }
 }
 
-/**
- * The lab: lab.html (src/lab/main.ts) served at <base>lab/, linked from nowhere (the mark ten
- * ways and ten scenes, each a live drawing: src/fx). noindex in its own head.
- *   dev / shots  /lab/ (and /lab, with any query) is rewritten to /lab.html
- *   build        dist/lab/index.html with og:url for --base; dist/lab.html goes
- */
-function labPage(): Plugin {
-  let outDir = 'dist'
-  let base = '/'
-  let build = false
-  const rewrite = (req: { url?: string }, _res: unknown, next: () => void) => {
-    const m = (req.url ?? '').match(/^\/lab\/?(\?.*)?$/)
-    if (m) req.url = `/lab.html${m[1] ?? ''}`
-    next()
-  }
-  return {
-    name: 'hark-lab-page',
-    configResolved(c) {
-      outDir = path.resolve(c.root, c.build.outDir)
-      base = c.base
-      build = c.command === 'build'
-    },
-    configureServer(server) {
-      server.middlewares.use(rewrite)
-    },
-    closeBundle() {
-      if (!build) return
-      const src = path.join(outDir, 'lab.html')
-      if (!fs.existsSync(src)) return
-      const url = `${ORIGIN}${base}lab/`
-      const page = fs.readFileSync(src, 'utf8').replace(/(<meta\s+property="og:url"\s+content=")[^"]*"/, (_, open) => `${open}${esc(url)}"`)
-      const dir = path.join(outDir, 'lab')
-      fs.mkdirSync(dir, { recursive: true })
-      fs.writeFileSync(path.join(dir, 'index.html'), page)
-      fs.rmSync(src)
-    },
-  }
-}
-
 // GitHub Pages serves from /<repo>/ — CI passes --base=/<repo>/.
 export default defineConfig({
   server: { host: true },
-  plugins: [servicePages(), portfolioPage(), termsPage(), labPage()],
+  plugins: [servicePages(), industryPages(), portfolioPage(), termsPage(), labPage()],
   build: {
     // Safari 15/16.3 can't parse class static blocks (three r186) — lower them
     target: ['es2020', 'safari15', 'chrome100', 'firefox100'],
     chunkSizeWarningLimit: 1500,
     rollupOptions: {
-      input: { main: 'index.html', service: 'service.html', portfolio: 'portfolio.html', terms: 'terms.html', lab: 'lab.html' },
+      input: { main: 'index.html', service: 'service.html', industry: 'industry.html', portfolio: 'portfolio.html', terms: 'terms.html', lab: 'lab.html' },
       // three.js (~180 KB gzipped, most of the story's JS) in a file of its own:
       // it only changes when three is upgraded, so a deploy doesn't make every
       // returning visitor download it again
