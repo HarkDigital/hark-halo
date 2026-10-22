@@ -35,3 +35,17 @@ A filled-in template is all a build needs: the entries in `SERVICES`
 `SERVICE_CONTENT` (`src/service/data/content.ts`) and `CONTACT_FORM.services`,
 a home plate icon (`src/chapters/services/icons.ts`) and a hero scene
 (`src/service/scenes/`). The page, menus, footer and Read as a page follow.
+
+## Adding an industry
+
+An industry page (`/industries/<slug>/`, src/industry) is a service page's anatomy
+for a line of work, plus the clients built for it and the services that fit. Write the
+copy with `INDUSTRY-PAGE-TEMPLATE.md`. A page needs: an entry in `INDUSTRIES`
+(`src/content.ts`: number, slug, title, the index plate's blurb), a data file
+`src/industry/data/<slug>.ts` listed in `src/industry/data/index.ts` (the copy, a sourced
+stat, the clients' ids from `WORK` / `PORTFOLIO_MORE`, the service slugs), and a hero
+scene `src/industry/scenes/<name>.ts` exporting `<name>(): Scene` (it registers itself;
+until it exists the page borrows a service scene by name). The index, the header
+dropdown, the phone sheet, the footer and the build follow; the build warns about an id
+that isn't real. Add the slug to `INDUSTRY_SLUGS` in `scripts/stat-shot.mjs`.
+
